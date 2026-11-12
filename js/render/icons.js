@@ -4,6 +4,7 @@
    カードのアイコン描画
    ===================================================== */
 function drawPaintCell(ctx, kind, cx, cy, rad, ink, hp) {
+  if (kind > 10 && drawExtraPaintCell(ctx, kind, cx, cy, rad, hp)) return;
   switch (kind) {
     case 0: ctx.fillStyle = ink; ctx.beginPath(); ctx.arc(cx, cy, rad, 0, TAU); ctx.fill(); break;
     case 1: {
@@ -102,6 +103,7 @@ function drawCardIcon(ctx, id, W, H) {
     }
     ctx.restore(); return;
   }
+  if (drawExtraIcon(ctx, id, W, H)) { ctx.restore(); return; }
   if (id === 'dark') {
     rrect(ctx, W * 0.1, H * 0.1, W * 0.8, H * 0.8, 6); ctx.fillStyle = '#1b1d26'; ctx.fill();
     const grd = ctx.createRadialGradient(W / 2, H / 2, 2, W / 2, H / 2, H * 0.32);

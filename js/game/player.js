@@ -17,7 +17,9 @@ function hurt(amount, srcX, word) {
 }
 function damageEnemy(e, dmg, dir) {
   const d = ETYPES[e.type];
+  if (e.hide) return false; // モグラが地面に隠れている
   if (d.invuln) { SFX.clank(); popup(e.x + e.w / 2, e.y - 6, 'カキン', '#6b7080', 16); return false; }
+  if (d.shield && dir && dir === -e.dir) { SFX.clank(); popup(e.x + e.w / 2, e.y - 6, 'ガード', '#6b7080', 16); return false; } // 盾：正面からの攻撃は効かない
   e.hp -= dmg; e.flash = 8;
   if (dir && WALK_SPD[e.type] && e.type !== 'giant') { e.vx += dir * 3; e.vy = -3; }
   if (dir && (e.type === 'hopper' || e.type === 'charger')) { e.vx += dir * 3; e.vy = -3; }
@@ -119,7 +121,8 @@ function updatePlayer() {
   if (effects.rev > 0) { const tmp = L; L = R; R = tmp; }
   const dir = (R ? 1 : 0) - (L ? 1 : 0);
   const heavy = effects.heavy > 0;
-  const maxSp = ch.runSpeed * (p.glued ? 0.4 : 1) * (heavy ? 0.75 : 1) * (effects.boost > 0 ? 1.35 : 1);
+  const chill = p.chill > 0; if (chill) p.chill--;
+  const maxSp = ch.runSpeed * (p.glued ? 0.4 : 1) * (heavy ? 0.75 : 1) * (chill ? 0.6 : 1) * (effects.boost > 0 ? 1.35 : 1);
   if (p.kb > 0) p.kb--;
   else if (p.stuck > 0) { p.stuck--; p.vx = 0; }
   else {
@@ -132,16 +135,16 @@ function updatePlayer() {
   if (p.jumpBuf > 0) p.jumpBuf--;
   if (p.noCut > 0) p.noCut--;
   if (p.jumpBuf > 0 && p.coyote > 0 && !(p.stuck > 0)) {
-    p.vy = -ch.jumpV * (p.glued ? 0.65 : 1) * (heavy ? 0.68 : 1) * (effects.boost > 0 ? 1.1 : 1); p.coyote = 0; p.jumpBuf = 0; p.onGround = false; p.squash = 0.78;
+    p.vy = -ch.jumpV * (p.glued ? 0.65 : 1) * (heavy ? 0.68 : 1) * (chill ? 0.85 : 1) * (effects.boost > 0 ? 1.1 : 1); p.coyote = 0; p.jumpBuf = 0; p.onGround = false; p.squash = 0.78;
     SFX.jump(); dust(p.x + p.w / 2, p.y + p.h, 4);
   }
   if (!J && p.vy < -4.5 && p.noCut <= 0) p.vy = -4.5;
   if (dbg('fly')) p.vy = held(K_JUMP) ? -6 : (keys.KeyS || keys.ArrowDown) ? 6 : 0; // デバッグ：ふわふわ移動
-  else p.vy = Math.min(p.vy + GRAV * (p.glued ? 0.7 : 1), p.glued ? 5 : 13);
+  else { const fl = effects.float > 0; p.vy = Math.min(p.vy + GRAV * (p.glued ? 0.7 : 1) * (fl ? 0.32 : 1), p.glued ? 5 : fl ? 4 : 13); } // ふわふわ：重力が弱い
   if (p.dashT > 0) { p.vy = 0; p.vx = p.dashDir * (CH.dashSpd || 9); } // ダッシュ突進中は高さを保ってまっすぐ進む
   if (p.slam) p.vy = Math.max(p.vy, 12); // ドスン（空中）：急降下
   const vyPrev = p.vy, prevBottom = p.y + p.h, wasGround = p.onGround;
-  const baseVx = p.vx;
+  const baseVx = p.vx, moveDir = Math.sign(p.vx + p.wind);
   p.vx = baseVx + p.wind;
   const mr = moveEntity(p);
   if (COOP && SPLIT === 's' && p.x < camSlide.to + 2) { p.x = camSlide.to + 2; if (p.vx < 0) p.vx = 0; } // 画面に見えている範囲より左へは戻れない
@@ -151,6 +154,14 @@ function updatePlayer() {
   }
   p.vx = mr.hitX ? 0 : baseVx;
   p.wind = 0;
+  if (mr.hitX && moveDir) { // ハネカエシペン：横からぶつかると跳ね返される
+    const c = moveDir > 0 ? Math.floor((p.x + p.w + 1) / T) : Math.floor((p.x - 1) / T);
+    for (let r = Math.floor(p.y / T); r <= Math.floor((p.y + p.h - 0.01) / T); r++) {
+      if (c < 0 || c >= LW || r < 0 || r >= ROWS || tiles[idx(c, r)] !== 3 || paintKind[idx(c, r)] !== 14) continue;
+      p.vx = -moveDir * 8; p.vy = Math.min(p.vy, -4.5); p.kb = 14; p.onGround = false; p.dashT = 0;
+      SFX.boing(); burst(c * T + T / 2, r * T + T / 2, KCOL[14], 6, 2.5); break;
+    }
+  }
   if (p.dashT > 0) { // ダッシュ突進：ぶつかった敵にダメージ、壁にぶつかったらペンのブロックを壊して止まる
     p.dashT--;
     const hb = { x: p.x - 6, y: p.y - 4, w: p.w + 12, h: p.h + 8 };
@@ -170,7 +181,7 @@ function updatePlayer() {
   if (p.shield > 0) p.shield--;
 
   // surfaces: ice / bounce / glue / thorn
-  p.onIce = false; let bounce = false, belt = false, thornX = null;
+  p.onIce = false; let bounce = false, belt = false, thornX = null, hotX = null;
   if (p.onGround) {
     const r = Math.floor((p.y + p.h + 1) / T);
     for (let c = Math.floor((p.x + 1) / T); c <= Math.floor((p.x + p.w - 1) / T); c++) {
@@ -178,11 +189,13 @@ function updatePlayer() {
       const i = idx(c, r);
       if (tiles[i] === 3) {
         const k = paintKind[i];
-        if (k === 3) p.onIce = true; if (k === 4) bounce = true; if (k === 7) belt = true;
+        if (k === 3) p.onIce = true; if (k === 4) bounce = true; if (k === 7) belt = true; if (k === 12) hotX = c * T + T / 2;
         if (k === 8 && paintHp[i] !== 9) { paintHp[i] = 9; paintExp[i] = tick + 22; crumbling.push(i); SFX.crumble(); }
       }
     }
   }
+  if (effects.slip > 0 && p.onGround) p.onIce = true; // ツルツル：どの床も滑る
+  if (hotX !== null) hurt(10, hotX, 'アチッ!');
   if (belt) p.wind -= 2.2;
   if (bounce) {
     p.vy = -15.5; p.onGround = false; p.coyote = 0; p.squash = 0.7; p.noCut = 30;
@@ -201,7 +214,7 @@ function updatePlayer() {
   if (thornX !== null) hurt(12, thornX, 'チクッ!');
 
   if (p.atkCd > 0) p.atkCd--;
-  if (atkPressed && COOP) { if (tick - (p.noAtkT || 0) > 50) { popup(p.x + p.w / 2, p.y - 10, '攻撃できない！', C.bad, 16); p.noAtkT = tick; } }
+  if (atkPressed && (COOP || effects.seal > 0)) { if (tick - (p.noAtkT || 0) > 50) { popup(p.x + p.w / 2, p.y - 10, '攻撃できない！', C.bad, 16); p.noAtkT = tick; } }
   else if (atkPressed && p.atkCd <= 0) doAttack();
   atkPressed = false;
   if (p.atkT > 0) p.atkT--;
@@ -213,12 +226,12 @@ function updatePlayer() {
   }
 
   for (const e of enemies) {
-    if (e.dead || e.spawnT > 0 || state !== 'play' || e.mode === 'vanish' || effects.freeze > 0) continue;
+    if (e.dead || e.hide || e.spawnT > 0 || state !== 'play' || e.mode === 'vanish' || effects.freeze > 0) continue;
     const d = ETYPES[e.type];
     if (d.touch === false && !d.stomp) continue;
     const box = e.type === 'spike' ? { x: e.x + 3, y: e.y + 5, w: e.w - 6, h: e.h - 5 } : e;
     if (!overlap(p, box)) continue;
-    if (d.stomp && vyPrev > 0.5 && prevBottom <= e.y + 10) {
+    if (d.stomp && !e.noStomp && vyPrev > 0.5 && prevBottom <= e.y + 10) {
       damageEnemy(e, CH.dmg, 0); // ストーリーでも踏めばダメージ（大王は踏んでも効かない）
       p.vy = held(K_JUMP) ? -11 : -8; p.y = e.y - p.h; p.onGround = false;
       popup(e.x + e.w / 2, e.y - 4, e.type === 'boss' ? 'ポヨン' : 'ムギュッ', C.ink, 18);

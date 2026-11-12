@@ -3,6 +3,7 @@
 /* =====================================================
    ビルダー／サポーターの操作（敵・ワナ・ペンを置く）
    ===================================================== */
+const SPECIAL_FX = { dark: 'dark', reverse: 'rev', weight: 'heavy', slip: 'slip', float: 'float', seal: 'seal' }; // 特殊カード → effects のキー
 const liveEnemies = () => enemies.reduce((n, e) => n + (e.dead ? 0 : 1), 0);
 function boxSolid(x, y, w, h) {
   const c0 = Math.floor(x / T), c1 = Math.floor((x + w - 0.01) / T), r0 = Math.floor(y / T), r1 = Math.floor((y + h - 0.01) / T);
@@ -32,7 +33,7 @@ function placementFor(id, wx, wy) {
     return { ok: !why, x: wx, y: wy, why };
   }
   if (card.cat === 'special') {
-    const why = energy < card.cost ? 'エネルギー不足' : effects[{ dark: 'dark', reverse: 'rev', weight: 'heavy' }[id]] > 0 ? '発動中' : '';
+    const why = energy < card.cost ? 'エネルギー不足' : effects[SPECIAL_FX[id]] > 0 ? '発動中' : '';
     return { ok: !why, x: wx, y: wy, why };
   }
   if (id === 'thorn') {
@@ -90,6 +91,7 @@ function spawnEnemy(type, x, y, defer) {
   if (type === 'slime' || type === 'slimelet') e.timer = 30;
   if (type === 'warper') e.timer = 150;
   if (type === 'rockfall') e.rxs = [0, 1, 2].map(() => x + 20 + rand(-18, 18));
+  initExtraEnemy(e);
   (defer ? spawnQueue : enemies).push(e);
   return e;
 }

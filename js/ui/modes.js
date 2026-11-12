@@ -64,7 +64,7 @@ function setSetupTexts() {
     $('#drawSub').textContent = '描いた絵がそのまま自キャラになります。描くたびに能力が変わります。';
     $('#btnGo').textContent = '次へ：ビルダーのカード選び';
     $('#deckTitle').innerHTML = '<span class="pill p2">P2</span> カードを選ぼう';
-    $('#deckSub').textContent = '40種類から8枚まで選びます。選んだ順に1〜8キーへ割り当てられます。';
+    $('#deckSub').textContent = '70種類から8枚まで選びます。選んだ順に1〜8キーへ割り当てられます。';
     $('#btnDeckGo').textContent = 'このデッキで対戦開始';
     return;
   }
@@ -74,7 +74,7 @@ function setSetupTexts() {
   $('#drawSub').textContent = 'ランナーになったときに使うキャラです。相手に見えないように描くと盛り上がります。';
   $('#btnGo').textContent = MATCH.phase === 'redraw' ? '描き直し完了' : `次へ：プレイヤー${dl}のカード選び`;
   $('#deckTitle').innerHTML = `<span class="pill p2">${kl}</span> プレイヤー${kl}のカードを選ぼう`;
-  $('#deckSub').textContent = 'ビルダーになったときに使うデッキです。40種類から8枚まで選べます。';
+  $('#deckSub').textContent = 'ビルダーになったときに使うデッキです。70種類から8枚まで選べます。';
   $('#btnDeckGo').textContent = MATCH.phase === 'redeck' ? 'このデッキで次のラウンドへ' : MATCH.setup === 0 ? '次へ：プレイヤーBのキャラ' : 'マッチ開始';
 }
 function updateRoleLabels() {

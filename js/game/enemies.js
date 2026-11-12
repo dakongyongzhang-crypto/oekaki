@@ -347,6 +347,7 @@ function updateEnemy(e) {
       if (play && e.cyc >= 155 && overlap(P, { x: ecx - 11, y: e.y + e.h - 4, w: 22, h: e.gy - (e.y + e.h) + 4 })) hurt(20, ecx, 'ビリッ!');
       break;
     }
+    default: updateExtraEnemy(e, pcx, pcy, ecx, ecy, play); // 追加カード（enemies-extra.js）
   }
   if (e.type !== 'shadow' && e.type !== 'boss') {
     if (e.y > WH + 80 || farBehind(e)) e.dead = true;
@@ -363,7 +364,7 @@ function updateBullets() {
       b.x += b.vx; b.y += b.vy; b.life--;
       if (b.life <= 0) { b.dead = true; continue; }
       if (solid(Math.floor(b.x / T), Math.floor(b.y / T))) { b.dead = true; if (!breakCells(b.x, b.y, 14, b.x, b.y - 12)) burst(b.x, b.y, b.col, 6, 2); continue; }
-      for (const e of enemies) if (!e.dead && e.spawnT <= 0 && circleRect(b.x, b.y, b.hr || b.r, e)) { b.dead = true; if (damageEnemy(e, b.dmg, Math.sign(b.vx))) popup(b.x, b.y - 12, 'ビシャッ!', C.runner, 18); burst(b.x, b.y, b.col, 8, 2.4); break; }
+      for (const e of enemies) if (!e.dead && !e.hide && e.spawnT <= 0 && circleRect(b.x, b.y, b.hr || b.r, e)) { b.dead = true; if (damageEnemy(e, b.dmg, Math.sign(b.vx))) popup(b.x, b.y - 12, 'ビシャッ!', C.runner, 18); burst(b.x, b.y, b.col, 8, 2.4); break; }
       if (b.dead) continue;
       for (const o of bullets) if (o !== b && !o.dead && !o.friendly && dist(o.x, o.y, b.x, b.y) < o.r + (b.hr || b.r)) { o.dead = true; b.dead = true; burst(b.x, b.y, C.ink, 5, 2); break; }
       continue;
@@ -378,6 +379,7 @@ function updateBullets() {
     }
     if (b.kind === 'rock') { b.vy = Math.min(b.vy + 0.45, 11); b.rot += 0.1; }
     if (b.kind === 'crumb') { b.vy = Math.min(b.vy + 0.32, 10); b.rot += 0.2; }
+    updateExtraBullet(b);
     b.x += b.vx; b.y += b.vy; b.life--;
     if (b.life <= 0) b.dead = true;
     else if (b.kind !== 'boom' && solid(Math.floor(b.x / T), Math.floor(b.y / T))) {
@@ -385,7 +387,11 @@ function updateBullets() {
       if (b.kind === 'rock') { burst(b.x, b.y, '#a59c8e', 9, 2.4); dust(b.x, b.y, 4); if (nearView(b.x, b.y)) SFX.thud(); }
       else burst(b.x, b.y, '#8b90a0', 5, 1.6);
     }
-    else if (!b.friendly && state === 'play' && P.inv <= 0 && circleRect(b.x, b.y, b.r, P)) { b.dead = true; hurt(b.dmg || 12, b.x, b.word || 'ドン!'); }
+    else if (!b.friendly && state === 'play' && P.inv <= 0 && circleRect(b.x, b.y, b.r, P)) {
+      b.dead = true;
+      if (b.kind === 'snow' && !(P.shield > 0)) P.chill = 120; // 雪玉：少しの間ひえて動きが鈍る
+      hurt(b.dmg || 12, b.x, b.word || 'ドン!');
+    }
   }
   bullets = bullets.filter(b => !b.dead);
 }

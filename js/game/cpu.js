@@ -126,4 +126,7 @@ function activateSpecial(id) {
   if (id === 'dark') { effects.dark = 360; banner = { text: '暗闇！', life: 45, color: C.builder }; }
   if (id === 'reverse') { effects.rev = 240; banner = { text: 'さかさま！', life: 45, color: C.builder }; }
   if (id === 'weight') { effects.heavy = 300; banner = { text: 'おもり！', life: 45, color: C.builder }; }
+  if (id === 'slip') { effects.slip = 300; banner = { text: 'ツルツル！', life: 45, color: C.builder }; }
+  if (id === 'float') { effects.float = 300; banner = { text: 'ふわふわ！', life: 45, color: C.builder }; }
+  if (id === 'seal') { effects.seal = 300; banner = { text: 'ふういん！', life: 45, color: C.builder }; }
 }

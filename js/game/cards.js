@@ -20,10 +20,15 @@ const PENS = {
   glue: { kind: 5, cost: 1.2, life: 20, hp: 1, solid: false },
   conveyor: { kind: 7, cost: 2, life: 25, hp: 1, solid: true },
   crumble: { kind: 8, cost: 1, life: 30, hp: 1, solid: true },
-  eraser: { kind: 6, cost: 3, life: 12, hp: 0, erase: true }
+  eraser: { kind: 6, cost: 3, life: 12, hp: 0, erase: true },
+  steel: { kind: 11, cost: 4, life: 15, hp: 6, solid: true },
+  quick: { kind: 0, cost: 0.6, life: 6, hp: 1, solid: true },
+  hot: { kind: 12, cost: 2, life: 20, hp: 1, solid: true },
+  clear: { kind: 13, cost: 2.5, life: 25, hp: 1, solid: true },
+  repel: { kind: 14, cost: 2, life: 25, hp: 1, solid: true }
 };
-// ペンの種類ごとの色（0:インク 1:かたい 2:トゲ 3:氷 4:バネ 5:ネバネバ 6:消しゴム 7:コンベア 8:くずれ）
-const KCOL = ['#2a5bd7', '#5a6072', '#e0313f', '#9fe0f4', '#33b06a', '#a0703f', '#f7a8c4', '#7a8091', '#8fa6d9', '#c99a68'];
+// ペンの種類ごとの色（0:インク 1:かたい 2:トゲ 3:氷 4:バネ 5:ネバネバ 6:消しゴム 7:コンベア 8:くずれ 9:板 10:足場 11:てつ 12:アツアツ 13:すけすけ 14:ハネカエシ）
+const KCOL = ['#2a5bd7', '#5a6072', '#e0313f', '#9fe0f4', '#33b06a', '#a0703f', '#f7a8c4', '#7a8091', '#8fa6d9', '#c99a68', '#8fd8a8', '#3d4250', '#ff7a3d', '#c7d3e6', '#ff5ca8'];
 const CARDS = [
   { id: 'pen', cat: 'pen', name: 'ペン', desc: 'なぞった線が壁になる。30秒で消える' },
   { id: 'thick', cat: 'pen', name: '太ペン', desc: '太い線で一気に壁を作れる' },
@@ -34,6 +39,11 @@ const CARDS = [
   { id: 'conveyor', cat: 'pen', name: 'コンベアペン', desc: '乗るとスタート側へ押し流される床' },
   { id: 'crumble', cat: 'pen', name: 'くずれペン', desc: '見た目はふつうの壁。乗ると一瞬で崩れる' },
   { id: 'eraser', cat: 'pen', name: '消しゴム', desc: '地面を消して穴をあける。12秒で元に戻る' },
+  { id: 'steel', cat: 'pen', name: 'てつペン', desc: 'かたいペンよりさらに頑丈。高いけど15秒で消える' },
+  { id: 'quick', cat: 'pen', name: 'はやがきペン', desc: 'とても安く描けるが、6秒で消えてしまう' },
+  { id: 'hot', cat: 'pen', name: 'アツアツペン', desc: '上に乗るとやけどする床。20秒で消える' },
+  { id: 'clear', cat: 'pen', name: 'すけすけペン', desc: 'ランナーの画面ではほとんど見えない壁' },
+  { id: 'repel', cat: 'pen', name: 'ハネカエシペン', desc: '横からぶつかると大きく跳ね返される壁' },
   { id: 'walker', cat: 'enemy', name: 'ノシノシ', cost: 20, desc: '左右に歩いて往復する基本の敵' },
   { id: 'hopper', cat: 'enemy', name: 'ピョンタ', cost: 25, desc: 'ランナーめがけて跳ねてくる' },
   { id: 'flyer', cat: 'enemy', name: 'パタパタ', cost: 30, desc: '空を飛んで追いかけてくる' },
@@ -49,6 +59,18 @@ const CARDS = [
   { id: 'thrower', cat: 'enemy', name: 'ブーメランくん', cost: 35, desc: '壁をすり抜けて戻ってくるブーメランを投げる' },
   { id: 'slime', cat: 'enemy', name: 'ぷるぷる', cost: 30, desc: '跳ねて近づく。倒すと2匹に分裂する' },
   { id: 'shadow', cat: 'enemy', name: 'カゲぼうし', cost: 35, desc: 'ランナーの通った道を2秒遅れで追う影。12秒で消える' },
+  { id: 'bat', cat: 'enemy', name: 'コウモリ', cost: 25, desc: '波のように上下しながら、壁をすり抜けて飛んでくる' },
+  { id: 'mole', cat: 'enemy', name: 'モグラ', cost: 25, desc: '地面に隠れていて、近づくと飛び出す。隠れている間は無敵' },
+  { id: 'tate', cat: 'enemy', name: 'タテノシ', cost: 30, desc: '盾を持っていて正面からの攻撃が効かない。後ろか上をねらえ' },
+  { id: 'frog', cat: 'enemy', name: 'ケロッパ', cost: 25, desc: '高く遠くまでジャンプして飛びかかってくる' },
+  { id: 'spitter', cat: 'enemy', name: 'タネッポ', cost: 30, desc: '地面に生えた花。ランナーめがけて山なりにタネを飛ばす' },
+  { id: 'eye', cat: 'enemy', name: 'メダマン', cost: 35, desc: '空中でじっと狙いを定め、速い弾を撃つ。赤い線が予告' },
+  { id: 'dropper', cat: 'enemy', name: 'ポイポイドリ', cost: 30, desc: 'ランナーの頭上を飛び、真上から岩を落とす' },
+  { id: 'ninja', cat: 'enemy', name: 'ニンニン', cost: 35, desc: '跳び上がって手裏剣を投げてくる' },
+  { id: 'puffer', cat: 'enemy', name: 'プクプク', cost: 30, desc: 'ゆっくり迫り、ときどき大きくふくらむ。ふくらむと踏めない' },
+  { id: 'jelly', cat: 'enemy', name: 'フワクラゲ', cost: 25, desc: 'その場でふわふわ上下する。しびれるので踏めない' },
+  { id: 'ufo', cat: 'enemy', name: 'ユーフォー', cost: 40, desc: '頭上から光線でランナーを吸い上げる。15秒で消える' },
+  { id: 'snowman', cat: 'enemy', name: 'ユキダルマ', cost: 30, desc: '雪玉を投げる。当たると少しの間ひえて動きが鈍る' },
   { id: 'spike', cat: 'trap', name: 'トゲトゲ', cost: 15, desc: '床に置くトゲ。安くて手軽' },
   { id: 'thorn', cat: 'trap', name: 'トゲブロック', cost: 20, desc: 'クリックで2×2のトゲブロックを置く。触れるとダメージ。1秒に1個まで、8秒で消える' },
   { id: 'cannon', cat: 'trap', name: 'ポンポン砲', cost: 40, desc: 'ランナーを狙って弾を撃つ' },
@@ -62,9 +84,22 @@ const CARDS = [
   { id: 'laser', cat: 'trap', name: 'レーザー砲', cost: 40, desc: '予告のあと、横一直線にレーザーを撃つ' },
   { id: 'snare', cat: 'trap', name: 'トリモチ', cost: 20, desc: '踏むと1.5秒その場から動けなくなる。1回きり' },
   { id: 'rockfall', cat: 'trap', name: 'らくせき', cost: 30, desc: 'クリックした列に、上から岩が3つ降ってくる' },
+  { id: 'catapult', cat: 'trap', name: 'ふっとびバネ', cost: 25, desc: '踏むとスタート側へ大きくふっ飛ばされる床' },
+  { id: 'pendulum', cat: 'trap', name: 'ふりこ鉄球', cost: 40, desc: 'クリックした場所から鉄球がぶら下がって揺れる。壊せない' },
+  { id: 'piston', cat: 'trap', name: 'パンチブロック', cost: 35, desc: 'ときどきパンチを突き出して、ランナーを押し返す' },
+  { id: 'mine', cat: 'trap', name: 'じらい', cost: 20, desc: 'ランナーの画面ではほとんど見えない。踏むと爆発する' },
+  { id: 'geyser', cat: 'trap', name: 'ふんすい', cost: 25, desc: '床から周期的に水が噴き出し、ランナーを打ち上げる' },
+  { id: 'blackhole', cat: 'trap', name: 'ブラックホール', cost: 45, desc: 'まわりのランナーを吸い寄せる。中心は痛い。8秒で消える' },
+  { id: 'arrow', cat: 'trap', name: '矢の発射台', cost: 30, desc: '向いている方向へ、まっすぐ矢を撃ち続ける' },
+  { id: 'sawv', cat: 'trap', name: 'たてノコギリ', cost: 35, desc: '上下に往復する刃。壊せない' },
+  { id: 'spikeball', cat: 'trap', name: 'はねトゲ玉', cost: 40, desc: '壁や床で跳ね返りながら飛び回る。壊せない。15秒で消える' },
+  { id: 'homing', cat: 'trap', name: 'ホーミング砲', cost: 45, desc: 'ランナーを追いかけるミサイルを撃つ。斬れば落とせる' },
   { id: 'dark', cat: 'special', name: '暗闇', cost: 40, desc: '6秒間、ランナーの周り以外が真っ暗に' },
   { id: 'reverse', cat: 'special', name: 'さかさま', cost: 45, desc: '4秒間、ランナーの左右の操作が逆になる' },
-  { id: 'weight', cat: 'special', name: 'おもり', cost: 40, desc: '5秒間、ランナーのジャンプ力と速さが落ちる' }
+  { id: 'weight', cat: 'special', name: 'おもり', cost: 40, desc: '5秒間、ランナーのジャンプ力と速さが落ちる' },
+  { id: 'slip', cat: 'special', name: 'ツルツル', cost: 40, desc: '5秒間、どの床も氷のように滑る' },
+  { id: 'float', cat: 'special', name: 'ふわふわ', cost: 40, desc: '5秒間、重力が弱くなってうまく着地できない' },
+  { id: 'seal', cat: 'special', name: 'ふういん', cost: 45, desc: '5秒間、ランナーが攻撃できなくなる' }
 ];
 CARDS.forEach(c => { if (c.cat === 'pen') { c.cost = PENS[c.id].cost; c.per = true; } c.costLabel = c.per ? `${c.cost}/マス` : String(c.cost); });
 const CARD = Object.fromEntries(CARDS.map(c => [c.id, c]));

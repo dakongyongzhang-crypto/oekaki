@@ -307,6 +307,7 @@ function drawEnemyShape(ctx, type, w, h, o = {}) {
       eyes(ctx, w / 2, h * 0.54, w * 0.12, 2.8, o.face, true);
       break;
     }
+    default: drawExtraShape(ctx, type, w, h, o, fill, d); // 追加カード（sprites-extra.js）
   }
 }
 function drawBoomerang(ctx, x, y, s) {

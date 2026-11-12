@@ -162,6 +162,10 @@ function drawHUD() {
   if (P.shield > 0) tags.push(`バリア ${Math.ceil(P.shield / 60)}`);
   if (effects.boost > 0) tags.push(`スピード ${Math.ceil(effects.boost / 60)}`);
   if (effects.freeze > 0) tags.push(`ストップ ${Math.ceil(effects.freeze / 60)}`);
+  if (effects.slip > 0) tags.push(`ツルツル ${Math.ceil(effects.slip / 60)}`);
+  if (effects.float > 0) tags.push(`ふわふわ ${Math.ceil(effects.float / 60)}`);
+  if (effects.seal > 0) tags.push(`ふういん ${Math.ceil(effects.seal / 60)}`);
+  if (P.chill > 0) tags.push('ひえひえ');
   if (P.stuck > 0) tags.push('トリモチ');
   if (P.glued) tags.push('ネバネバ');
   if (P.onIce) tags.push('ツルツル');

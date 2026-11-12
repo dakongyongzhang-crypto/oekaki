@@ -4,8 +4,9 @@
    画面全体の描画（render）
    ===================================================== */
 // mode: 'runner' = ランナー用画面 / 'builder' = ビルダー用画面 / 'single' = 2人で共有する1画面
+let viewMode = 'single'; // いま描いている画面（すけすけペン・じらいの見え方に使う）
 function renderView(ox, oy, cx, cy, mode, sx, sy) {
-  viewX = Math.round(cx); viewY = Math.round(cy);
+  viewX = Math.round(cx); viewY = Math.round(cy); viewMode = mode;
   g.save();
   g.beginPath(); g.rect(ox, oy, VW, VH); g.clip();
   g.translate(ox + sx, oy + sy);

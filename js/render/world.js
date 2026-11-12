@@ -81,6 +81,7 @@ function drawTerrain() {
   for (const [kind, cx, cy, rad, i, age, left] of others) {
     const sc = age < 8 ? 0.3 + age / 8 * 0.7 : 1;
     g.globalAlpha = left <= 180 ? ((tick >> 3) % 2 ? 0.35 : 0.85) : 1;
+    if (kind === 13 && viewMode === 'runner') g.globalAlpha *= 0.06; // すけすけペン：ランナーにはほとんど見えない
     drawPaintCell(g, kind, cx, cy, rad * sc, INKS[paintCol[i]], paintHp[i]);
     g.globalAlpha = 1;
   }
@@ -124,6 +125,7 @@ function drawItems() {
 }
 function drawEnemyExtras(e, front) {
   const ecx = e.x + e.w / 2;
+  drawExtraEnemyExtras(e, front);
   if (!front) {
     if (e.type === 'fire') {
       if (e.cyc >= 90 && e.cyc < 130) drawFlame(g, e.x + 4, e.y + 2, e.w - 8, 6 + Math.sin(tick * 0.6) * 3, tick);
@@ -205,7 +207,7 @@ function drawEnemyExtras(e, front) {
 }
 function drawEnemies() {
   for (const e of enemies) {
-    const reach = (ETYPES[e.type].reach || 0) + (e.type === 'fan' ? 240 : 0) + (e.type === 'laser' ? 620 : 0) + (e.type === 'rockfall' ? 800 : 0);
+    const reach = (ETYPES[e.type].reach || 0) + (ETYPES[e.type].cull || 0) + (e.type === 'fan' ? 240 : 0) + (e.type === 'laser' ? 620 : 0) + (e.type === 'rockfall' ? 800 : 0);
     if (e.x - reach > viewX + VWW + 60 || e.x + e.w + reach < viewX - 60 || e.y - reach > viewY + VWH + 60 || e.y + e.h + reach < viewY - 60) continue;
     drawEnemyExtras(e, false);
     g.save(); g.translate(e.x, e.y);
@@ -220,11 +222,12 @@ function drawEnemies() {
       g.fillStyle = C.builder; g.font = `${Math.round(18 * TXS)}px ${FONT}`; g.textAlign = 'center'; g.textBaseline = 'alphabetic';
       if ((tick >> 2) % 2) g.fillText('!', e.w / 2, -8);
     } else {
-      const face = WALK_SPD[e.type] || ['charger', 'fan', 'bee', 'ghost', 'laser', 'warper', 'shadow', 'thrower', 'slime', 'slimelet'].includes(e.type) ? e.dir : Math.sign(P.x + P.w / 2 - (e.x + e.w / 2));
+      const face = WALK_SPD[e.type] || EXTRA_FACE_DIR.has(e.type) || ['charger', 'fan', 'bee', 'ghost', 'laser', 'warper', 'shadow', 'thrower', 'slime', 'slimelet'].includes(e.type) ? e.dir : Math.sign(P.x + P.w / 2 - (e.x + e.w / 2));
       if (e.type === 'ghost') g.globalAlpha = 0.72 + Math.sin(e.t * 0.08) * 0.18;
+      if (ETYPES[e.type].sneaky && viewMode === 'runner') g.globalAlpha = 0.16; // じらい：ランナーにはほとんど見えない
       if (e.type === 'warper' && e.mode === 'vanish') { const q = e.timer / 20; g.globalAlpha = q; g.translate(e.w / 2, e.h); g.scale(q, 1 + (1 - q) * 0.6); g.translate(-e.w / 2, -e.h); }
       if (e.type === 'shadow' && CH) drawShadowRunner(e);
-      else drawEnemyShape(g, e.type, e.w, e.h, { t: e.t, face, flash: e.flash > 0, vy: e.vy, aim: e.aim, recoil: e.recoil, rot: e.rot, mode: e.mode, angry: e.type === 'boss' && e.t > 1200, charging: e.type === 'laser' && e.cyc >= 120, empty: e.type === 'thrower' && bullets.some(b => b.owner === e), throwing: e.throwT > 0 });
+      else drawEnemyShape(g, e.type, e.w, e.h, { t: e.t, face, flash: e.flash > 0, vy: e.vy, aim: e.aim, recoil: e.recoil, rot: e.rot, mode: e.mode, angry: e.type === 'boss' && e.t > 1200, charging: e.type === 'laser' && e.cyc >= 120, empty: e.type === 'thrower' && bullets.some(b => b.owner === e), throwing: e.throwT > 0, e });
       g.globalAlpha = 1;
       if (effects.freeze > 0) { g.fillStyle = 'rgba(150,215,255,0.5)'; g.fillRect(-3, -3, e.w + 6, e.h + 6); g.strokeStyle = '#3e8fd6'; g.lineWidth = 2; g.strokeRect(-3, -3, e.w + 6, e.h + 6); }
       if (e.hp < e.maxHp && !ETYPES[e.type].invuln) {
@@ -236,6 +239,7 @@ function drawEnemies() {
     drawEnemyExtras(e, true);
   }
   for (const b of bullets) {
+    if (drawExtraBullet(b)) continue;
     if (b.kind === 'boom') { g.save(); g.translate(b.x, b.y); g.rotate(b.rot); drawBoomerang(g, 0, 0, 9); g.restore(); continue; }
     if (b.kind === 'ink') {
       g.save(); g.globalAlpha = 0.35; g.fillStyle = b.col; g.beginPath(); g.ellipse(b.x - Math.sign(b.vx) * b.r * 1.4, b.y, b.r * 1.6, b.r * 0.6, 0, 0, TAU); g.fill(); g.restore();

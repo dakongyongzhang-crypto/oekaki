@@ -50,6 +50,7 @@ function step() {
     if (effects.heavy > 0) effects.heavy--;
     if (effects.boost > 0) effects.boost--;
     if (effects.freeze > 0) effects.freeze--;
+    for (const k of ['slip', 'float', 'seal']) if (effects[k] > 0) effects[k]--;
     for (const k in cardCd) if (cardCd[k] > 0) cardCd[k]--;
   }
   if (state === 'play' && lifts.length) updateLifts();
