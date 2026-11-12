@@ -106,9 +106,11 @@ function analyze() {
 }
 function deriveParams(an) {
   const s = an.stats;
-  const h = (an.sN > 0.6 ? 3 : 2) * T; // 当たり判定の高さはマス単位：ふつうは2マス、「大きい」キャラは3マス
+  // 当たり判定はマス単位。高さ：ふつうは2マス、「大きい」キャラは3マス
+  // 横幅：絵が縦長なら高さより1マス細く、それ以外は高さと同じマス数（ふつう1〜2マス、大きい2〜3マス）
+  const hT = an.sN > 0.6 ? 3 : 2, h = hT * T;
   const aspect = clamp(an.bw / an.bh, 0.55, 1.5);
-  const w = Math.round(clamp(h * aspect * 0.95, 22, 54));
+  const w = clamp(Math.round(hT * aspect), hT - 1, hT) * T;
   return {
     w, h, legH: Math.max(5, Math.round(h * 0.15)),
     maxHp: Math.round(60 + s.hp * 1.4),
