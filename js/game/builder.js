@@ -125,7 +125,7 @@ function tryPlaceW(wx, wy) {
   if (SPAWNS[tool]) for (const [t, ox, oy] of SPAWNS[tool]) { const e = ETYPES[t]; spawnEnemy(t, wx + ox - e.w / 2, wy + oy - e.h / 2); }
   else spawnEnemy(tool, pl.x, pl.y);
   SFX.place();
-  burst(wx, wy, C.builder, 8, 2.5);
+  if (!ETYPES[tool] || !ETYPES[tool].sneaky) burst(wx, wy, C.builder, 8, 2.5); // じらいは置いた場所がばれないように粒を出さない
   updateToolAvailability();
 }
 function cellFree(c, r) {

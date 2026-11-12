@@ -207,6 +207,7 @@ function drawEnemyExtras(e, front) {
 }
 function drawEnemies() {
   for (const e of enemies) {
+    if (ETYPES[e.type].sneaky && viewMode === 'runner') continue; // じらい：ランナーの画面には一切描かない（置いたときの予告も出さない）
     const reach = (ETYPES[e.type].reach || 0) + (ETYPES[e.type].cull || 0) + (e.type === 'fan' ? 240 : 0) + (e.type === 'laser' ? 620 : 0) + (e.type === 'rockfall' ? 800 : 0);
     if (e.x - reach > viewX + VWW + 60 || e.x + e.w + reach < viewX - 60 || e.y - reach > viewY + VWH + 60 || e.y + e.h + reach < viewY - 60) continue;
     drawEnemyExtras(e, false);
@@ -224,7 +225,6 @@ function drawEnemies() {
     } else {
       const face = WALK_SPD[e.type] || EXTRA_FACE_DIR.has(e.type) || ['charger', 'fan', 'bee', 'ghost', 'laser', 'warper', 'shadow', 'thrower', 'slime', 'slimelet'].includes(e.type) ? e.dir : Math.sign(P.x + P.w / 2 - (e.x + e.w / 2));
       if (e.type === 'ghost') g.globalAlpha = 0.72 + Math.sin(e.t * 0.08) * 0.18;
-      if (ETYPES[e.type].sneaky && viewMode === 'runner') g.globalAlpha = 0.16; // じらい：ランナーにはほとんど見えない
       if (e.type === 'warper' && e.mode === 'vanish') { const q = e.timer / 20; g.globalAlpha = q; g.translate(e.w / 2, e.h); g.scale(q, 1 + (1 - q) * 0.6); g.translate(-e.w / 2, -e.h); }
       if (e.type === 'shadow' && CH) drawShadowRunner(e);
       else drawEnemyShape(g, e.type, e.w, e.h, { t: e.t, face, flash: e.flash > 0, vy: e.vy, aim: e.aim, recoil: e.recoil, rot: e.rot, mode: e.mode, angry: e.type === 'boss' && e.t > 1200, charging: e.type === 'laser' && e.cyc >= 120, empty: e.type === 'thrower' && bullets.some(b => b.owner === e), throwing: e.throwT > 0, e });
