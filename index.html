@@ -161,12 +161,12 @@ button{font:inherit}
 .net-status.err{color:var(--runner)}
 .net-pill{margin-left:8px;font-size:12px;font-weight:900;color:#2a9d5c}
 #guestHint{display:none;font-size:13px}
-body.net-guest .ctrl{font-size:0}
+body.net-guest .ctrl{font-size:0!important}
 body.net-guest .ctrl>*:not(#netPill):not(#guestHint){display:none}
 body.net-guest #guestHint{display:inline}
-body.net-guest .ctrl #netPill{font-size:13px}
+body.net-guest .ctrl #netPill{font-size:13px!important}
 .net-toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#24252b;color:#fff;padding:10px 16px;border-radius:12px;z-index:60;font-weight:700;max-width:90vw;box-shadow:0 4px 14px rgba(0,0,0,.3)}
-body.net-host .tools{pointer-events:none}
+body.net-notool .tools{pointer-events:none}
 .res-wait{margin:12px 0 0;font-weight:900;color:var(--builder);text-align:center}
 /* ---------- デバッグ ---------- */
 #btnDebug.on{background:#24252b;color:#ffd23f}
@@ -523,7 +523,7 @@ body.ingame .ctrl{font-size:12.5px}
         </div>
         <div class="mode-card">
           <h3 class="hand">オンライン協力（2台のPCで）</h3>
-          <p>協力ストーリーを、別々のパソコンで遊べます。P1（ランナー）がホスト、P2（サポーター）がゲスト。接続コードをコピペで送り合うだけ（無料・サーバー不要）。</p>
+          <p>協力ストーリーと対戦（フリー／先取マッチ）を、別々のパソコンで遊べます。接続コードをコピペで送り合うだけ（無料・サーバー不要）。</p>
           <button class="btn blue big" id="btnOnline">オンラインで遊ぶ</button>
         </div>
       </div>
@@ -663,7 +663,7 @@ body.ingame .ctrl{font-size:12.5px}
   <section id="scr-online" class="screen">
     <div class="screen-head">
       <h2 class="hand">オンライン協力：2台のパソコンで遊ぶ</h2>
-      <p>P1（ランナー）がホスト、P2（サポーター）がゲストです。接続コードを LINE や Discord などで送り合うだけで、つながります。</p>
+      <p>部屋を作る人が「ホスト」（P1）、入る人が「ゲスト」（P2）です。接続コードを LINE や Discord などで送り合うだけで、つながります。</p>
     </div>
     <div class="panel online-card" id="onPick">
       <p>先に「部屋を作る人」（P1・ランナー）を決めてください。もう1人は「部屋に入る人」（P2・サポーター）です。</p>
@@ -689,7 +689,19 @@ body.ingame .ctrl{font-size:12.5px}
       </ol>
       <p class="net-status" id="hostStatus"></p>
       <p class="note">コードには、あなたのネットワーク情報（IPアドレスなど）が含まれます。一緒に遊ぶ相手にだけ送ってください。</p>
-      <div class="online-btns"><button class="btn primary big" id="btnOnlineGo" hidden>ゲームへ進む（キャラを描く）</button><button class="btn" id="btnOnBack1">戻る</button></div>
+      <div id="onModes" hidden>
+        <p><b>遊ぶモードを選んでください</b></p>
+        <div class="online-btns">
+          <button class="btn primary big" id="btnOnlineGo">協力ストーリー</button>
+          <button class="btn blue big" id="btnOnlineVs">対戦（フリー）</button>
+          <button class="btn big" id="btnOnlineMatch">先取マッチ</button>
+        </div>
+        <div class="online-btns"><span class="note">先取マッチの本数：</span>
+          <div class="target-pick" role="group" aria-label="先取の本数"><button class="btn sm" data-t="3">3本</button><button class="btn sm on" data-t="5">5本</button><button class="btn sm" data-t="7">7本</button></div>
+        </div>
+        <p class="note">対戦では、ホストがP1（ランナー）、ゲストがP2（ビルダー）です。先取マッチは、ラウンドごとに役割が入れ替わります。</p>
+      </div>
+      <div class="online-btns"><button class="btn" id="btnOnBack1">戻る</button></div>
     </div>
     <div class="panel online-card" id="onGuest" hidden>
       <h3 class="hand">部屋に入る（P2：サポーター）</h3>
@@ -918,6 +930,7 @@ function show(id) {
   window.scrollTo(0, 0);
   musicForScreen(id);
   if (NET.role === 'host' && NET.open) netOnHostScreen(id);
+  if (NET.vsMode && (id === 'scr-draw' || id === 'scr-deck')) netFixTexts();
 }
 $('#btnStart').addEventListener('click', () => { SFX.init(); startFree(); });
 
@@ -1479,7 +1492,8 @@ const hatch = (() => {
    ===================================================== */
 let CH = null, P = null;
 const NET = { role: null, open: false, live: false, closing: false, dc: null, dcPending: null, pc: null, seed: null, seq: 0, idc: 0, fx: [], queue: [], guestReady: false,
-  shadow: null, mP: null, mE: null, mB: null, gE: new Map(), gB: new Map(), small: {}, sE: '', sB: '', baseGuides: 0, camTarget: 0, mv: null, rtt: 0, bytes: 0, lastRx: 0 };
+  shadow: null, mP: null, mE: null, mB: null, gE: new Map(), gB: new Map(), small: {}, sE: '', sB: '', baseGuides: 0, camTarget: 0, camTargetY: 0, bTarget: 0, bSent: 0, bPend: false, pts: [], vsDown: false, mv: null, rtt: 0, bytes: 0, lastRx: 0,
+  vsMode: null, runnerSide: 'host', ready: [false, false] };
 let tiles, paintCol, paintKind, paintHp, paintT, paintExp, origTile, items, clouds, goalX, goalY;
 let enemies = [], bullets = [], particles = [], popups = [];
 let state = 'countdown', prevState = 'play', countT = 0, timeLeft = 0, energy = 0, tick = 0, camX = 0, shake = 0, hitStop = 0, overT = 0, banner = null;
@@ -2224,6 +2238,12 @@ function goDeck() {
   SFX.init();
   CH = makeCharacter(an);
   if (COOP) { storyCH = CH; storyStrokes = copyStrokes(D.strokes); showStory(); return; }
+  if (NET.role && NET.vsMode) { // オンライン対戦：自分のキャラ・デッキは自分のPCで用意する
+    const pl = MATCH.players[netMyIdx()];
+    pl.ch = CH; pl.strokes = copyStrokes(D.strokes); pl.name = CH.name;
+    if (NET.vsMode === 'free') { netPrepSend(); netPrepWait(); return; } // フリー：ホストはキャラだけ描く
+    DECK = pl.deck.slice(); setSetupTexts(); show('scr-deck'); refreshDeckUI(); return;
+  }
   if (MATCH.on) {
     const pl = MATCH.players[MATCH.phase === 'redraw' ? MATCH.runner : MATCH.setup];
     pl.ch = CH; pl.strokes = copyStrokes(D.strokes); pl.name = CH.name;
@@ -2234,6 +2254,7 @@ function goDeck() {
 }
 function deckGo() {
   if (!DECK.length) return;
+  if (NET.role && NET.vsMode) { MATCH.players[netMyIdx()].deck = DECK.slice(); netPrepSend(); netPrepWait(); return; }
   if (!MATCH.on) { startGame(); return; }
   if (MATCH.phase === 'redeck') { roleWho('builder').deck = DECK.slice(); MATCH.phase = 'play'; showSwap(); return; }
   MATCH.players[MATCH.setup].deck = DECK.slice();
@@ -2388,19 +2409,19 @@ function quitToTitle() { if (NET.role) netClose(true); $('#btnPause').textConten
 $('#btnMatch').addEventListener('click', startMatch);
 $$('.target-pick .btn').forEach(b => b.addEventListener('click', () => {
   MATCH.target = +b.dataset.t;
-  $$('.target-pick .btn').forEach(x => x.classList.toggle('on', x === b));
+  $$('.target-pick .btn').forEach(x => x.classList.toggle('on', +x.dataset.t === MATCH.target));
   $('#matchTitle').textContent = `${MATCH.target}本先取マッチ`; $('#targetLabel').textContent = MATCH.target;
 }));
 $('#btnRoundGo').addEventListener('click', startRound);
 $('#btnSwapDeck').addEventListener('click', () => { MATCH.phase = 'redeck'; DECK = roleWho('builder').deck.slice(); setSetupTexts(); show('scr-deck'); refreshDeckUI(); });
 $('#btnSwapDraw').addEventListener('click', () => { MATCH.phase = 'redraw'; beginDrawFor(MATCH.runner, true); });
 $('#btnSwapQuit').addEventListener('click', quitToTitle);
-$('#btnNextRound').addEventListener('click', () => { $('#result').classList.add('hidden'); MATCH.round++; MATCH.runner = 1 - MATCH.runner; showSwap(); });
+$('#btnNextRound').addEventListener('click', () => { $('#result').classList.add('hidden'); MATCH.round++; MATCH.runner = 1 - MATCH.runner; if (NET.role) netOnlineRound(); else showSwap(); });
 $('#btnRematch').addEventListener('click', () => {
   $('#result').classList.add('hidden');
   MATCH.players.forEach(p => { p.wins = 0; });
   Object.assign(MATCH, { over: false, round: 1, runner: 0, phase: 'play', history: [] });
-  updateScoreUI(); showSwap();
+  updateScoreUI(); if (NET.role) netOnlineRound(); else showSwap();
 });
 refreshDeckUI();
 
@@ -2465,21 +2486,42 @@ window.addEventListener('keydown', e => {
   if (GAME_KEYS.has(e.code)) e.preventDefault();
   if (e.code === 'Escape' || e.code === 'KeyP') { if (!e.repeat && NET.role !== 'guest') togglePause(); return; }
   const m = /^(Digit|Numpad)([1-8])$/.exec(e.code);
-  if (m) { const id = DECK[+m[2] - 1]; if (id && NET.role !== 'host') selectTool(id); return; }
+  if (m) { const id = DECK[+m[2] - 1]; if (id && (!NET.role || netIAmBuilder())) selectTool(id); return; }
   if (e.code === 'KeyM') { if (!e.repeat) toggleBgm(); return; }
   if (e.repeat) return;
+  if (NET.role && !netIAmRunner()) return; // この機械はランナーではない（ランナーの操作はもう片方のPCから届く）
+  if (NET.role === 'guest') { if (GAME_KEYS.has(e.code)) netSend({ t: 'key', c: e.code, d: 1 }); return; } // ゲストがランナー：キー操作をホストへ送る
   keys[e.code] = true;
   if (K_JUMP.includes(e.code)) pressJump();
   if (K_ATK.includes(e.code)) pressAtk();
 });
-window.addEventListener('keyup', e => { keys[e.code] = false; if (screen === 'scr-game' && GAME_KEYS.has(e.code)) e.preventDefault(); });
-window.addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
+window.addEventListener('keyup', e => {
+  if (screen === 'scr-game' && GAME_KEYS.has(e.code)) e.preventDefault();
+  if (NET.role && !netIAmRunner()) return;
+  if (NET.role === 'guest') { if (GAME_KEYS.has(e.code)) netSend({ t: 'key', c: e.code, d: 0 }); return; }
+  keys[e.code] = false;
+});
+window.addEventListener('blur', () => {
+  if (NET.role === 'host' && !netIAmRunner()) return; // 相手のキー入力を消さない
+  if (NET.role === 'guest' && netIAmRunner()) netSend({ t: 'keys0' });
+  for (const k in keys) keys[k] = false;
+});
 document.addEventListener('visibilitychange', () => { if (document.hidden && NET.role !== 'guest' && screen === 'scr-game' && (state === 'play' || state === 'countdown')) togglePause(); });
 
 $$('.tp').forEach(b => {
   const k = b.dataset.k;
-  const down = e => { e.preventDefault(); SFX.init(); keys[k] = true; b.classList.add('down'); if (k === 'TouchJump') pressJump(); if (k === 'TouchAtk') pressAtk(); };
-  const up = e => { e.preventDefault(); keys[k] = false; b.classList.remove('down'); };
+  const down = e => {
+    e.preventDefault(); SFX.init();
+    if (NET.role && !netIAmRunner()) return;
+    if (NET.role === 'guest') { netSend({ t: 'key', c: k, d: 1 }); b.classList.add('down'); return; }
+    keys[k] = true; b.classList.add('down'); if (k === 'TouchJump') pressJump(); if (k === 'TouchAtk') pressAtk();
+  };
+  const up = e => {
+    e.preventDefault();
+    if (NET.role === 'guest' && netIAmRunner()) netSend({ t: 'key', c: k, d: 0 });
+    if (NET.role) { b.classList.remove('down'); return; }
+    keys[k] = false; b.classList.remove('down');
+  };
   b.addEventListener('pointerdown', down);
   b.addEventListener('pointerup', up); b.addEventListener('pointercancel', up); b.addEventListener('pointerleave', up);
   b.addEventListener('contextmenu', e => e.preventDefault());
@@ -2506,7 +2548,7 @@ function scrollBuilder(d) {
 }
 let pointerIsDown = false; // 扉のスイッチは「押している＋カーソルが乗っている」あいだだけ開く
 gcv.addEventListener('pointerdown', e => {
-  if (NET.role) { e.preventDefault(); SFX.init(); netPointer('d', e); return; }
+  if (netPtrIntercept()) { e.preventDefault(); SFX.init(); netPointer('d', e); return; }
   e.preventDefault(); SFX.init(); pointerIsDown = true;
   const p = gpos(e);
   if (!inBuilder(p)) { hover.on = false; return; }
@@ -2523,7 +2565,7 @@ gcv.addEventListener('pointerdown', e => {
   } else tryPlace(p.x, p.y);
 });
 gcv.addEventListener('pointermove', e => {
-  if (NET.role) { netPointer('m', e); return; }
+  if (netPtrIntercept()) { netPointer('m', e); return; }
   const p = gpos(e);
   if (mmDrag) { mmSeek(p); return; }
   if (panDrag) {
@@ -2538,14 +2580,17 @@ gcv.addEventListener('pointermove', e => {
 const stopPaint = () => { painting = false; lastPaint = null; };
 const endPointer = () => { stopPaint(); panDrag = null; mmDrag = false; };
 const releaseGate = () => { if (holdGate) { holdGate.hold = false; holdGate.grace = 14; holdGate = null; } if (holdLift) { holdLift.hold = false; holdLift.grace = 20; holdLift = null; } };
-gcv.addEventListener('pointerup', e => { if (NET.role) { netPointer('u', e); return; } pointerIsDown = false; releaseGate(); endPointer(); if (e.pointerType !== 'mouse') hover.on = false; });
-gcv.addEventListener('pointercancel', e => { if (NET.role) { netPointer('u', e); return; } pointerIsDown = false; releaseGate(); endPointer(); hover.on = false; });
-gcv.addEventListener('pointerleave', () => { if (NET.role === 'guest') { hover.on = false; NET.mv = { t: 'pm', x: 0, y: 0, on: 0 }; return; } if (NET.role) return; if (!painting) hover.on = false; });
+gcv.addEventListener('pointerup', e => { if (netPtrIntercept()) { netPointer('u', e); return; } pointerIsDown = false; releaseGate(); endPointer(); if (e.pointerType !== 'mouse') hover.on = false; });
+gcv.addEventListener('pointercancel', e => { if (netPtrIntercept()) { netPointer('u', e); return; } pointerIsDown = false; releaseGate(); endPointer(); hover.on = false; });
+gcv.addEventListener('pointerleave', () => {
+  if (netPtrIntercept()) { if (NET.role === 'guest' && netIAmBuilder() && !NET.vsDown) { hover.on = false; NET.mv = { t: 'pm', x: 0, y: 0, on: 0 }; } return; }
+  if (!painting) hover.on = false;
+});
 gcv.addEventListener('contextmenu', e => e.preventDefault());
 let wheelAcc = 0;
 gcv.addEventListener('wheel', e => {
   e.preventDefault();
-  if (NET.role === 'host') return;
+  if (NET.role && !netIAmBuilder()) return;
   if (SPLIT === 's') {
     wheelAcc += e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
     if (Math.abs(wheelAcc) >= 60 && DECK.length) {
@@ -2578,8 +2623,8 @@ function buildToolbar() {
     b.innerHTML = `<span class="tk">${i + 1}</span><span class="tu"></span><canvas width="104" height="76"></canvas><span class="tn">${c.name}</span><span class="tc">コスト ${c.costLabel}</span>`;
     b.title = c.desc;
     let lastPd = 0;
-    b.addEventListener('pointerdown', e => { e.preventDefault(); if (NET.role === 'host') return; lastPd = performance.now(); selectTool(id); });
-    b.addEventListener('click', e => { e.preventDefault(); if (NET.role === 'host' || performance.now() - lastPd < 700) return; selectTool(id); });
+    b.addEventListener('pointerdown', e => { e.preventDefault(); if (NET.role && !netIAmBuilder()) return; lastPd = performance.now(); selectTool(id); });
+    b.addEventListener('click', e => { e.preventDefault(); if ((NET.role && !netIAmBuilder()) || performance.now() - lastPd < 700) return; selectTool(id); });
     toolsEl.appendChild(b);
     iconCanvas(b.querySelector('canvas'), id, 52, 38);
   });
@@ -2711,8 +2756,9 @@ function spawnEnemy(type, x, y, defer) {
   (defer ? spawnQueue : enemies).push(e);
   return e;
 }
-function tryPlace(sx, sy) {
-  const wx = bwx(sx), wy = bwy(sy), card = CARD[tool];
+function tryPlace(sx, sy) { tryPlaceW(bwx(sx), bwy(sy)); }
+function tryPlaceW(wx, wy) {
+  const card = CARD[tool];
   const pl = placementFor(tool, wx, wy);
   if (!pl.ok) { popup(wx, wy - 14, pl.why, C.bad, 15); SFX.deny(); return; }
   energy -= pl.cost != null ? pl.cost : card.cost; ST.placed++;
@@ -3617,7 +3663,7 @@ function endRound(winner, reason) {
   banner = { text: winner === 'runner' ? (bossInfo ? 'CLEAR!' : 'GOAL!') : (reason.includes('時間') ? 'TIME UP' : 'K.O.'), life: 75, color: winner === 'runner' ? C.runner : C.builder };
 }
 function showResult() {
-  if (MATCH.on && MATCH.over) { showVictory(); return; }
+  if (MATCH.on && MATCH.over) { if (NET.role === 'host') netSendVictory(); showVictory(); return; }
   const r = lastResult;
   const title = $('#resTitle');
   title.textContent = r.winner === 'runner' ? 'ランナーの勝ち！' : 'ビルダーの勝ち！';
@@ -3637,6 +3683,7 @@ function showResult() {
       <p><span>与えたダメージ</span><b>${ST.dmg}</b></p>
       <p><span>${MATCH.on ? 'マッチ' : '通算成績'}</span><b>${MATCH.on ? `A ${MATCH.players[0].wins} − ${MATCH.players[1].wins} B` : `${SCORE.runner} − ${SCORE.builder}`}</b></p></div>`;
   ['#btnRetry', '#btnRedeck', '#btnRedraw'].forEach(sel => { $(sel).hidden = MATCH.on; });
+  if (NET.role && !COOP) { $('#btnRedeck').hidden = true; $('#btnRedraw').hidden = true; } // オンラインでは、デッキ・キャラの組み直しはなし
   $('#btnNextRound').hidden = !MATCH.on || MATCH.over;
   $('#btnRematch').hidden = !MATCH.on || !MATCH.over;
   const rm = $('#resMatch'); rm.hidden = !MATCH.on;
@@ -5396,7 +5443,8 @@ function netClose(sendBye) {
   if (sendBye) netSend({ t: 'bye' });
   NET.closing = true;
   const r = NET.role; NET.role = null; netCleanup();
-  document.body.classList.remove('net-host', 'net-guest'); $('#netPill').hidden = true; $('#resWait').hidden = true;
+  document.body.classList.remove('net-host', 'net-guest', 'net-notool'); $('#netPill').hidden = true; $('#resWait').hidden = true;
+  NET.vsMode = null; NET.runnerSide = 'host'; NET.ready = [false, false]; NET.vsDown = false;
   if (r === 'host') { pointerIsDown = false; releaseGate(); }
   NET.closing = false;
 }
@@ -5443,7 +5491,6 @@ async function netGuestAnswer(text) {
   return codeEncode({ v: 1, d: { type: pc.localDescription.type, sdp: pc.localDescription.sdp } });
 }
 function netOnOpen() {
-  document.body.classList.toggle('net-host', NET.role === 'host');
   netSend({ t: 'hello', v: 1 });
   NET.pingTimer = setInterval(() => {
     netSend({ t: 'ping', ts: performance.now() });
@@ -5453,7 +5500,7 @@ function netOnOpen() {
   SFX.pick();
   if (NET.role === 'host') {
     setStatus('hostStatus', '接続できました！ 下のボタンでゲームに進みましょう。', 'ok');
-    $('#btnOnlineGo').hidden = false; $('#btnHostConnect').disabled = true;
+    $('#onModes').hidden = false; $('#btnHostConnect').disabled = true;
   } else {
     NET.mTimer = setInterval(netFlushMove, 33);
     onShow('onWait'); $('#waitTitle').textContent = '接続できました！';
@@ -5467,7 +5514,7 @@ function netOnClose(reason) {
   clearInterval(NET.pingTimer); clearInterval(NET.mTimer);
   NET.open = false; NET.live = false;
   if (role === 'host') {
-    pointerIsDown = false; releaseGate();
+    pointerIsDown = false; releaseGate(); stopPaint(); for (const k in keys) keys[k] = false;
     if (screen === 'scr-game' && (state === 'play' || state === 'countdown')) togglePause();
     netToast('相手との接続が切れました。ポーズメニューの「タイトルへ戻る」で戻れます。', 9000);
   } else {
@@ -5490,6 +5537,7 @@ function netOnMessage(raw) {
   let m; try { m = JSON.parse(raw); } catch (_e) { return; }
   if (m.t === 'ping') { netSend({ t: 'pong', ts: m.ts }); return; }
   if (m.t === 'pong') { NET.rtt = performance.now() - m.ts; updateNetPill(); return; }
+  if (m.t === 'prep') { netOnPrep(m); return; }
   if (m.t === 'bye') {
     if (NET.role === 'guest') { netToast('ホストが部屋を閉じました。タイトルに戻ります。', 6000); netClose(false); quitToTitle(); }
     else { NET.open = false; NET.live = false; netToast('相手が退出しました。', 6000); if (screen === 'scr-game' && (state === 'play' || state === 'countdown')) togglePause(); }
@@ -5514,7 +5562,34 @@ function supporterDown() {
 }
 function netHostInput(m) {
   if (screen !== 'scr-game' || !NET.live) return;
+  if (m.t === 'key') { // ゲストがランナーのとき：キー操作を受け取る
+    if (netIAmRunner()) return;
+    keys[m.c] = !!m.d;
+    if (m.d) { if (K_JUMP.includes(m.c)) pressJump(); if (K_ATK.includes(m.c)) pressAtk(); }
+    return;
+  }
+  if (m.t === 'keys0') { if (!netIAmRunner()) for (const k in keys) keys[k] = false; return; }
+  if (m.t === 'bcam') { if (!COOP && !netIAmBuilder()) bCamT = clamp(m.x, 0, Math.max(0, WW - VWW)); return; } // ゲストがビルダー：視点をそろえる
+  if (netIAmBuilder()) return; // ホスト自身がビルダーのときは、ゲストからの操作は使わない
   if (m.t === 'tool') { if (DECK.includes(m.id)) selectTool(m.id); return; }
+  if (!COOP) { // 対戦：ゲストがビルダー（ワールド座標で受け取る）
+    const hoverW = (x, y, on) => { hover.sx = (x - bCam) * VS + BX; hover.sy = (y - bCamY) * VS + BY; hover.on = !!on; };
+    if (m.t === 'pu') { stopPaint(); return; }
+    if (m.t === 'pd') {
+      hoverW(m.x, m.y, 1);
+      if (!builderActive()) return;
+      if (CARD[tool].cat === 'pen') { painting = true; paintInk = (paintInk + 1) % INKS.length; lastPaint = { x: m.x, y: m.y }; paintAt(m.x, m.y); }
+      else tryPlaceW(m.x, m.y);
+      return;
+    }
+    if (m.t === 'pm') {
+      for (const q of (m.p || [[m.x, m.y]])) {
+        hoverW(q[0], q[1], m.on !== 0);
+        if (painting && builderActive()) { const w = { x: q[0], y: q[1] }; paintLine(lastPaint, w); lastPaint = w; }
+      }
+    }
+    return;
+  }
   if (m.t === 'pu') { pointerIsDown = false; releaseGate(); return; }
   if (m.t !== 'pd' && m.t !== 'pm') return;
   hover.sx = (m.x - camX) * VS + BX; hover.sy = (m.y - camY) * VS + BY; hover.on = m.on !== 0;
@@ -5558,23 +5633,27 @@ function netHostBegin() {
   if (!NET.open) { NET.role = null; document.body.classList.remove('net-host'); updateNetPill(); return; } // 相手がいなければ、ふつうの協力プレイとして続ける
   NET.seq = 0; NET.fx.length = 0; NET.idc = 0; NET.mP = new Map(); NET.mE = new Map(); NET.mB = new Map(); NET.small = {}; NET.sE = ''; NET.sB = '';
   NET.shadow = netMakeShadow(); NET.live = true;
-  const spr = CH.spr;
-  netSend({ t: 'start', seed: NET.seed, idx: storyIdx, lv: COOP_LV, ck: sumArr(tiles),
-    ch: { name: CH.name, w: CH.w, h: CH.h, legH: CH.legH, maxHp: CH.maxHp, stats: CH.stats, color: CH.color, spr: spr.toDataURL('image/png') } });
+  netApplyRoleClasses();
+  netSend({ t: 'start', seed: NET.seed, idx: storyIdx, lv: COOP_LV, ck: sumArr(tiles), vs: COOP ? 0 : 1, rs: NET.runnerSide, deck: DECK.slice(),
+    match: MATCH.on ? { target: MATCH.target, round: MATCH.round, runner: MATCH.runner, wins: MATCH.players.map(p => p.wins), history: MATCH.history } : 0,
+    ch: serializeCH(CH) });
 }
 function netOnHostScreen(id) {
   NET.live = false;
+  if (NET.vsMode) return; // 対戦の準備中は、ゲストも自分の画面で準備している
   const msg = { 'scr-draw': 'ホストがキャラを描いています…', 'scr-story': 'ホストがページを選んでいます…', 'scr-ending': 'エンディングです！ ホストの画面を見てね', 'scr-online': 'ホストが準備中です…' }[id];
   if (msg) netSend({ t: 'wait', msg });
 }
 function netSendResult() {
   netSend({ t: 'res', title: $('#resTitle').textContent, cls: $('#resTitle').className, reason: $('#resReason').textContent,
-    match: $('#resMatch').innerHTML, matchHidden: $('#resMatch').hidden, cols: $('#resCols').innerHTML });
+    match: $('#resMatch').innerHTML, matchHidden: $('#resMatch').hidden, cols: $('#resCols').innerHTML,
+    sc: { r: SCORE.runner, b: SCORE.builder }, mt: MATCH.on ? { wins: MATCH.players.map(p => p.wins), history: MATCH.history, over: MATCH.over, round: MATCH.round, runner: MATCH.runner } : 0 });
 }
 function netSendSnap() {
   const dc = NET.dc; if (!dc || dc.readyState !== 'open' || dc.bufferedAmount > 600000) return;
   const sm = (k, v) => { const j = JSON.stringify(v); if (NET.small[k] === j) return undefined; NET.small[k] = j; return v; };
   const s = { t: 'snap', n: ++NET.seq, k: tick, st: state, c: countT, tl: timeLeft, e: r1(energy), sh: r1(shake), cx: r1(camX), si: scrIdx };
+  if (!COOP) { s.cy = r1(camY); s.bv = r1(bCam); }
   s.p = netDelta(NET.mP, 0, P) || undefined;
   const E = [], ids = [];
   for (const e of enemies) { if (e.dead) continue; const id = e._id || (e._id = ++NET.idc); ids.push(id); const d = netDelta(NET.mE, id, e); if (d) E.push(d); }
@@ -5592,6 +5671,7 @@ function netSendSnap() {
   s.bc = sm('bc', bossCut ? bossCut.col : -1);
   s.gd = sm('gd', guides.slice(NET.baseGuides).map(g => ({ kind: g.kind, row: g.row, c0: g.c0, c1: g.c1, until: g.until })));
   s.bn = sm('bn', banner ? { text: banner.text, life: banner.life, color: banner.color } : null);
+  if (!COOP) { s.tool = sm('tool', tool); s.hv = sm('hv', hover.on ? [r1(hover.sx), r1(hover.sy)] : 0); }
   const td = netTileDiff(); if (td.length) s.ti = td;
   if (NET.fx.length) s.fe = NET.fx.splice(0).slice(-80);
   netSend(s);
@@ -5624,33 +5704,47 @@ function netHostTick(ts) { if (ts - netLastSnap >= 28) { netLastSnap = ts; netSe
 /* ---------- ゲスト側：受信と描画の準備 ---------- */
 function netGuestMsg(m) {
   if (m.t === 'start') netStartMirror(m);
+  else if (m.t === 'mode') netOnMode(m);
+  else if (m.t === 'vic') netShowVictory(m);
   else if (m.t === 'snap') netApplySnap(m);
   else if (m.t === 'res') netShowRes(m);
   else if (m.t === 'wait') { NET.guestReady = false; NET.queue = []; $('#result').classList.add('hidden'); onShow('onWait'); $('#waitTitle').textContent = '接続中'; $('#waitMsg').textContent = m.msg; show('scr-online'); }
 }
 async function netStartMirror(m) {
   NET.guestReady = false; NET.queue = [];
-  const img = new Image();
-  try { await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = m.ch.spr; }); }
-  catch (_e) { netToast('キャラ画像を受け取れませんでした', 6000); return; }
-  const cv = document.createElement('canvas'); cv.width = img.naturalWidth; cv.height = img.naturalHeight; cv.getContext('2d').drawImage(img, 0, 0);
-  CH = { name: m.ch.name, w: m.ch.w, h: m.ch.h, legH: m.ch.legH, maxHp: m.ch.maxHp, stats: m.ch.stats, color: m.ch.color, spr: cv };
-  COOP = true; COOP_LV = m.lv; storyIdx = m.idx; MATCH.on = false;
-  NET.seed = m.seed; DECK = SUPPORT_DECK.slice();
-  SFX.init(); updateRoleLabels();
+  try { CH = await deserializeCH(m.ch); } catch (_e) { netToast('キャラ画像を受け取れませんでした', 6000); return; }
+  COOP = !m.vs; COOP_LV = m.lv; storyIdx = m.idx; NET.runnerSide = m.rs || 'host'; NET.seed = m.seed;
+  if (m.vs) {
+    DECK = (m.deck || []).slice();
+    if (m.match) {
+      Object.assign(MATCH, { on: true, target: m.match.target, round: m.match.round, runner: m.match.runner, over: false, history: m.match.history || [] });
+      m.match.wins.forEach((w, i) => { MATCH.players[i].wins = w; });
+    } else MATCH.on = false;
+  } else { MATCH.on = false; DECK = SUPPORT_DECK.slice(); }
+  SFX.init(); updateRoleLabels(); netApplyRoleClasses();
+  $('#guestHint').textContent = COOP ? 'P2 サポーター：画面をクリックしてブロックを置く／ホイールか1〜8キーでカード切り替え'
+    : netIAmBuilder() ? 'ビルダー：クリック・ドラッグで置く／描く、ホイールで視点移動、1〜8キーでカード切り替え'
+    : 'ランナー：A・D（←・→）で移動、W・Spaceでジャンプ、J・Fで攻撃';
   show('scr-game'); buildToolbar(); resizeGame(); resetRound();
-  NET.gE = new Map(); NET.gB = new Map(); NET.camTarget = camX; NET.mv = null;
-  $('#btnPause').textContent = '切断'; $('#resWait').hidden = true; document.body.classList.add('net-guest'); updateScoreUI(); updateNetPill();
+  NET.gE = new Map(); NET.gB = new Map(); NET.camTarget = camX; NET.camTargetY = camY; NET.bTarget = bCam; NET.bSent = bCamT; NET.bPend = false; NET.mv = null; NET.pts = []; NET.vsDown = false;
+  $('#btnPause').textContent = '切断'; $('#resWait').hidden = true; $('#btnVicRematch').hidden = false; $('#btnVicTitle').textContent = 'タイトルへ';
+  document.body.classList.add('net-guest'); updateScoreUI(); updateNetPill();
   if (m.ck !== sumArr(tiles)) netToast('ステージが一致しませんでした（ホストと別のバージョンかも）。画面がずれる可能性があります。', 9000);
   NET.guestReady = true;
   const q = NET.queue; NET.queue = [];
-  for (const s of q) netApplySnap(s);
+  for (const sn of q) netApplySnap(sn);
 }
 function netMerge(o, d) { for (const k in d) { if (k === 'x') o.tx = d.x; else if (k === 'y') o.ty = d.y; else o[k] = d[k]; } }
 function netApplySnap(s) {
   if (!NET.guestReady || !P) return;
   tick = s.k; state = s.st; countT = s.c; timeLeft = s.tl; energy = s.e; if (s.sh > shake) shake = s.sh;
   NET.camTarget = s.cx; scrIdx = s.si;
+  if (s.cy !== undefined) NET.camTargetY = s.cy;
+  if (!netIAmBuilder()) {
+    if (s.bv !== undefined) NET.bTarget = s.bv;
+    if (s.tool !== undefined && s.tool !== tool) { tool = s.tool; $$('.tool').forEach(b => b.classList.toggle('on', b.dataset.id === tool)); }
+    if (s.hv !== undefined) { if (s.hv) { hover.sx = s.hv[0]; hover.sy = s.hv[1]; hover.on = true; } else hover.on = false; }
+  }
   if (s.p) { if (s.p.f) { Object.assign(P, s.p.f); P.tx = P.x; P.ty = P.y; } else netMerge(P, s.p.d); }
   const ent = (list, map, ids) => {
     if (list) for (const m of list) {
@@ -5695,7 +5789,16 @@ function guestStep() {
   if (shake > 0) { shake *= 0.85; if (shake < 0.3) shake = 0; }
   netSmooth(P, 0.5); for (const e of enemies) netSmooth(e, 0.5); for (const b of bullets) netSmooth(b, 0.6);
   camX += (NET.camTarget - camX) * 0.4; if (Math.abs(NET.camTarget - camX) < 0.5) camX = NET.camTarget;
-  camY = Math.max(0, WH - VWH);
+  if (COOP) camY = Math.max(0, WH - VWH);
+  else {
+    camY += (NET.camTargetY - camY) * 0.4;
+    if (netIAmBuilder()) { // 自分がビルダー：視点は自分で動かす（ランナーより後ろは見られない）
+      if (SPLIT === 'h') bCamT = clamp(Math.max(bCamT, P.x + P.w + 120 - VWW), 0, Math.max(0, WW - VWW));
+      bCam = lerp(bCam, bCamT, 0.25);
+      if (Math.abs(bCamT - NET.bSent) > 0.5) { NET.bSent = bCamT; NET.bPend = true; }
+    } else bCam += (NET.bTarget - bCam) * 0.4;
+    if (tick % 20 === 0) mmDirty = true;
+  }
   for (const pt of particles) { pt.x += pt.vx; pt.y += pt.vy; pt.vy += pt.g; pt.life--; }
   particles = particles.filter(pt => pt.life > 0);
   for (const pp of popups) { pp.y -= 0.7; pp.life--; }
@@ -5706,6 +5809,9 @@ function guestStep() {
 function netShowRes(m) {
   $('#resTitle').textContent = m.title; $('#resTitle').className = m.cls; $('#resReason').textContent = m.reason;
   $('#resMatch').innerHTML = m.match; $('#resMatch').hidden = !!m.matchHidden; $('#resCols').innerHTML = m.cols;
+  if (m.sc) { SCORE.runner = m.sc.r; SCORE.builder = m.sc.b; }
+  if (m.mt) { m.mt.wins.forEach((w, i) => { MATCH.players[i].wins = w; }); MATCH.history = m.mt.history; MATCH.over = m.mt.over; }
+  updateScoreUI();
   $$('#result .result-btns .btn').forEach(b => { b.hidden = b.id !== 'btnTitle'; });
   $('#btnTitle').textContent = '切断してタイトルへ'; $('#resWait').hidden = false;
   $('#result').classList.remove('hidden');
@@ -5713,7 +5819,8 @@ function netShowRes(m) {
 
 /* ゲスト側：操作をホストへ送る */
 function netPointer(kind, e) {
-  if (NET.role !== 'guest' || !NET.guestReady) return;
+  if (NET.role !== 'guest' || !NET.guestReady || !netIAmBuilder()) return;
+  if (!COOP) { netPointerVs(kind, e); return; }
   const p = gpos(e);
   hover.sx = p.x; hover.sy = p.y;
   const wx = r1(bwx(p.x)), wy = r1(bwy(p.y));
@@ -5722,14 +5829,126 @@ function netPointer(kind, e) {
   else { hover.on = true; NET.mv = { t: 'pm', x: wx, y: wy }; }
   gcv.style.cursor = 'crosshair';
 }
-function netFlushMove() { if (NET.mv) { netSend(NET.mv); NET.mv = null; } }
+function netFlushMove() {
+  if (NET.pts.length) { netSend({ t: 'pm', p: NET.pts, on: 1 }); NET.pts = []; NET.mv = null; }
+  else if (NET.mv) { netSend(NET.mv); NET.mv = null; }
+  if (NET.bPend) { netSend({ t: 'bcam', x: r1(NET.bSent) }); NET.bPend = false; }
+}
+
+/* ---------- オンライン対戦（フリー／先取マッチ） ---------- */
+// 協力・フリー対戦はホストがランナー。先取マッチはラウンドごとに交代する（走る側が「手元のキーボード」を使う）
+const netRunnerIsHost = () => COOP || NET.runnerSide !== 'guest';
+const netIAmRunner = () => !NET.role || (NET.role === 'host') === netRunnerIsHost();
+const netIAmBuilder = () => !NET.role || (NET.role === 'host') !== netRunnerIsHost();
+const netPtrIntercept = () => NET.role === 'guest' || (NET.role === 'host' && !netIAmBuilder());
+const netMyIdx = () => NET.role === 'host' ? 0 : 1;
+function netApplyRoleClasses() { document.body.classList.toggle('net-notool', !!NET.role && !netIAmBuilder()); }
+function serializeCH(ch) {
+  const o = {};
+  for (const k in ch) { const v = ch[k]; if (k === 'spr' || typeof v === 'function') continue; o[k] = v; }
+  o.spr = ch.spr.toDataURL('image/png');
+  return o;
+}
+const loadImg = src => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
+async function deserializeCH(o) {
+  const img = await loadImg(o.spr), cv = document.createElement('canvas');
+  cv.width = img.naturalWidth; cv.height = img.naturalHeight; cv.getContext('2d').drawImage(img, 0, 0);
+  const ch = Object.assign({}, o); ch.spr = cv; return ch;
+}
+function netFixTexts() { // オンライン対戦の準備画面の文言
+  if (!NET.vsMode) return;
+  if (NET.vsMode === 'free') {
+    if (NET.role === 'host') {
+      $('#drawTitle').innerHTML = '<span class="pill p1">P1</span> ランナーのキャラを描こう';
+      $('#drawSub').textContent = 'オンライン対戦：あなたはランナー（キーボード）です。相手はビルダー（マウス）のカードを選んでいます。';
+      $('#btnGo').textContent = '準備完了（相手を待つ）';
+    } else {
+      $('#deckTitle').innerHTML = '<span class="pill p2">P2</span> ビルダーのカードを選ぼう';
+      $('#deckSub').textContent = 'オンライン対戦：あなたはビルダー（マウス）です。40種類から8枚まで選びます。';
+      $('#btnDeckGo').textContent = '準備完了';
+    }
+  } else $('#btnDeckGo').textContent = '準備完了';
+}
+function netPrepSend() {
+  const i = netMyIdx(), pl = MATCH.players[i];
+  NET.ready[i] = true;
+  netSend({ t: 'prep', i, name: pl.name, ch: pl.ch ? serializeCH(pl.ch) : null, strokes: pl.strokes, deck: pl.deck });
+}
+function netPrepWait(msg) {
+  onShow('onWait'); $('#waitTitle').textContent = 'じゅんび完了！'; $('#waitMsg').textContent = msg || '相手の準備を待っています…';
+  show('scr-online'); netTryStartVersus();
+}
+async function netOnPrep(m) {
+  const pl = MATCH.players[m.i]; if (!pl) return;
+  if (m.ch) { try { pl.ch = await deserializeCH(m.ch); } catch (_e) { return; } pl.strokes = m.strokes || []; pl.name = m.name || pl.ch.name; }
+  if (m.deck) pl.deck = m.deck;
+  NET.ready[m.i] = true;
+  netTryStartVersus();
+}
+function netTryStartVersus() { // ホスト：2人とも準備できたら始める
+  if (NET.role !== 'host' || !NET.open || !NET.vsMode || !NET.ready[0] || !NET.ready[1]) return;
+  NET.ready = [false, false];
+  const p0 = MATCH.players[0], p1 = MATCH.players[1];
+  NET.runnerSide = 'host';
+  if (NET.vsMode === 'free') { MATCH.on = false; CH = p0.ch; DECK = p1.deck.slice(); startGame(); }
+  else { MATCH.on = true; Object.assign(MATCH, { phase: 'play', round: 1, runner: 0, over: false, history: [] }); p0.wins = p1.wins = 0; startRound(); }
+}
+function netOnlineRound() { NET.runnerSide = MATCH.runner === 0 ? 'host' : 'guest'; startRound(); } // マッチ：席替えの画面は飛ばして、すぐ次のラウンドへ
+function netBeginVsHost(mode) {
+  if (!NET.open) return;
+  NET.vsMode = mode; NET.ready = [false, false]; NET.runnerSide = 'host'; COOP = false;
+  netSend({ t: 'mode', m: mode, target: MATCH.target });
+  if (mode === 'match') startMatch();
+  else { Object.assign(MATCH, { on: false, phase: 'setup', setup: 0, players: [mkPlayer('A'), mkPlayer('B')] }); updateScoreUI(); updateRoleLabels(); setSetupTexts(); show('scr-draw'); }
+}
+function netOnMode(m) { // ゲスト：ホストが選んだ対戦モードの準備に入る
+  NET.vsMode = m.m; NET.ready = [false, false]; NET.runnerSide = 'host'; COOP = false; NET.guestReady = false; NET.queue = [];
+  const players = [mkPlayer('A'), mkPlayer('B')];
+  if (m.m === 'match') {
+    MATCH.target = m.target || 3;
+    Object.assign(MATCH, { on: true, phase: 'setup', setup: 1, round: 1, runner: 0, over: false, history: [], players });
+    updateScoreUI(); updateRoleLabels(); beginDrawFor(1, false);
+  } else {
+    Object.assign(MATCH, { on: false, phase: 'setup', setup: 1, players });
+    DECK = PRESET.slice(); updateScoreUI(); updateRoleLabels(); setSetupTexts(); show('scr-deck'); refreshDeckUI();
+  }
+}
+function netSendVictory() { netSend({ t: 'vic', wins: MATCH.players.map(p => p.wins), history: MATCH.history, winIdx: lastResult.winIdx }); }
+function netShowVictory(m) {
+  MATCH.on = true; MATCH.over = true; MATCH.history = m.history; m.wins.forEach((w, i) => { MATCH.players[i].wins = w; });
+  lastResult = { winIdx: m.winIdx, winner: '', reason: '', time: 0 };
+  showVictory(); $('#btnVicRematch').hidden = true; $('#btnVicTitle').textContent = '切断してタイトルへ';
+}
+function netPointerVs(kind, e) { // ゲストがビルダー（対戦）：視点はこちらで動かし、「置く・描く」操作だけをホストへ送る
+  const p = gpos(e);
+  if (kind === 'd') {
+    if (!inBuilder(p)) { hover.on = false; return; }
+    hover.sx = p.x; hover.sy = p.y;
+    try { gcv.setPointerCapture(e.pointerId); } catch (_e) {}
+    if (inMM(p)) { mmDrag = true; hover.on = false; mmSeek(p); return; }
+    if (e.button === 1 || e.button === 2) { panDrag = { sx: p.x, sy: p.y, cx: bCamT, cy: bCamTY }; hover.on = false; return; }
+    hover.on = true; NET.vsDown = true; NET.mv = null; NET.pts = [];
+    netSend({ t: 'pd', x: r1(bwx(p.x)), y: r1(bwy(p.y)) });
+  } else if (kind === 'm') {
+    if (mmDrag) { mmSeek(p); return; }
+    if (panDrag) { bCamT = clamp(panDrag.cx - (p.x - panDrag.sx) / VS, 0, Math.max(0, WW - VWW)); return; }
+    hover.sx = Math.max(p.x, BX); hover.sy = Math.max(p.y, BY); hover.on = NET.vsDown || (inBuilder(p) && !inMM(p));
+    gcv.style.cursor = !inBuilder(p) ? 'default' : inMM(p) ? 'ew-resize' : 'crosshair';
+    const wx = r1(bwx(hover.sx)), wy = r1(bwy(hover.sy));
+    if (NET.vsDown) NET.pts.push([wx, wy]); else NET.mv = { t: 'pm', x: wx, y: wy, on: hover.on ? 1 : 0 };
+  } else {
+    if (NET.vsDown) { netFlushMove(); netSend({ t: 'pu' }); }
+    NET.vsDown = false; panDrag = null; mmDrag = false; NET.mv = null;
+    if (e.pointerType && e.pointerType !== 'mouse') hover.on = false;
+  }
+}
 
 /* ---------- 画面（接続のしかた） ---------- */
 $('#btnOnline').addEventListener('click', () => { SFX.init(); netClose(false); onShow('onPick'); show('scr-online'); });
 $('#btnOnHost').addEventListener('click', async () => {
   SFX.init();
   if (typeof RTCPeerConnection === 'undefined') { onShow('onHost'); setStatus('hostStatus', 'このブラウザはオンライン通信（WebRTC）に対応していません。Chrome・Edge・Firefox・Safariの新しいものを使ってください。', 'err'); return; }
-  onShow('onHost'); $('#hostCode').value = ''; $('#hostReply').value = ''; $('#btnOnlineGo').hidden = true; $('#btnHostConnect').disabled = true;
+  onShow('onHost'); $('#hostCode').value = ''; $('#hostReply').value = ''; $('#onModes').hidden = true; $('#btnHostConnect').disabled = true;
   setStatus('hostStatus', '接続コードを作っています…（数秒かかります）');
   try {
     $('#hostCode').value = await netHostCreate(); $('#btnHostConnect').disabled = false;
@@ -5746,7 +5965,10 @@ $('#btnHostConnect').addEventListener('click', async () => {
     setTimeout(() => { if (!NET.open && NET.role === 'host') setStatus('hostStatus', 'まだつながりません。コードが新しいものか確認してください（ホストがコードを作り直したら、相手も返事コードを作り直す必要があります）。', 'err'); }, 25000);
   } catch (e) { setStatus('hostStatus', '接続できませんでした：' + e.message, 'err'); }
 });
-$('#btnOnlineGo').addEventListener('click', () => { startCoop(); });
+$('#btnOnlineGo').addEventListener('click', () => { NET.vsMode = null; startCoop(); });
+$('#btnOnlineVs').addEventListener('click', () => netBeginVsHost('free'));
+$('#btnOnlineMatch').addEventListener('click', () => netBeginVsHost('match'));
+$$('#onModes .target-pick .btn').forEach(b => b.addEventListener('click', () => { MATCH.target = +b.dataset.t; $$('.target-pick .btn').forEach(x => x.classList.toggle('on', +x.dataset.t === MATCH.target)); }));
 $('#btnOnGuest').addEventListener('click', () => {
   SFX.init(); onShow('onGuest'); $('#guestCode').value = ''; $('#guestAnswer').value = ''; $('#guestAnswerBox').hidden = true;
   setStatus('guestStatus', typeof RTCPeerConnection === 'undefined' ? 'このブラウザはオンライン通信（WebRTC）に対応していません。' : 'ホストから届いた接続コードを ① に貼り付けて、「返事コードを作る」を押してください。', typeof RTCPeerConnection === 'undefined' ? 'err' : '');
