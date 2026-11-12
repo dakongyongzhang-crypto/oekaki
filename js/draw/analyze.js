@@ -104,6 +104,8 @@ function analyze() {
     bbox: { minX, minY, maxX: maxX + 2, maxY: maxY + 2 }, bw, bh, enough: filled >= 120
   };
 }
+// 最高速（速さ10〜99 → 約2.9〜5.8）。前は 3.0 + 速さ×0.042（約3.4〜7.2）
+const RUN_SPD = spd => 2.6 + spd * 0.032;
 function deriveParams(an) {
   const s = an.stats;
   // 当たり判定はマス単位。高さ：ふつうは2マス、「大きい」キャラは3マス
@@ -114,13 +116,13 @@ function deriveParams(an) {
   return {
     w, h, legH: Math.max(5, Math.round(h * 0.15)),
     maxHp: Math.round(60 + s.hp * 1.4),
-    runSpeed: 3.0 + s.spd * 0.042,
+    runSpeed: RUN_SPD(s.spd),
     jumpV: 10.5 + s.spd * 0.014,
     slashR: Math.round(32 + s.atk * 0.42),
     dmg: 1 + Math.floor(s.atk / 30),
     atkType: atkTypeOf(s),
     shotSpd: 7 + s.atk * 0.03, shotR: 8 + Math.round(s.atk * 0.05),
-    dashSpd: Math.max(9, (3.0 + s.spd * 0.042) * 2.4),
+    dashSpd: Math.max(9, RUN_SPD(s.spd) * 2.4),
     quakeR: Math.round(80 + s.hp * 0.5)
   };
 }
