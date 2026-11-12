@@ -27,6 +27,7 @@ const SFX = {
     s.connect(f); f.connect(g); g.connect(c.destination); s.start();
   },
   jump() { this.tone(320, 640, 0.11, 'square', 0.035); },
+  swim() { this.tone(380, 760, 0.12, 'sine', 0.05); this.tone(600, 900, 0.06, 'sine', 0.03, 0.05); },
   noiseAt(dur, vol, freq, delay = 0, type = 'highpass') {
     if (!this.on || !this.ctx) return;
     const c = this.ctx, t = c.currentTime + delay, n = Math.floor(c.sampleRate * dur), buf = c.createBuffer(1, n, c.sampleRate), d = buf.getChannelData(0);

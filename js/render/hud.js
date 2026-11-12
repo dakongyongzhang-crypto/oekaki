@@ -166,6 +166,7 @@ function drawHUD() {
   if (effects.float > 0) tags.push(`ふわふわ ${Math.ceil(effects.float / 60)}`);
   if (effects.seal > 0) tags.push(`ふういん ${Math.ceil(effects.seal / 60)}`);
   if (P.chill > 0) tags.push('ひえひえ');
+  if (stage.water && !COOP) tags.push(`およぐ ${P.onGround ? SWIM_MAX : (P.swim ?? SWIM_MAX)}/${SWIM_MAX}`);
   if (P.stuck > 0) tags.push('トリモチ');
   if (P.glued) tags.push('ネバネバ');
   if (P.onIce) tags.push('ツルツル');

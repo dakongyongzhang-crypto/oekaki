@@ -9,6 +9,8 @@ const THEMES = [
   { name: 'やまみち', bg: 'mountain', terr: '#e7e2d6', grass: true, hmin: 10, hmax: 23, w: { flat: 1, gap: 2, up: 4, down: 3, stairs: 3, stairsDown: 3, valley: 3, mound: 2, bricks: 1, pillar: 1, planks: 1 } },
   { name: 'うきしま', bg: 'sky', terr: '#e1e9f3', grass: true, hmin: 12, hmax: 22, w: { flat: 1, gap: 2, float: 4, islands: 5, pillars: 3, bricks: 1, planks: 2 } },
   { name: 'どうくつ', bg: 'cave', terr: '#d8dbe5', grass: false, hmin: 13, hmax: 23, w: { flat: 2, gap: 2, tunnel: 5, stal: 3, up: 1, down: 1, pillar: 2, mound: 1, bricks: 1 } },
+  // 水中ステージ：重力が弱く、空中でもジャンプで泳げる（SWIM_MAX 回まで）。泳がないと渡れない広い海溝がある
+  { name: 'うみのそこ', bg: 'sea', terr: '#eadfc2', grass: true, water: true, hmin: 12, hmax: 23, w: { flat: 2, gap: 1, trench: 3, float: 2, islands: 2, pillars: 2, tunnel: 2, stal: 2, mound: 1, valley: 1 } },
   { name: 'まぜこぜ', bg: 'forest', terr: '#e3e6ee', grass: true, hmin: 12, hmax: 23, w: { flat: 2, gap: 2, up: 2, down: 2, pillar: 1, float: 1, bricks: 1, stairs: 1, stairsDown: 1, mound: 1, valley: 1, islands: 1, pillars: 1, planks: 1, tunnel: 1, stal: 1 } }
 ];
 let stage = THEMES[0];
@@ -134,7 +136,9 @@ function holeMaker(rng) {
     // 跳び越えられる穴（k = 跳べる距離のどれくらいを使うか）
     jumpable: (k0, k1, maxT = 99) => clamp(Math.round((w + reach * (k0 + rng() * (k1 - k0))) / T), minT, Math.max(minT, maxT)),
     // ジャンプだけでは絶対に越えられない穴（協力：橋が必要）
-    noJump: base => Math.max(base, Math.ceil((w + reach + 40) / T))
+    noJump: base => Math.max(base, Math.ceil((w + reach + 40) / T)),
+    // 水中の海溝：水中のジャンプ1回では届かず、泳げば渡れる幅（泳ぐとジャンプの4倍以上進める）
+    swim: () => Math.ceil((w + reach * (1.6 + rng() * 0.6) + 40) / T)
   };
 }
 function genLevel(seed) {
@@ -163,6 +167,10 @@ function genLevel(seed) {
     switch (seg) {
       case 'flat': flat(ri(4, 9)); break;
       case 'gap': c += hole.jumpable(0.25, 0.55); flat(ri(3, 6)); break;
+      case 'trench': { // 海溝：ふつうのジャンプでは届かない。空中で泳げば渡れる
+        c += hole.swim();
+        flat(ri(4, 6)); break;
+      }
       case 'up': h = Math.max(HMIN, h - ri(1, 3)); flat(ri(4, 8)); break;
       case 'down': h = Math.min(HMAX, h + ri(1, 3)); flat(ri(4, 8)); break;
       case 'pillar': {
