@@ -67,7 +67,9 @@ function drawPlayer() {
   if (p.quakeT > 0) { // ドスン：足もとから広がる衝撃波
     const q = 1 - p.quakeT / 16, R = (p.quakeR || 100) * (0.25 + q * 0.75);
     g.save(); g.globalAlpha = 1 - q; g.strokeStyle = ch.color || C.runner; g.lineWidth = 6 * (1 - q) + 2;
-    g.beginPath(); g.ellipse(cx, footY, R, R * 0.22, 0, 0, TAU); g.stroke(); g.restore();
+    g.beginPath(); g.ellipse(cx, footY, R, R * 0.22, 0, 0, TAU); g.stroke();
+    const U = (p.quakeU || 50) * (0.4 + q * 0.6); // 上にも広がる衝撃波
+    g.lineWidth = 4 * (1 - q) + 1.5; g.beginPath(); g.arc(cx, p.y + p.h / 2, U, Math.PI * 1.12, Math.PI * 1.88); g.stroke(); g.restore();
   }
   if (p.atkT > 0 && atype === 'shot') { // インクショット：発射の光
     const fx = p.x + p.w / 2 + p.facing * (p.w / 2 + 4), fy = p.y + p.h * 0.42;

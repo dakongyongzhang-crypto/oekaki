@@ -80,15 +80,18 @@ function doShot() { // インクショット：前に弾を撃つ
 }
 function doQuake(pow) { // ドスン：地面をゆらして両側を攻撃
   const p = P, cx = p.x + p.w / 2, fy = p.y + p.h, R = (CH.quakeR || 100) * pow;
-  p.quakeT = 16; p.quakeR = Math.round(R); shake = Math.max(shake, 6 + 3 * pow); SFX.thud();
+  const up = Math.round(Math.max(R * 0.6, p.h * 0.5 + T)); // 上方向の届く距離（ペンで閉じ込められても頭上と横の壁を壊せる）
+  p.quakeT = 16; p.quakeR = Math.round(R); p.quakeU = up; shake = Math.max(shake, 6 + 3 * pow); SFX.thud();
   let hit = false;
   for (const e of enemies) {
     if (e.dead || e.spawnT > 0) continue;
     const ex = e.x + e.w / 2;
     if (Math.abs(ex - cx) <= R + e.w / 2 && e.y + e.h > fy - 90 && e.y < fy + 24) { if (damageEnemy(e, CH.dmg + 1, ex < cx ? -1 : 1)) hit = true; }
+    else if (Math.abs(ex - cx) <= up * 0.8 + e.w / 2 && e.y + e.h > p.y - up && e.y < p.y) { if (damageEnemy(e, CH.dmg + 1, 0)) hit = true; } // 頭の上
   }
   for (const b of bullets) if (!b.dead && !b.friendly && Math.abs(b.x - cx) <= R && Math.abs(b.y - fy) < 90) { b.dead = true; burst(b.x, b.y, C.ink, 4, 2); }
   breakCells(cx, fy - 12, R * 0.55, cx, p.y - 30);
+  breakCells(cx, p.y + p.h / 2, up, cx, p.y - up * 0.6); // 体のまわりと頭上のペンも壊す
   for (let k = -3; k <= 3; k++) dust(cx + k * R / 3.2, fy, 3);
   popup(cx, p.y - 12, hit ? 'ドスン!!' : 'ドスン!', C.runner, 22);
 }
