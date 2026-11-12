@@ -10,7 +10,7 @@ const NET = { role: null, open: false, live: false, closing: false, dc: null, dc
 let tiles, paintCol, paintKind, paintHp, paintT, paintExp, origTile, items, clouds, goalX, goalY;
 let enemies = [], bullets = [], particles = [], popups = [];
 let state = 'countdown', prevState = 'play', countT = 0, timeLeft = 0, energy = 0, tick = 0, camX = 0, shake = 0, hitStop = 0, overT = 0, banner = null;
-let tool = DECK[0], paintInk = -1, atkPressed = false, inkWarnT = 0;
+let tool = DECK[0], paintInk = -1, atkPressed = false, inkWarnT = 0, penLive = 0;
 let effects = { dark: 0, rev: 0, heavy: 0, boost: 0, freeze: 0 };
 // 協力モードのエリア：1エリア960px（画面いっぱい）。視点を引いて、前後のエリアが160pxずつ重なって見えるようにする
 const AREA_W = 960, AREA_OV = 160;

@@ -261,7 +261,7 @@ function resetRound() {
   effects = { dark: 0, rev: 0, heavy: 0, boost: 0, freeze: 0 };
   cpu = { energy: 40, timer: 90 };
   trail = []; spawnQueue = []; crumbling = [];
-  atkPressed = false; painting = false; lastPaint = null;
+  atkPressed = false; painting = false; lastPaint = null; penLive = 0;
   ST = { kills: 0, broken: 0, placed: 0, painted: 0, dmg: 0, startX: sx, startY: sy0 };
   $('#result').classList.add('hidden'); $('#pauseMenu').classList.add('hidden');
   SFX.count(false);

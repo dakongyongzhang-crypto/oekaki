@@ -50,7 +50,7 @@ const usesLeft = id => COOP && SUPPORT_LIMIT[id] && !dbg('noLimit') ? (supUses[i
 function updateToolAvailability() {
   $$('.tool').forEach(b => {
     const id = b.dataset.id, left = usesLeft(id);
-    b.classList.toggle('poor', energy < CARD[id].cost || (cardCd[id] || 0) > 0 || left <= 0);
+    b.classList.toggle('poor', energy < CARD[id].cost || (cardCd[id] || 0) > 0 || left <= 0 || (CARD[id].cat === 'pen' && penCapOn() && penLive >= VS_PEN_MAX));
     const tu = b.querySelector('.tu'); if (tu) tu.textContent = left === Infinity ? '' : `のこり${left}`;
   });
 }

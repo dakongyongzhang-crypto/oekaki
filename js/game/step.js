@@ -30,6 +30,7 @@ function step() {
     if (countT <= 0) { state = 'play'; banner = { text: 'GO!', life: 45, color: C.runner }; SFX.count(true); P.jumpBuf = 0; atkPressed = false; }
   }
   if (state === 'play' || state === 'countdown') {
+    if (penCapOn()) penLive = countPenCells();
     energy = Math.min(EMAX, energy + (COOP ? (pageDef(storyIdx).regen || 0.17) : EREGEN));
     if (dbg('energy')) energy = EMAX;
     if (lifts.length && COOP) {

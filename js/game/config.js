@@ -20,6 +20,7 @@ function setLayout(mode) {
   VWW = VW / VS; VWH = VH / VS; WW = LW * T; WH = ROWS * T;
 }
 const GRAV = 0.55, SAFE_R = 110, VS_SAFE_R = 80, VS_HP_MUL = 1.5, VS_DMG_MUL = 1.2, EMAX = 100, EREGEN = 0.3, MAX_EN = 30, SPAWN = 40; // EREGEN = 対戦のビルダーのエネルギー回復（1フレームあたり）
+const VS_PEN_MAX = 40; // 対戦：ペン系カードで同時に置いておけるマスの上限（分厚い壁で進めなくなるのを防ぐ）
 const ROUND_T = 60 * 60, COOP_T = 80 * 60, DECK_MAX = 8, BOMB_R = 105, BOMB_DMG = 35;
 const C = { paper: '#f7f9fc', grid: '#d6e2f1', ink: '#24252b', terr: '#e3e6ee', brick: '#ffe58a', plank: '#c99a68', grass: '#4f9a52', cloud: '#a8bed6', runner: '#e8305f', builder: '#2a5bd7', bad: '#d1293f' };
 const INKS = ['#2a5bd7', '#6b3fd0', '#16899b', '#d03f86'];

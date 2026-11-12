@@ -200,6 +200,13 @@ function useSupport(id, wx, wy, pl) {
   }
 }
 
+// 対戦：いま残っているペン系のマス（ペン・ネバネバ・消しゴム跡。トゲのワナは数えない）
+const penCapOn = () => !COOP && !dbg('noLimit');
+function countPenCells() {
+  let n = 0;
+  for (let i = 0; i < tiles.length; i++) { const t = tiles[i]; if ((t === 3 && paintKind[i] !== 2) || t === 5 || t === 6) n++; }
+  return n;
+}
 function cellBlocked(c, r, id) {
   if (c < 0 || c >= LW || r < 0 || r >= ROWS) return 'x';
   const pen = PENS[id], t = tiles[idx(c, r)];
@@ -210,6 +217,7 @@ function cellBlocked(c, r, id) {
   if (inGoalZone(c * T, r * T, T, T)) return 'x';
   if (pen.erase && inStartZone(c, r)) return 'x';
   if (pen.solid) for (const e of enemies) if (!e.dead && cx + T / 2 > e.x && cx - T / 2 < e.x + e.w && cy + T / 2 > e.y && cy - T / 2 < e.y + e.h) return 'x';
+  if (penCapOn() && penLive >= VS_PEN_MAX) return 'max';
   if (energy < pen.cost) return 'ink';
   return '';
 }
@@ -217,9 +225,10 @@ function paintCell(c, r) {
   const id = tool, pen = PENS[id];
   const why = cellBlocked(c, r, id);
   if (why === 'ink') { if (tick - inkWarnT > 50) { popup(c * T + T / 2, r * T - 4, 'エネルギー不足', C.bad, 15); SFX.deny(); inkWarnT = tick; } return; }
+  if (why === 'max') { if (tick - inkWarnT > 50) { popup(c * T + T / 2, r * T - 4, `ペンは${VS_PEN_MAX}マスまで`, C.bad, 15); SFX.deny(); inkWarnT = tick; } return; }
   if (why) return;
   const i = idx(c, r);
-  energy -= pen.cost; ST.painted++;
+  energy -= pen.cost; ST.painted++; penLive++;
   paintT[i] = tick; paintExp[i] = tick + pen.life * 60;
   if (pen.plank) { tiles[i] = 4; paintKind[i] = 9; SFX.paint(); return; }
   if (pen.erase) {

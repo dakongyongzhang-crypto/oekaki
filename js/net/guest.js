@@ -105,6 +105,7 @@ function guestStep() {
   for (const pp of popups) { pp.y -= 0.7; pp.life--; }
   popups = popups.filter(pp => pp.life > 0);
   if (banner) { banner.life--; if (banner.life <= 0) banner = null; }
+  if (penCapOn()) penLive = countPenCells();
   if (tick % 6 === 0) updateToolAvailability();
 }
 function netShowRes(m) {

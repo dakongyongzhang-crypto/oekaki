@@ -190,6 +190,11 @@ function drawHUD() {
   g.strokeStyle = 'rgba(255,255,255,0.7)'; g.lineWidth = 1; g.beginPath();
   for (let i = 1; i < 10; i++) { const x = rx + 10 + (LP - 20) * i / 10; g.moveTo(x, ry + 25); g.lineTo(x, ry + 34); }
   g.stroke();
+  if (penCapOn()) { // 対戦：ペン系のマスの上限
+    const full = penLive >= VS_PEN_MAX, t = `ペン ${Math.min(penLive, VS_PEN_MAX)}/${VS_PEN_MAX}${full ? '（上限）' : ''}`;
+    g.font = `12px ${FONT}`; g.textAlign = 'right'; g.lineWidth = 3; g.strokeStyle = '#fff';
+    g.strokeText(t, rx + LP - 4, ry + PH + 16); g.fillStyle = full ? C.bad : C.builder; g.fillText(t, rx + LP - 4, ry + PH + 16);
+  }
   if (COOP) {
     const t = `消しゴム大王（${CPU_LV[COOP_LV].name}）`;
     g.font = `12px ${FONT}`; g.textAlign = 'right'; g.lineWidth = 3; g.strokeStyle = '#fff';
