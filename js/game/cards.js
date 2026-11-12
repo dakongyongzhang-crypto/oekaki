@@ -75,7 +75,7 @@ const CARDS = [
   { id: 'thorn', cat: 'trap', name: 'トゲブロック', cost: 20, desc: 'クリックで2×2のトゲブロックを置く。触れるとダメージ。1秒に1個まで、8秒で消える' },
   { id: 'cannon', cat: 'trap', name: 'ポンポン砲', cost: 40, desc: 'ランナーを狙って弾を撃つ' },
   { id: 'triple', cat: 'trap', name: '3連砲', cost: 55, desc: '扇状に3発まとめて撃つ' },
-  { id: 'bomb', cat: 'trap', name: '時限バクダン', cost: 30, desc: '3秒後に大爆発。ダメージ35で大きく吹き飛ばす。斬れば解除' },
+  { id: 'bomb', cat: 'trap', name: '時限バクダン', cost: 30, desc: '3秒後に大爆発。ダメージ35で大きく吹き飛ばす。解除できない' },
   { id: 'saw', cat: 'trap', name: 'ノコギリ', cost: 35, desc: '左右に往復する刃。壊せない' },
   { id: 'fire', cat: 'trap', name: '火柱', cost: 30, desc: '床から周期的に炎が噴き出す。壊せない' },
   { id: 'firebar', cat: 'trap', name: 'ぐるぐるボール', cost: 40, desc: '回転する火の玉の列。壊せない' },

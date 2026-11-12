@@ -18,7 +18,7 @@ const ETYPES = {
   spike: { w: 40, h: 16, hp: 2, dmg: 20, color: '#c9cdd6', snap: true, word: 'チクッ!' },
   cannon: { w: 30, h: 30, hp: 4, dmg: 10, color: '#8b90a0', snap: true, stomp: true },
   triple: { w: 34, h: 30, hp: 5, dmg: 10, color: '#7380a0', snap: true, stomp: true },
-  bomb: { w: 26, h: 28, hp: 1, dmg: 0, color: '#3a3d48', touch: false },
+  bomb: { w: 26, h: 28, hp: 1, dmg: 0, color: '#3a3d48', touch: false, invuln: true }, // 攻撃しても解除できない
   saw: { w: 30, h: 30, hp: 1, dmg: 20, color: '#cfd3dc', invuln: true, word: 'ザクッ!' },
   fire: { w: 24, h: 12, hp: 1, dmg: 0, color: '#ff7a3d', snap: true, invuln: true, touch: false },
   firebar: { w: 16, h: 16, hp: 1, dmg: 0, color: '#ff7a3d', invuln: true, touch: false, reach: 66 },

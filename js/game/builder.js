@@ -190,7 +190,7 @@ function useSupport(id, wx, wy, pl) {
   if (id === 's_freeze') { effects.freeze = 180; banner = { text: 'ストップ！', life: 40, color: C.builder }; }
   if (id === 's_bomb') {
     SFX.boom(); const R = 90;
-    for (const e of enemies) if (!e.dead && circleRect(wx, wy, R, e)) { if (e.type === 'boss') { e.stun = isEX() ? 55 : 90; popup(e.x + e.w / 2, e.y - 24, 'ピヨピヨ…', C.builder, 20); } else damageEnemy(e, 4, 0); }
+    for (const e of enemies) if (!e.dead && circleRect(wx, wy, R, e)) { if (e.type === 'boss') { e.stun = isEX() ? 55 : 90; popup(e.x + e.w / 2, e.y - 24, 'ピヨピヨ…', C.builder, 20); } else if (e.type === 'bomb') { e.dead = true; popup(e.x + e.w / 2, e.y - 6, '解除！', C.ink, 20); } else damageEnemy(e, 4, 0); }
     for (const b of bullets) if (dist(wx, wy, b.x, b.y) < R) b.dead = true;
     for (let c = Math.floor((wx - R) / T); c <= Math.floor((wx + R) / T); c++) for (let r = Math.floor((wy - R) / T); r <= Math.floor((wy + R) / T); r++) {
       if (c < 0 || c >= LW || r < 0 || r >= ROWS) continue;

@@ -30,7 +30,7 @@ function damageEnemy(e, dmg, dir) {
       for (const sgn of [-1, 1]) { const n = spawnEnemy('slimelet', e.x + e.w / 2 - 9 + sgn * 8, e.y + 6, true); n.spawnT = 14; n.vx = sgn * 2.4; n.vy = -4.5; n.timer = 24; }
     }
     burst(e.x + e.w / 2, e.y + e.h / 2, d.color === '#ffffff' ? '#c9cdd6' : d.color, 16, 3.6);
-    popup(e.x + e.w / 2, e.y - 6, e.type === 'bomb' ? '解除！' : 'ポコッ', C.ink, 20);
+    popup(e.x + e.w / 2, e.y - 6, 'ポコッ', C.ink, 20);
   } else SFX.tick();
   return true;
 }
