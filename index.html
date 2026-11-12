@@ -1274,7 +1274,7 @@ function setLayout(mode) {
   else { VW = GW; VH = GH / 2; VS = 0.5; BX = 0; BY = GH / 2; TXS = 1.7; }
   VWW = VW / VS; VWH = VH / VS; WW = LW * T; WH = ROWS * T;
 }
-const GRAV = 0.55, SAFE_R = 110, EMAX = 100, EREGEN = 0.3, MAX_EN = 30, SPAWN = 40; // EREGEN = 対戦のビルダーのエネルギー回復（1フレームあたり）
+const GRAV = 0.55, SAFE_R = 110, VS_SAFE_R = 80, VS_HP_MUL = 1.5, VS_DMG_MUL = 1.2, EMAX = 100, EREGEN = 0.3, MAX_EN = 30, SPAWN = 40; // EREGEN = 対戦のビルダーのエネルギー回復（1フレームあたり）
 const ROUND_T = 60 * 60, COOP_T = 80 * 60, DECK_MAX = 8, BOMB_R = 105, BOMB_DMG = 35;
 const C = { paper: '#f7f9fc', grid: '#d6e2f1', ink: '#24252b', terr: '#e3e6ee', brick: '#ffe58a', plank: '#c99a68', grass: '#4f9a52', cloud: '#a8bed6', runner: '#e8305f', builder: '#2a5bd7', bad: '#d1293f' };
 const INKS = ['#2a5bd7', '#6b3fd0', '#16899b', '#d03f86'];
@@ -1926,7 +1926,7 @@ function resetRound() {
     safeX: sx, safeY: sy0, squash: 1, walk: 0, wind: 0, onIce: false, glued: false
   };
   enemies = []; bullets = []; particles = []; popups = [];
-  energy = COOP ? 60 : 50; timeLeft = roundLen(); tick = 0; state = 'countdown'; countT = COOP ? 300 : 180; camX = 0; shake = 0; hitStop = 0; banner = null;
+  energy = COOP ? 60 : EMAX; timeLeft = roundLen(); tick = 0; state = 'countdown'; countT = COOP ? 300 : 180; camX = 0; shake = 0; hitStop = 0; banner = null; // 対戦：ビルダーはエネルギー満タンで始まる
   effects = { dark: 0, rev: 0, heavy: 0, boost: 0, freeze: 0 };
   cpu = { energy: 40, timer: 90 };
   trail = []; spawnQueue = []; crumbling = [];
@@ -2714,7 +2714,8 @@ function boxSolid(x, y, w, h) {
   for (let c = c0; c <= c1; c++) for (let r = r0; r <= r1; r++) if (solid(c, r)) return true;
   return false;
 }
-function rectNearPlayer(x, y, w, h, R = SAFE_R) {
+const safeR = () => COOP ? SAFE_R : VS_SAFE_R; // 対戦：ビルダーはランナーの近くにも置ける
+function rectNearPlayer(x, y, w, h, R = safeR()) {
   const pcx = P.x + P.w / 2, pcy = P.y + P.h / 2;
   return dist(pcx, pcy, clamp(pcx, x, x + w), clamp(pcy, y, y + h)) < R;
 }
@@ -2778,11 +2779,12 @@ function placementFor(id, wx, wy) {
   else if (inGoalZone(x - reach, y - reach, d.w + reach * 2, d.h + reach * 2)) why = 'ゴール前には置けない';
   return { ok: !why, x, y, why };
 }
+const vsHp = hp => !COOP && hp >= 2 ? Math.ceil(hp * VS_HP_MUL) : hp; // 対戦：ビルダーの敵はしぶとい
 function spawnEnemy(type, x, y, defer) {
   const d = ETYPES[type];
   const toward = (P.x + P.w / 2 < x + d.w / 2) ? -1 : 1;
   const e = {
-    type, x, y, w: d.w, h: d.h, vx: 0, vy: 0, hp: d.hp, maxHp: d.hp, dir: toward,
+    type, x, y, w: d.w, h: d.h, vx: 0, vy: 0, hp: vsHp(d.hp), maxHp: vsHp(d.hp), dir: toward,
     spawnT: SPAWN, t: 0, flash: 0, timer: 0, aim: -Math.PI / 2, recoil: 0, onGround: false, dead: false,
     mode: '', homeX: x, homeY: y, rot: 0, cyc: 0, fuse: 180, life: 0, gy: WH, ofs: Math.random() * TAU
   };
@@ -3032,7 +3034,7 @@ function cellBlocked(c, r, id) {
   if (pen.erase ? !(t === 1 || t === 2 || t === 4) : t !== 0) return 'x';
   const cx = c * T + T / 2, cy = r * T + T / 2;
   if (COOP && pen.support) { if (overlap(P, { x: c * T, y: r * T, w: T, h: T })) return 'x'; }
-  else if (dist(cx, cy, P.x + P.w / 2, P.y + P.h / 2) < SAFE_R) return 'x';
+  else if (dist(cx, cy, P.x + P.w / 2, P.y + P.h / 2) < safeR()) return 'x';
   if (inGoalZone(c * T, r * T, T, T)) return 'x';
   if (pen.erase && inStartZone(c, r)) return 'x';
   if (pen.solid) for (const e of enemies) if (!e.dead && cx + T / 2 > e.x && cx - T / 2 < e.x + e.w && cy + T / 2 > e.y && cy - T / 2 < e.y + e.h) return 'x';
@@ -3114,6 +3116,7 @@ function hurt(amount, srcX, word) {
   const p = P;
   if (p.inv > 0 || state !== 'play' || dbg('inv')) return;
   if (p.shield > 0) { if (tick - (p.guardT || 0) > 20) { popup(p.x + p.w / 2, p.y - 8, 'ガード！', C.builder, 18); p.guardT = tick; } return; }
+  if (!COOP) amount = Math.round(amount * VS_DMG_MUL); // 対戦：敵やワナのダメージが少し大きい
   p.hp -= amount; p.inv = 70; p.kb = 10;
   p.vx = (p.x + p.w / 2 < srcX ? -1 : 1) * 5.5; p.vy = -6;
   shake = 9; ST.dmg += amount; SFX.hurt();
@@ -5108,7 +5111,7 @@ function drawGhost() {
   g.save();
   if (!COOP && card.cat !== 'special' && tool !== 'shadow') {
     g.setLineDash([6, 6]); g.strokeStyle = 'rgba(232,48,95,0.6)'; g.lineWidth = 2;
-    g.beginPath(); g.arc(pcx, pcy, SAFE_R, 0, TAU); g.stroke(); g.setLineDash([]);
+    g.beginPath(); g.arc(pcx, pcy, safeR(), 0, TAU); g.stroke(); g.setLineDash([]);
     g.fillStyle = 'rgba(232,48,95,0.06)'; g.fill();
   }
   if (card.cat === 'pen') {
