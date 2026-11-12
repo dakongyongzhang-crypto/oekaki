@@ -106,7 +106,7 @@ function analyze() {
 }
 function deriveParams(an) {
   const s = an.stats;
-  const h = Math.round(30 + an.sN * 24);
+  const h = (an.sN > 0.6 ? 3 : 2) * T; // 当たり判定の高さはマス単位：ふつうは2マス、「大きい」キャラは3マス
   const aspect = clamp(an.bw / an.bh, 0.55, 1.5);
   const w = Math.round(clamp(h * aspect * 0.95, 22, 54));
   return {
