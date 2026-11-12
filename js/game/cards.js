@@ -99,11 +99,13 @@ const CARDS = [
   { id: 'weight', cat: 'special', name: 'おもり', cost: 40, desc: '5秒間、ランナーのジャンプ力と速さが落ちる' },
   { id: 'slip', cat: 'special', name: 'ツルツル', cost: 40, desc: '5秒間、どの床も氷のように滑る' },
   { id: 'float', cat: 'special', name: 'ふわふわ', cost: 40, desc: '5秒間、重力が弱くなってうまく着地できない' },
-  { id: 'seal', cat: 'special', name: 'ふういん', cost: 45, desc: '5秒間、ランナーが攻撃できなくなる' }
+  { id: 'seal', cat: 'special', name: 'ふういん', cost: 45, desc: '3秒間、ランナーが攻撃できなくなる' }
 ];
 CARDS.forEach(c => { if (c.cat === 'pen') { c.cost = PENS[c.id].cost; c.per = true; } c.costLabel = c.per ? `${c.cost}/マス` : String(c.cost); });
 const CARD = Object.fromEntries(CARDS.map(c => [c.id, c]));
-const PRESET = ['pen', 'walker', 'hopper', 'flyer', 'spike', 'cannon', 'bomb', 'saw'];
+const TRAP_MAX = 2; // デッキに入れられるワナカードの枚数
+const trapCount = deck => deck.filter(id => CARD[id] && CARD[id].cat === 'trap').length;
+const PRESET = ['pen', 'walker', 'hopper', 'flyer', 'spike', 'cannon', 'slime', 'dark'];
 let DECK = PRESET.slice();
 // 協力モードでP2（サポーター）が使うカード
 // サポーターのブロック（クリック1回で決まった形を置く）

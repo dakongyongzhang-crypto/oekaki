@@ -128,5 +128,5 @@ function activateSpecial(id) {
   if (id === 'weight') { effects.heavy = 300; banner = { text: 'おもり！', life: 45, color: C.builder }; }
   if (id === 'slip') { effects.slip = 300; banner = { text: 'ツルツル！', life: 45, color: C.builder }; }
   if (id === 'float') { effects.float = 300; banner = { text: 'ふわふわ！', life: 45, color: C.builder }; }
-  if (id === 'seal') { effects.seal = 300; banner = { text: 'ふういん！', life: 45, color: C.builder }; }
+  if (id === 'seal') { effects.seal = 180; banner = { text: 'ふういん！', life: 45, color: C.builder }; }
 }

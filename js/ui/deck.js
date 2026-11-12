@@ -38,14 +38,15 @@ function buildDeckScreen() {
 function toggleCard(id) {
   const i = DECK.indexOf(id);
   if (i >= 0) DECK.splice(i, 1);
-  else if (DECK.length < DECK_MAX) DECK.push(id);
-  else { $('#deckHint').textContent = '8枚までです。枠をクリックで外せます'; return; }
+  else if (DECK.length >= DECK_MAX) { $('#deckHint').textContent = '8枚までです。枠をクリックで外せます'; return; }
+  else if (CARD[id].cat === 'trap' && trapCount(DECK) >= TRAP_MAX) { $('#deckHint').textContent = `ワナは${TRAP_MAX}枚までです。ほかのワナを外してから選んでください`; return; }
+  else DECK.push(id);
   refreshDeckUI();
 }
 function refreshDeckUI() {
   CARDS.forEach(c => {
     const el = cardEls[c.id], i = DECK.indexOf(c.id);
-    el.classList.toggle('sel', i >= 0); el.classList.toggle('full', DECK.length >= DECK_MAX);
+    el.classList.toggle('sel', i >= 0); el.classList.toggle('full', DECK.length >= DECK_MAX || (c.cat === 'trap' && trapCount(DECK) >= TRAP_MAX));
     el.querySelector('.badge').textContent = i >= 0 ? i + 1 : '';
     el.hidden = deckFilter !== 'all' && c.cat !== deckFilter;
     el.setAttribute('aria-pressed', String(i >= 0));
@@ -58,14 +59,15 @@ function refreshDeckUI() {
   });
   $('#deckCount').textContent = DECK.length;
   $('#btnDeckGo').disabled = DECK.length === 0;
-  $('#deckHint').textContent = DECK.length ? '枠をクリックで外せます' : 'カードを1枚以上選んでください';
+  $('#deckHint').textContent = DECK.length ? `枠をクリックで外せます（ワナ ${trapCount(DECK)}/${TRAP_MAX}枚）` : `カードを1枚以上選んでください（ワナは${TRAP_MAX}枚まで）`;
 }
 $('#btnDeckPreset').addEventListener('click', () => { DECK = PRESET.slice(); refreshDeckUI(); });
 $('#btnDeckClear').addEventListener('click', () => { DECK = []; refreshDeckUI(); });
 $('#btnDeckRandom').addEventListener('click', () => {
   const pens = CARDS.filter(c => c.cat === 'pen').map(c => c.id), rest = CARDS.filter(c => c.cat !== 'pen').map(c => c.id);
   const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
-  DECK = [...shuffle(pens).slice(0, 2), ...shuffle(rest).slice(0, 6)];
+  const pick = []; for (const id of shuffle(rest)) { if (pick.length >= 6) break; if (CARD[id].cat === 'trap' && trapCount(pick) >= TRAP_MAX) continue; pick.push(id); }
+  DECK = [...shuffle(pens).slice(0, 2), ...pick];
   refreshDeckUI();
 });
 $('#btnDeckGo').addEventListener('click', () => deckGo());
