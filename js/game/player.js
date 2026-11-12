@@ -125,8 +125,7 @@ function updatePlayer() {
   const dir = (R ? 1 : 0) - (L ? 1 : 0);
   const heavy = effects.heavy > 0;
   const chill = p.chill > 0; if (chill) p.chill--;
-  const water = !!stage.water;
-  const maxSp = ch.runSpeed * (p.glued ? 0.4 : 1) * (heavy ? 0.75 : 1) * (chill ? 0.6 : 1) * (water ? 0.85 : 1) * (effects.boost > 0 ? 1.35 : 1);
+  const maxSp = ch.runSpeed * (p.glued ? 0.4 : 1) * (heavy ? 0.75 : 1) * (chill ? 0.6 : 1) * (effects.boost > 0 ? 1.35 : 1);
   if (p.kb > 0) p.kb--;
   else if (p.stuck > 0) { p.stuck--; p.vx = 0; }
   else {
@@ -135,27 +134,22 @@ function updatePlayer() {
     else { p.vx *= p.onIce ? 0.988 : (p.onGround ? 0.72 : 0.93); if (Math.abs(p.vx) < 0.08) p.vx = 0; }
     p.vx = clamp(p.vx, -maxSp * (p.onIce ? 1.25 : 1), maxSp * (p.onIce ? 1.25 : 1));
   }
-  if (p.onGround) { p.coyote = 7; p.swim = SWIM_MAX; } else if (p.coyote > 0) p.coyote--;
+  if (p.onGround) p.coyote = 7; else if (p.coyote > 0) p.coyote--;
   if (p.jumpBuf > 0) p.jumpBuf--;
   if (p.noCut > 0) p.noCut--;
   if (p.jumpBuf > 0 && p.coyote > 0 && !(p.stuck > 0)) {
-    p.vy = -ch.jumpV * (p.glued ? 0.65 : 1) * (heavy ? 0.68 : 1) * (chill ? 0.85 : 1) * (water ? 0.65 : 1) * (effects.boost > 0 ? 1.1 : 1); p.coyote = 0; p.jumpBuf = 0; p.onGround = false; p.squash = 0.78;
+    p.vy = -ch.jumpV * (p.glued ? 0.65 : 1) * (heavy ? 0.68 : 1) * (chill ? 0.85 : 1) * (effects.boost > 0 ? 1.1 : 1); p.coyote = 0; p.jumpBuf = 0; p.onGround = false; p.squash = 0.78;
     SFX.jump(); dust(p.x + p.w / 2, p.y + p.h, 4);
-  } else if (water && p.jumpBuf > 0 && !p.onGround && p.swim > 0 && !(p.stuck > 0)) { // 水中：空中でもひとかき泳げる
-    p.swim--; p.jumpBuf = 0; p.vy = -ch.jumpV * 0.55 * (heavy ? 0.75 : 1); p.noCut = 8; p.squash = 0.85;
-    SFX.swim();
-    for (let k = 0; k < 4; k++) particles.push({ x: p.x + p.w / 2 + rand(-8, 8), y: p.y + p.h, vx: rand(-0.6, 0.6), vy: rand(0.2, 1), life: 30, max: 30, r: rand(2, 4), color: 'rgba(220,240,255,0.9)', g: -0.05, bubble: true });
   }
   if (!J && p.vy < -4.5 && p.noCut <= 0) p.vy = -4.5;
   if (dbg('fly')) p.vy = held(K_JUMP) ? -6 : (keys.KeyS || keys.ArrowDown) ? 6 : 0; // デバッグ：ふわふわ移動
-  else { const fl = effects.float > 0; p.vy = Math.min(p.vy + GRAV * (p.glued ? 0.7 : 1) * (fl ? 0.32 : water ? WATER_GRAV : 1), p.glued ? 5 : fl ? 4 : water ? WATER_FALL : 13); } // ふわふわ・水中：重力が弱い
+  else { const fl = effects.float > 0; p.vy = Math.min(p.vy + GRAV * (p.glued ? 0.7 : 1) * (fl ? 0.32 : 1), p.glued ? 5 : fl ? 4 : 13); } // ふわふわ：重力が弱い
   if (p.dashT > 0) { p.vy = 0; p.vx = p.dashDir * (CH.dashSpd || 9); } // ダッシュ突進中は高さを保ってまっすぐ進む
   if (p.slam) p.vy = Math.max(p.vy, 12); // ドスン（空中）：急降下
   const vyPrev = p.vy, prevBottom = p.y + p.h, wasGround = p.onGround;
   const baseVx = p.vx, moveDir = Math.sign(p.vx + p.wind);
   p.vx = baseVx + p.wind;
   const mr = moveEntity(p);
-  if (water && p.y < 0) { p.y = 0; if (p.vy < 0) p.vy = 0; } // 水中：水面より上には出られない
   if (COOP && SPLIT === 's' && p.x < camSlide.to + 2) { p.x = camSlide.to + 2; if (p.vx < 0) p.vx = 0; } // 画面に見えている範囲より左へは戻れない
   p.onLift = null;
   for (const lf of lifts) {

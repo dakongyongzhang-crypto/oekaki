@@ -64,7 +64,6 @@ function render() {
     if (single) drawCenterText('2人で協力しよう！', 19, C.builder, 152, 1, rcx);
     else drawCenterText('今のうちに敵やワナを置こう', hz ? 24 : 21, C.builder, bcy + 4, 1, bcx);
     }
-    if (!COOP && stage.water) drawCenterText(`水中ステージ：空中でもジャンプで${SWIM_MAX}回まで泳げる`, 17, '#1d6fa5', SPLIT === 'o' ? 176 : (hz ? 122 : 140), 1, SPLIT === 'o' ? GW / 2 : rcx);
   }
   if (banner) drawCenterText(banner.text, hz ? 64 : 60, banner.color || C.runner, rcy + (hz ? 10 : -20), clamp(banner.life / 20, 0, 1), rcx);
   if (state === 'paused') {

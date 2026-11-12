@@ -13,8 +13,7 @@ const BGS = {
   cave: { sky: ['#2e3246', '#1a1d28'], grid: 'rgba(255,255,255,0.05)', weather: 'dust', dark: true },
   storm: { sky: ['#7f849f', '#c3c7d8'], grid: 'rgba(50,55,85,0.14)', weather: 'rain', lightning: true },
   castle: { sky: ['#b28acb', '#ffd3bd'], grid: 'rgba(110,70,130,0.16)', weather: 'embers', moon: true },
-  ex: { sky: ['#120d22', '#3a1f57'], grid: 'rgba(255,255,255,0.05)', weather: 'stars', moon: true, dark: true },
-  sea: { sky: ['#8fd6ee', '#2b6f9f'], grid: 'rgba(255,255,255,0.1)', weather: 'bubbles', rays: true }
+  ex: { sky: ['#120d22', '#3a1f57'], grid: 'rgba(255,255,255,0.05)', weather: 'stars', moon: true, dark: true }
 };
 let backdrop = { bg: 'meadow', far: [], mid: [] };
 function genBackdrop(bg, seed) {
@@ -51,10 +50,6 @@ function genBackdrop(bg, seed) {
     case 'ex':
       each(spanF, () => R(380, 620), x => far.push({ t: 'castle', x, w: R(260, 380), h: R(200, 280) }));
       each(spanM, () => R(160, 320), x => mid.push({ t: 'chunk', x, y: R(160, 420), w: R(40, 90), h: R(26, 44), ph: rnd() * 6 }));
-      break;
-    case 'sea':
-      each(spanF, () => R(260, 460), x => far.push({ t: 'searock', x, w: R(300, 520), h: R(120, 220), col: pick(['#3f7fa8', '#4a88b0']) }));
-      each(spanM, () => R(70, 170), x => mid.push(rnd() < 0.7 ? { t: 'kelp', x, h: R(150, 300), ph: rnd() * 6, col: pick(['#3f9a6a', '#4fae78', '#5c9e5a']) } : { t: 'coral', x, h: R(50, 90), col: pick(['#ff8fa3', '#ffb36b', '#c48cff']) }));
       break;
     case 'castle':
       each(spanF, () => R(400, 640), x => far.push({ t: 'castle', x, w: R(260, 380), h: R(200, 280) }));
@@ -150,27 +145,6 @@ function drawBgShape(el, sx, t) {
       g.fillStyle = 'rgba(255,214,120,0.75)'; for (const [fx, fh] of towers) g.fillRect(sx + w * fx - 4, B - h * fh * 0.7, 8, 12);
       break;
     }
-    case 'searock': {
-      g.beginPath(); g.moveTo(sx - el.w / 2, B);
-      g.bezierCurveTo(sx - el.w * 0.4, B - el.h * 1.2, sx + el.w * 0.1, B - el.h * 0.7, sx + el.w * 0.2, B - el.h);
-      g.quadraticCurveTo(sx + el.w * 0.45, B - el.h * 0.8, sx + el.w / 2, B); g.closePath();
-      g.fillStyle = el.col; g.globalAlpha = 0.55; g.fill(); break;
-    }
-    case 'kelp': {
-      g.strokeStyle = el.col; g.lineWidth = 7; g.lineCap = 'round'; g.globalAlpha = 0.75; g.beginPath(); g.moveTo(sx, B);
-      const n = 6;
-      for (let k = 1; k <= n; k++) { const y = B - el.h * k / n, sw = Math.sin(t * 1.4 + el.ph + k * 0.7) * (6 + k * 2.5); g.lineTo(sx + sw, y); }
-      g.stroke();
-      g.fillStyle = el.col; for (let k = 2; k <= n; k += 2) { const y = B - el.h * k / n, sw = Math.sin(t * 1.4 + el.ph + k * 0.7) * (6 + k * 2.5); g.beginPath(); g.ellipse(sx + sw + 9, y + 4, 10, 4, -0.5, 0, TAU); g.fill(); }
-      break;
-    }
-    case 'coral': {
-      g.strokeStyle = el.col; g.lineWidth = 6; g.lineCap = 'round'; g.globalAlpha = 0.8; g.beginPath();
-      g.moveTo(sx, B); g.lineTo(sx, B - el.h);
-      g.moveTo(sx, B - el.h * 0.45); g.quadraticCurveTo(sx - 18, B - el.h * 0.55, sx - 20, B - el.h * 0.85);
-      g.moveTo(sx, B - el.h * 0.6); g.quadraticCurveTo(sx + 16, B - el.h * 0.68, sx + 18, B - el.h * 0.95);
-      g.stroke(); break;
-    }
     case 'banner': {
       g.strokeStyle = 'rgba(60,40,80,0.55)'; g.lineWidth = 4; g.beginPath(); g.moveTo(sx, B); g.lineTo(sx, B - el.h); g.stroke();
       const wv = Math.sin(t * 3 + sx * 0.02) * 6, top = B - el.h;
@@ -182,7 +156,7 @@ function drawBgShape(el, sx, t) {
   g.restore();
 }
 function drawWeather(kind, t) {
-  const base = { snow: 50, rain: 80, fireflies: 22, dust: 30, birds: 4, embers: 28, stars: 70, bubbles: 34 }[kind] || 0;
+  const base = { snow: 50, rain: 80, fireflies: 22, dust: 30, birds: 4, embers: 28, stars: 70 }[kind] || 0;
   const n = Math.round(base * VWW / 960), W = VWW + 60, H = VWH + 40, mod = (a, m) => ((a % m) + m) % m;
   g.save();
   if (kind === 'snow') {
@@ -210,19 +184,6 @@ function drawWeather(kind, t) {
       g.globalAlpha = Math.max(0.05, a); g.fillStyle = i % 5 ? '#ffffff' : '#ffd23f'; g.fillRect(x, y, i % 3 ? 2 : 3, i % 3 ? 2 : 3);
     }
     g.globalAlpha = 1;
-  } else if (kind === 'bubbles') { // 水中：のぼっていく泡と、ときどき泳ぐ魚
-    g.strokeStyle = 'rgba(255,255,255,0.7)'; g.lineWidth = 1.4;
-    for (let i = 0; i < n; i++) {
-      const x = mod(i * 167 + Math.sin(t * 1.5 + i) * 10 - viewX * 0.45, W) - 30, y = mod(i * 73 - t * (30 + (i % 5) * 9), H) - 20, r = 2 + (i % 4);
-      g.beginPath(); g.arc(x, y, r, 0, TAU); g.stroke();
-    }
-    const nf = Math.max(2, Math.round(5 * VWW / 960));
-    for (let i = 0; i < nf; i++) {
-      const dir = i % 2 ? 1 : -1, x = mod(i * 613 + dir * t * (40 + i * 7) - viewX * 0.25, W + 300) - 150, y = 90 + mod(i * 131, VWH * 0.6) + Math.sin(t * 1.3 + i) * 8;
-      g.save(); g.translate(x, y); g.scale(dir, 1); g.globalAlpha = 0.45;
-      g.beginPath(); g.ellipse(0, 0, 14, 7, 0, 0, TAU); g.moveTo(-12, 0); g.lineTo(-22, -7); g.lineTo(-22, 7); g.closePath();
-      g.fillStyle = ['#ffd166', '#ff8fa3', '#9fe6ff'][i % 3]; g.fill(); g.restore();
-    }
   } else if (kind === 'embers') {
     for (let i = 0; i < n; i++) { const x = mod(i * 191 + Math.sin(t + i) * 16 - viewX * 0.4, W) - 30, y = mod(i * 83 - t * (22 + (i % 4) * 6), H) - 20; g.fillStyle = i % 2 ? 'rgba(255,150,80,0.7)' : 'rgba(255,210,120,0.6)'; g.beginPath(); g.arc(x, y, 1.6 + (i % 3) * 0.6, 0, TAU); g.fill(); }
   }
@@ -243,16 +204,6 @@ function drawBackground() {
     const x = VWW * 0.75 - viewX * 0.02, y = 105;
     g.save(); g.shadowColor = 'rgba(255,236,190,0.55)'; g.shadowBlur = 10;
     g.drawImage(moonSprite(), x - 60, y - 60);
-    g.restore();
-  }
-  if (cfg.rays) { // 水面からさしこむ光の筋
-    g.save(); g.globalCompositeOperation = 'lighter';
-    for (let k = 0; k < 6; k++) {
-      const x = mod1(k * 330 - viewX * 0.1, VWW + 400) - 200, sw = Math.sin(t * 0.6 + k * 1.7) * 30;
-      g.globalAlpha = 0.07 + 0.04 * Math.sin(t * 0.9 + k);
-      g.beginPath(); g.moveTo(x, -10); g.lineTo(x + 70, -10); g.lineTo(x + 200 + sw, VWH); g.lineTo(x + 90 + sw, VWH); g.closePath();
-      g.fillStyle = '#ffffff'; g.fill();
-    }
     g.restore();
   }
   for (const el of backdrop.far) { const sx = el.x - viewX * 0.15; if (sx > -500 && sx < VWW + 500) drawBgShape(el, sx, t); }
