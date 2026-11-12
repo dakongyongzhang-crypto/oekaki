@@ -163,8 +163,8 @@ function updateEnemy(e) {
     }
     case 'fan': {
       moveEntity(e); e.rot += 0.45;
-      if (play && overlap(P, fanZone(e))) P.wind += e.dir * 2.4;
-      if (tick % 4 === 0 && nearView(ecx, ecy)) { const z = fanZone(e); particles.push({ x: e.dir > 0 ? z.x : z.x + z.w, y: z.y + rand(4, z.h - 4), vx: e.dir * 5, vy: 0, life: 40, max: 40, r: 1.6, color: '#8fd0e8', g: 0 }); }
+      if (play && overlap(P, fanZone(e))) P.wind += e.dir * 5.5; // 風の強さ（前は2.4）
+      if (tick % 4 === 0 && nearView(ecx, ecy)) { const z = fanZone(e); particles.push({ x: e.dir > 0 ? z.x : z.x + z.w, y: z.y + rand(4, z.h - 4), vx: e.dir * 9, vy: 0, life: 26, max: 26, r: 1.6, color: '#8fd0e8', g: 0 }); }
       break;
     }
     case 'warper': {
