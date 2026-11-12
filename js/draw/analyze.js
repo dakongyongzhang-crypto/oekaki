@@ -125,20 +125,21 @@ function deriveParams(an) {
   };
 }
 function typeName(s) {
-  const arr = [['どっしりタンク型', s.hp], ['すばしっこスプリンター型', s.spd], ['トゲトゲアタッカー型', s.atk]].sort((a, b) => b[1] - a[1]);
-  if (arr[0][1] - arr[2][1] < 16) return 'バランス型';
-  return arr[0][0];
+  return { quake: 'どっしりタンク型', dash: 'すばしっこスプリンター型', shot: 'トゲトゲアタッカー型', slash: 'バランス型' }[atkTypeOf(s)];
 }
-// 攻撃方法：いちばん高い能力で決まる（3つが近いときはバランス型の「斬り」）
+// 攻撃方法：いちばん高い能力で決まる（3つが近いとき・速さがいちばん高くても SPEED_TYPE_MIN 未満のときはバランス型の「斬り」）
+const SPEED_TYPE_MIN = 85;
 const ATK_TYPES = {
-  slash: { name: '斬り', desc: '3つの能力のバランスがよいので、まわりをまとめて斬る（攻撃が高いほど範囲が広い）' },
+  slash: { name: '斬り', desc: `3つの能力のバランスがよい（または速さが${SPEED_TYPE_MIN}に届かない）ので、まわりをまとめて斬る（攻撃が高いほど範囲が広い）` },
   shot: { name: 'インクショット', desc: '攻撃がいちばん高いので、前にインクの弾を撃つ（攻撃が高いほど弾が速くて大きい）' },
-  dash: { name: 'ダッシュ突進', desc: '速さがいちばん高いので、前へ一気に突っ込んで体当たり（突進中は無敵・空中でも使える）' },
+  dash: { name: 'ダッシュ突進', desc: `速さがいちばん高く${SPEED_TYPE_MIN}以上なので、前へ一気に突っ込んで体当たり（突進中は無敵・空中でも使える）` },
   quake: { name: 'ドスン', desc: '体力がいちばん高いので、地面をゆらして両側と頭上の敵やペンを攻撃（空中で使うと急降下してから）' }
 };
 function atkTypeOf(s) {
   const arr = [['quake', s.hp], ['dash', s.spd], ['shot', s.atk]].sort((a, b) => b[1] - a[1]);
-  return arr[0][1] - arr[2][1] < 16 ? 'slash' : arr[0][0];
+  if (arr[0][1] - arr[2][1] < 16) return 'slash';
+  if (arr[0][0] === 'dash' && s.spd < SPEED_TYPE_MIN) return 'slash'; // 速さが足りないとスピードタイプにはならない
+  return arr[0][0];
 }
 function analyzeAndShow() {
   const an = analyze(); D.analysis = an;

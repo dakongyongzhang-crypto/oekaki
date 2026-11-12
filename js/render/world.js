@@ -79,9 +79,9 @@ function drawTerrain() {
   }
   inkPaths.forEach((p, k) => { g.fillStyle = INKS[k]; g.fill(p); });
   for (const [kind, cx, cy, rad, i, age, left] of others) {
+    if (kind === 13 && viewMode === 'runner') continue; // すけすけペン：ランナーの画面には一切描かない
     const sc = age < 8 ? 0.3 + age / 8 * 0.7 : 1;
     g.globalAlpha = left <= 180 ? ((tick >> 3) % 2 ? 0.35 : 0.85) : 1;
-    if (kind === 13 && viewMode === 'runner') g.globalAlpha *= 0.06; // すけすけペン：ランナーにはほとんど見えない
     drawPaintCell(g, kind, cx, cy, rad * sc, INKS[paintCol[i]], paintHp[i]);
     g.globalAlpha = 1;
   }

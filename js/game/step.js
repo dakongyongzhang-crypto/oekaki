@@ -84,7 +84,7 @@ function step() {
           tiles[i] = origTile[i];
         } else {
           tiles[i] = 0;
-          if (nearView(c * T, r * T)) burst(c * T + T / 2, r * T + T / 2, t === 5 ? '#a0703f' : INKS[paintCol[i]], 2, 1.2);
+          if (nearView(c * T, r * T) && !(t === 3 && paintKind[i] === 13)) burst(c * T + T / 2, r * T + T / 2, t === 5 ? '#a0703f' : INKS[paintCol[i]], 2, 1.2);
         }
       }
     }
