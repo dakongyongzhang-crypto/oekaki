@@ -167,6 +167,7 @@ body.net-guest #guestHint{display:inline}
 body.net-guest .ctrl #netPill{font-size:13px!important}
 .net-toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#24252b;color:#fff;padding:10px 16px;border-radius:12px;z-index:60;font-weight:700;max-width:90vw;box-shadow:0 4px 14px rgba(0,0,0,.3)}
 body.net-notool .tools{pointer-events:none}
+body.net-hidecards .builder-bar{display:none!important}
 .res-wait{margin:12px 0 0;font-weight:900;color:var(--builder);text-align:center}
 /* ---------- デバッグ ---------- */
 #btnDebug.on{background:#24252b;color:#ffd23f}
@@ -600,6 +601,7 @@ body.ingame .ctrl{font-size:12.5px}
         </div>
         <div class="go-row">
           <button class="btn primary big" id="btnGo" disabled>次へ：ビルダーのカード選び</button>
+          <button class="btn" id="btnRedoCancel1" hidden>やめて結果に戻る</button>
           <small id="goHint">もう少し描きこむと次へ進めます</small>
         </div>
       </aside>
@@ -622,6 +624,7 @@ body.ingame .ctrl{font-size:12.5px}
           <button class="btn sm" id="btnDeckClear">ぜんぶ外す</button>
         </div>
         <button class="btn blue big" id="btnDeckGo">このデッキで対戦開始</button>
+        <button class="btn" id="btnRedoCancel2" hidden>やめて結果に戻る</button>
       </div>
     </div>
     <div class="cat-tabs" id="catTabs"></div>
@@ -1144,13 +1147,28 @@ function deriveParams(an) {
     runSpeed: 3.0 + s.spd * 0.042,
     jumpV: 10.5 + s.spd * 0.014,
     slashR: Math.round(32 + s.atk * 0.42),
-    dmg: 1 + Math.floor(s.atk / 30)
+    dmg: 1 + Math.floor(s.atk / 30),
+    atkType: atkTypeOf(s),
+    shotSpd: 7 + s.atk * 0.03, shotR: 6 + Math.round(s.atk * 0.04),
+    dashSpd: Math.max(9, (3.0 + s.spd * 0.042) * 2.4),
+    quakeR: Math.round(80 + s.hp * 0.5)
   };
 }
 function typeName(s) {
   const arr = [['どっしりタンク型', s.hp], ['すばしっこスプリンター型', s.spd], ['トゲトゲアタッカー型', s.atk]].sort((a, b) => b[1] - a[1]);
   if (arr[0][1] - arr[2][1] < 16) return 'バランス型';
   return arr[0][0];
+}
+// 攻撃方法：いちばん高い能力で決まる（3つが近いときはバランス型の「斬り」）
+const ATK_TYPES = {
+  slash: { name: '斬り', desc: '3つの能力のバランスがよいので、まわりをまとめて斬る（攻撃が高いほど範囲が広い）' },
+  shot: { name: 'インクショット', desc: '攻撃がいちばん高いので、前にインクの弾を撃つ（攻撃が高いほど弾が速くて大きい）' },
+  dash: { name: 'ダッシュ突進', desc: '速さがいちばん高いので、前へ一気に突っ込んで体当たり（突進中は無敵・空中でも使える）' },
+  quake: { name: 'ドスン', desc: '体力がいちばん高いので、地面をゆらして両側の敵を攻撃（空中で使うと急降下してから）' }
+};
+function atkTypeOf(s) {
+  const arr = [['quake', s.hp], ['dash', s.spd], ['shot', s.atk]].sort((a, b) => b[1] - a[1]);
+  return arr[0][1] - arr[2][1] < 16 ? 'slash' : arr[0][0];
 }
 function analyzeAndShow() {
   const an = analyze(); D.analysis = an;
@@ -1167,7 +1185,7 @@ function analyzeAndShow() {
   set('Hp', s.hp); set('Spd', s.spd); set('Atk', s.atk);
   $('#sHp').textContent = `最大HP ${p.maxHp}`;
   $('#sSpd').textContent = `最高速 ${p.runSpeed.toFixed(1)}　ジャンプ力 ${p.jumpV.toFixed(1)}`;
-  $('#sAtk').textContent = `斬撃の範囲 ${p.slashR}px　ダメージ ${p.dmg}`;
+  $('#sAtk').textContent = `攻撃方法：${ATK_TYPES[p.atkType].name}　ダメージ ${p.dmg}`;
   $('#typeBadge').textContent = typeName(s);
   $('#bodySize').textContent = `体格 ${p.w}×${p.h}`;
   const lab = ['体力', '速さ', '攻撃'][an.colorVec.indexOf(Math.max(...an.colorVec))];
@@ -1180,7 +1198,8 @@ function analyzeAndShow() {
     `<li><span class="k">線</span><span>平均 ${an.avgW.toFixed(1)}px（${tw[0]}）。${tw[1]}</span></li>`,
     `<li><span class="k">大きさ</span><span>紙の${Math.round(an.sRaw * 100)}%（${sz[0]}）。${sz[1]}</span></li>`,
     `<li><span class="k">形</span><span>トゲトゲ度 ${Math.round(an.kN * 100)}%（${kk[0]}）。${kk[1]}</span></li>`,
-    `<li><span class="k">塗り</span><span>密度 ${Math.round(an.density * 100)}%（${dn[0]}）。${dn[1]}</span></li>`
+    `<li><span class="k">塗り</span><span>密度 ${Math.round(an.density * 100)}%（${dn[0]}）。${dn[1]}</span></li>`,
+    `<li><span class="k">攻撃</span><span><b>${ATK_TYPES[p.atkType].name}</b>：${ATK_TYPES[p.atkType].desc}</span></li>`
   ].join('');
   $('#btnGo').disabled = !an.enough;
   $('#goHint').textContent = an.enough ? '描き足すと能力が変わります' : 'もう少し描きこむと次へ進めます';
@@ -1246,9 +1265,11 @@ let ROWS = 27, LW = 300;
 // VW,VH = 1画面の大きさ（キャンバス座標） / BX,BY = ビルダー画面の左上 / VWW,VWH = 1画面に映るワールドの広さ / WW,WH = ステージ全体の広さ
 let SPLIT = 'h', VW = GW, VH = GH / 2, VS = 0.5, BX = 0, BY = GH / 2, VWW = GW * 2, VWH = GH, WW = 6000, WH = 540, TXS = 1.7;
 // mode: 'h' = 上下分割 / 'v' = 左右分割 / 's' = 分割なし（協力モード。2人で同じ画面を見る）
+const isH = () => SPLIT === 'h' || SPLIT === 'o'; // ビルダーの視点が横にスクロールする配置
 function setLayout(mode) {
   SPLIT = mode;
   if (mode === 'v') { VW = GW / 2; VH = GH; VS = 1; BX = GW / 2; BY = 0; TXS = 1; }
+  else if (mode === 'o') { VW = GW; VH = GH; VS = 1; BX = 0; BY = 0; TXS = 1; } // オンライン対戦：自分の役割の画面だけを全面に表示
   else if (mode === 's') { VW = GW; VH = GH; VS = COOP ? GW / (AREA_W + AREA_OV * 2) : 1; BX = 0; BY = 0; TXS = COOP ? 1.25 : 1; }
   else { VW = GW; VH = GH / 2; VS = 0.5; BX = 0; BY = GH / 2; TXS = 1.7; }
   VWW = VW / VS; VWH = VH / VS; WW = LW * T; WH = ROWS * T;
@@ -1493,7 +1514,7 @@ const hatch = (() => {
 let CH = null, P = null;
 const NET = { role: null, open: false, live: false, closing: false, dc: null, dcPending: null, pc: null, seed: null, seq: 0, idc: 0, fx: [], queue: [], guestReady: false,
   shadow: null, mP: null, mE: null, mB: null, gE: new Map(), gB: new Map(), small: {}, sE: '', sB: '', baseGuides: 0, camTarget: 0, camTargetY: 0, bTarget: 0, bSent: 0, bPend: false, pts: [], vsDown: false, mv: null, rtt: 0, bytes: 0, lastRx: 0,
-  vsMode: null, runnerSide: 'host', ready: [false, false] };
+  vsMode: null, runnerSide: 'host', ready: [false, false], busy: [false, false], redo: null };
 let tiles, paintCol, paintKind, paintHp, paintT, paintExp, origTile, items, clouds, goalX, goalY;
 let enemies = [], bullets = [], particles = [], popups = [];
 let state = 'countdown', prevState = 'play', countT = 0, timeLeft = 0, energy = 0, tick = 0, camX = 0, shake = 0, hitStop = 0, overT = 0, banner = null;
@@ -1861,12 +1882,12 @@ function genLevel(seed) {
       case 'tunnel': {
         flat(2); const len = ri(6, 12);
         for (let i = 0; i < len; i++) { ceil(c, h - 6); col(c++, h); }
-        flat(2); break;
+        flat(4); break; // 出口は4マス平ら（大きいキャラでも天井から出てから次の段差に挑める）
       }
       case 'stal': {
         const len = ri(7, 11), c0 = c; flat(len);
         const k = ri(2, 3);
-        for (let j = 0; j < k; j++) ceil(c0 + 1 + Math.floor(rng() * (len - 2)), h - ri(6, 9));
+        for (let j = 0; j < k; j++) ceil(c0 + 1 + Math.floor(rng() * (len - 4)), h - ri(6, 9)); // 最後の3マスには置かない
         break;
       }
     }
@@ -1879,7 +1900,7 @@ function genLevel(seed) {
   for (let x = -200; x < LW * T * 0.55 + 2200; x += cr() * 260 + 170) clouds.push({ x, y: 40 + cr() * 150, s: 0.6 + cr() * 0.7, v: cr() });
   startPos = { c: 3, r: 0 }; while (startPos.r < ROWS && !solid(3, startPos.r)) startPos.r++;
   let sr = 0; while (sr < ROWS && !solid(1, sr)) sr++; startSign = { x: 2 * T, y: sr * T };
-  setLayout('h');
+  setLayout(NET.role && !COOP ? 'o' : 'h');
 }
 function resetRound() {
   const seed = NET.role === 'guest' ? NET.seed : ((Math.random() * 1e9) | 0); NET.seed = seed; // オンラインでは、ホストの乱数の種をゲストにも渡して同じステージを作る
@@ -1903,7 +1924,7 @@ function resetRound() {
   updateToolAvailability();
   camX = clamp(P.x + P.w / 2 - VWW * 0.3, 0, Math.max(0, WW - VWW)); camY = clamp(P.y + P.h / 2 - VWH * 0.55, 0, Math.max(0, WH - VWH));
   scrIdx = Math.floor((P.x + P.w / 2) / AREA_W); if (SPLIT === 's') { camX = areaCamX(scrIdx, P.x + P.w / 2); camY = Math.max(0, WH - VWH); camSlide = { from: camX, to: camX, t: 1 }; }
-  if (SPLIT === 'h') { bCam = bCamT = clamp(480, 0, Math.max(0, WW - VWW)); bCamY = bCamTY = 0; }
+  if (isH()) { bCam = bCamT = clamp(480, 0, Math.max(0, WW - VWW)); bCamY = bCamTY = 0; }
   else { bCam = bCamT = 0; bCamY = bCamTY = clamp(camY - 400, 0, Math.max(0, WH - VWH)); }
   mmDirty = true; cardCd = {}; supUses = { ...SUPPORT_LIMIT }; if (COOP && pageDef(storyIdx).limit) for (const k in supUses) supUses[k] = pageDef(storyIdx).limit; refreshDebugUI();
   playStageMusic();
@@ -2241,6 +2262,7 @@ function goDeck() {
   if (NET.role && NET.vsMode) { // オンライン対戦：自分のキャラ・デッキは自分のPCで用意する
     const pl = MATCH.players[netMyIdx()];
     pl.ch = CH; pl.strokes = copyStrokes(D.strokes); pl.name = CH.name;
+    if (NET.redo === 'draw') { netRedoDone(); return; } // 組み直し：キャラだけ変えて結果画面に戻る
     if (NET.vsMode === 'free') { netPrepSend(); netPrepWait(); return; } // フリー：ホストはキャラだけ描く
     DECK = pl.deck.slice(); setSetupTexts(); show('scr-deck'); refreshDeckUI(); return;
   }
@@ -2254,7 +2276,11 @@ function goDeck() {
 }
 function deckGo() {
   if (!DECK.length) return;
-  if (NET.role && NET.vsMode) { MATCH.players[netMyIdx()].deck = DECK.slice(); netPrepSend(); netPrepWait(); return; }
+  if (NET.role && NET.vsMode) {
+    MATCH.players[netMyIdx()].deck = DECK.slice();
+    if (NET.redo === 'deck') { netRedoDone(); return; } // 組み直し：デッキだけ変えて結果画面に戻る
+    netPrepSend(); netPrepWait(); return;
+  }
   if (!MATCH.on) { startGame(); return; }
   if (MATCH.phase === 'redeck') { roleWho('builder').deck = DECK.slice(); MATCH.phase = 'play'; showSwap(); return; }
   MATCH.players[MATCH.setup].deck = DECK.slice();
@@ -2416,8 +2442,9 @@ $('#btnRoundGo').addEventListener('click', startRound);
 $('#btnSwapDeck').addEventListener('click', () => { MATCH.phase = 'redeck'; DECK = roleWho('builder').deck.slice(); setSetupTexts(); show('scr-deck'); refreshDeckUI(); });
 $('#btnSwapDraw').addEventListener('click', () => { MATCH.phase = 'redraw'; beginDrawFor(MATCH.runner, true); });
 $('#btnSwapQuit').addEventListener('click', quitToTitle);
-$('#btnNextRound').addEventListener('click', () => { $('#result').classList.add('hidden'); MATCH.round++; MATCH.runner = 1 - MATCH.runner; if (NET.role) netOnlineRound(); else showSwap(); });
+$('#btnNextRound').addEventListener('click', () => { if (netBusyGuard()) return; $('#result').classList.add('hidden'); MATCH.round++; MATCH.runner = 1 - MATCH.runner; if (NET.role) netOnlineRound(); else showSwap(); });
 $('#btnRematch').addEventListener('click', () => {
+  if (netBusyGuard()) return;
   $('#result').classList.add('hidden');
   MATCH.players.forEach(p => { p.wins = 0; });
   Object.assign(MATCH, { over: false, round: 1, runner: 0, phase: 'play', history: [] });
@@ -2535,7 +2562,7 @@ const builderActive = () => state === 'play' || state === 'countdown';
 const bwx = sx => (sx - BX) / VS + (SPLIT === 's' ? camX : bCam); // ビルダー画面上の座標 → ワールド座標
 const bwy = sy => (sy - BY) / VS + (SPLIT === 's' ? camY : bCamY);
 const inBuilder = p => p.x >= BX && p.y >= BY;
-function mmRect() { if (SPLIT === 's') return null; return SPLIT === 'h' ? { x: 14, y: GH - 20, w: GW - 28, h: 12, horiz: true } : { x: GW - 24, y: 66, w: 12, h: GH - 86, horiz: false }; }
+function mmRect() { if (SPLIT === 's') return null; return isH() ? { x: 14, y: GH - 20, w: GW - 28, h: 12, horiz: true } : { x: GW - 24, y: 66, w: 12, h: GH - 86, horiz: false }; }
 const inMM = p => { const m = mmRect(); if (!m) return false; return p.x >= m.x - 6 && p.x <= m.x + m.w + 6 && p.y >= m.y - 6 && p.y <= m.y + m.h + 6; };
 function mmSeek(p) {
   const m = mmRect();
@@ -2543,7 +2570,7 @@ function mmSeek(p) {
   else bCamTY = clamp((p.y - m.y) / m.h * WH - VWH / 2, 0, Math.max(0, WH - VWH));
 }
 function scrollBuilder(d) {
-  if (SPLIT === 'h') bCamT = clamp(bCamT + d, 0, Math.max(0, WW - VWW));
+  if (isH()) bCamT = clamp(bCamT + d, 0, Math.max(0, WW - VWW));
   else bCamTY = clamp(bCamTY + d, 0, Math.max(0, WH - VWH));
 }
 let pointerIsDown = false; // 扉のスイッチは「押している＋カーソルが乗っている」あいだだけ開く
@@ -2569,12 +2596,12 @@ gcv.addEventListener('pointermove', e => {
   const p = gpos(e);
   if (mmDrag) { mmSeek(p); return; }
   if (panDrag) {
-    if (SPLIT === 'h') bCamT = clamp(panDrag.cx - (p.x - panDrag.sx) / VS, 0, Math.max(0, WW - VWW));
+    if (isH()) bCamT = clamp(panDrag.cx - (p.x - panDrag.sx) / VS, 0, Math.max(0, WW - VWW));
     else bCamTY = clamp(panDrag.cy - (p.y - panDrag.sy) / VS, 0, Math.max(0, WH - VWH));
     return;
   }
   hover.sx = Math.max(p.x, BX); hover.sy = Math.max(p.y, BY); hover.on = painting || (inBuilder(p) && !inMM(p));
-  gcv.style.cursor = !inBuilder(p) ? 'default' : inMM(p) ? (SPLIT === 'h' ? 'ew-resize' : 'ns-resize') : 'crosshair';
+  gcv.style.cursor = !inBuilder(p) ? 'default' : inMM(p) ? (isH() ? 'ew-resize' : 'ns-resize') : 'crosshair';
   if (painting && builderActive()) { const w = { x: bwx(hover.sx), y: bwy(hover.sy) }; paintLine(lastPaint, w); lastPaint = w; }
 });
 const stopPaint = () => { painting = false; lastPaint = null; };
@@ -2608,7 +2635,7 @@ gcv.addEventListener('wheel', e => {
 $('#btnBView').addEventListener('pointerdown', e => e.preventDefault());
 $('#btnBView').addEventListener('click', () => {
   if (!P) return;
-  if (SPLIT === 'h') bCamT = clamp(P.x - 200, 0, Math.max(0, WW - VWW));
+  if (isH()) bCamT = clamp(P.x - 200, 0, Math.max(0, WW - VWW));
   else bCamTY = clamp(P.y - VWH * 0.7, 0, Math.max(0, WH - VWH));
 });
 
@@ -3108,7 +3135,12 @@ function doSlash() {
     if (e.type === 'firebar') box = { x: e.x - 4, y: e.y - 4, w: e.w + 8, h: e.h + 8 };
     if (circleRect(cx, cy, R, box)) { if (damageEnemy(e, CH.dmg, p.facing)) hit = true; }
   }
-  for (const b of bullets) { if (!b.dead && dist(cx, cy, b.x, b.y) < R + b.r) { b.dead = true; hit = true; burst(b.x, b.y, C.ink, 5, 2); } }
+  for (const b of bullets) { if (!b.dead && !b.friendly && dist(cx, cy, b.x, b.y) < R + b.r) { b.dead = true; hit = true; burst(b.x, b.y, C.ink, 5, 2); } }
+  breakCells(cx, cy, R, cx + p.facing * R * 0.6, cy - R * 0.5);
+  if (hit) popup(cx + p.facing * R * 0.5, cy - R * 0.7, 'バシッ!', C.runner, 20);
+}
+// ペンで描かれたブロックやネバネバを壊す（攻撃方法に関係なく使う）
+function breakCells(cx, cy, R, px, py) {
   let broke = 0, dented = 0;
   const c0 = Math.floor((cx - R) / T), c1 = Math.floor((cx + R) / T), r0 = Math.floor((cy - R) / T), r1 = Math.floor((cy + R) / T);
   for (let c = c0; c <= c1; c++) for (let r = r0; r <= r1; r++) {
@@ -3121,9 +3153,35 @@ function doSlash() {
       if (broke < 14) burst(c * T + T / 2, r * T + T / 2, (k === 0 || k === 8) ? INKS[paintCol[i]] : KCOL[k], 3, 2.4);
     }
   }
-  if (broke) { ST.broken += broke; SFX.crumble(); popup(cx + p.facing * R * 0.6, cy - R * 0.5, 'ガリッ', C.builder, 18); }
-  else if (dented) { SFX.clank(); popup(cx + p.facing * R * 0.6, cy - R * 0.5, 'ガキン', '#5a6072', 18); }
-  if (hit) popup(cx + p.facing * R * 0.5, cy - R * 0.7, 'バシッ!', C.runner, 20);
+  if (broke) { ST.broken += broke; SFX.crumble(); popup(px, py, 'ガリッ', C.builder, 18); }
+  else if (dented) { SFX.clank(); popup(px, py, 'ガキン', '#5a6072', 18); }
+  return broke + dented;
+}
+function doAttack() {
+  const p = P, t = CH.atkType || 'slash';
+  if (t === 'shot') { p.atkT = 8; p.atkCd = 22; doShot(); }
+  else if (t === 'dash') { p.atkCd = 34; p.dashT = 11; p.dashDir = p.facing; p.dashHit = []; p.slam = 0; p.inv = Math.max(p.inv, 14); SFX.whoosh(); dust(p.x + p.w / 2, p.y + p.h, 5); }
+  else if (t === 'quake') { p.atkCd = 40; if (p.onGround) doQuake(1); else { p.slam = 1; p.vy = 12; SFX.whoosh(); } }
+  else { p.atkT = 16; p.atkCd = 22; doSlash(); }
+}
+function doShot() { // インクショット：前に弾を撃つ
+  const p = P, d = p.facing;
+  bullets.push({ kind: 'ink', friendly: true, x: p.x + p.w / 2 + d * (p.w / 2 + 2), y: p.y + p.h * 0.42, vx: d * (CH.shotSpd || 8), vy: 0, r: CH.shotR || 7, life: 46, dmg: CH.dmg, col: CH.color || C.runner, dead: false });
+  SFX.shoot();
+}
+function doQuake(pow) { // ドスン：地面をゆらして両側を攻撃
+  const p = P, cx = p.x + p.w / 2, fy = p.y + p.h, R = (CH.quakeR || 100) * pow;
+  p.quakeT = 16; p.quakeR = Math.round(R); shake = Math.max(shake, 6 + 3 * pow); SFX.thud();
+  let hit = false;
+  for (const e of enemies) {
+    if (e.dead || e.spawnT > 0) continue;
+    const ex = e.x + e.w / 2;
+    if (Math.abs(ex - cx) <= R + e.w / 2 && e.y + e.h > fy - 90 && e.y < fy + 24) { if (damageEnemy(e, CH.dmg + 1, ex < cx ? -1 : 1)) hit = true; }
+  }
+  for (const b of bullets) if (!b.dead && !b.friendly && Math.abs(b.x - cx) <= R && Math.abs(b.y - fy) < 90) { b.dead = true; burst(b.x, b.y, C.ink, 4, 2); }
+  breakCells(cx, fy - 12, R * 0.55, cx, p.y - 30);
+  for (let k = -3; k <= 3; k++) dust(cx + k * R / 3.2, fy, 3);
+  popup(cx, p.y - 12, hit ? 'ドスン!!' : 'ドスン!', C.runner, 22);
 }
 function fallOut() {
   const p = P;
@@ -3173,6 +3231,8 @@ function updatePlayer() {
   if (!J && p.vy < -4.5 && p.noCut <= 0) p.vy = -4.5;
   if (dbg('fly')) p.vy = held(K_JUMP) ? -6 : (keys.KeyS || keys.ArrowDown) ? 6 : 0; // デバッグ：ふわふわ移動
   else p.vy = Math.min(p.vy + GRAV * (p.glued ? 0.7 : 1), p.glued ? 5 : 13);
+  if (p.dashT > 0) { p.vy = 0; p.vx = p.dashDir * (CH.dashSpd || 9); } // ダッシュ突進中は高さを保ってまっすぐ進む
+  if (p.slam) p.vy = Math.max(p.vy, 12); // ドスン（空中）：急降下
   const vyPrev = p.vy, prevBottom = p.y + p.h, wasGround = p.onGround;
   const baseVx = p.vx;
   p.vx = baseVx + p.wind;
@@ -3184,6 +3244,17 @@ function updatePlayer() {
   }
   p.vx = mr.hitX ? 0 : baseVx;
   p.wind = 0;
+  if (p.dashT > 0) { // ダッシュ突進：ぶつかった敵にダメージ、壁にぶつかったらペンのブロックを壊して止まる
+    p.dashT--;
+    const hb = { x: p.x - 6, y: p.y - 4, w: p.w + 12, h: p.h + 8 };
+    p.dashHit = p.dashHit || [];
+    for (const e of enemies) if (!e.dead && e.spawnT <= 0 && !p.dashHit.includes(e) && overlap(hb, e)) { p.dashHit.push(e); if (damageEnemy(e, CH.dmg, p.dashDir)) popup(e.x + e.w / 2, e.y - 8, 'ドカッ!', C.runner, 20); }
+    for (const b of bullets) if (!b.dead && !b.friendly && circleRect(b.x, b.y, b.r, hb)) { b.dead = true; burst(b.x, b.y, C.ink, 5, 2); }
+    if (mr.hitX) { breakCells(p.x + p.w / 2 + p.dashDir * (p.w / 2 + 10), p.y + p.h / 2, Math.max(26, p.h * 0.6), p.x + p.w / 2 + p.dashDir * 30, p.y - 10); p.dashT = 0; shake = Math.max(shake, 4); }
+    if (p.dashT === 0) p.vx = p.dashDir * (CH.runSpeed || 3);
+  }
+  if (p.slam && p.onGround) { p.slam = 0; doQuake(1.3); }
+  if (p.quakeT > 0) p.quakeT--;
   trail.push([p.x, p.y, p.facing]); if (trail.length > 200) trail.shift();
   if (p.onGround && !wasGround && vyPrev > 6) { p.squash = 1.25; dust(p.x + p.w / 2, p.y + p.h, 5); }
   p.squash = lerp(p.squash, 1, 0.2);
@@ -3224,7 +3295,7 @@ function updatePlayer() {
 
   if (p.atkCd > 0) p.atkCd--;
   if (atkPressed && COOP) { if (tick - (p.noAtkT || 0) > 50) { popup(p.x + p.w / 2, p.y - 10, '攻撃できない！', C.bad, 16); p.noAtkT = tick; } }
-  else if (atkPressed && p.atkCd <= 0) { p.atkT = 16; p.atkCd = 22; doSlash(); }
+  else if (atkPressed && p.atkCd <= 0) doAttack();
   atkPressed = false;
   if (p.atkT > 0) p.atkT--;
 
@@ -3620,6 +3691,15 @@ function followTrail(e) {
 function updateBullets() {
   for (const b of bullets) {
     if (b.dead) continue;
+    if (b.friendly) { // ランナーのインクショット：敵・敵の弾・ペンのブロックに当たる
+      b.x += b.vx; b.y += b.vy; b.life--;
+      if (b.life <= 0) { b.dead = true; continue; }
+      if (solid(Math.floor(b.x / T), Math.floor(b.y / T))) { b.dead = true; if (!breakCells(b.x, b.y, 14, b.x, b.y - 12)) burst(b.x, b.y, b.col, 6, 2); continue; }
+      for (const e of enemies) if (!e.dead && e.spawnT <= 0 && circleRect(b.x, b.y, b.r, e)) { b.dead = true; if (damageEnemy(e, b.dmg, Math.sign(b.vx))) popup(b.x, b.y - 12, 'ビシャッ!', C.runner, 18); burst(b.x, b.y, b.col, 8, 2.4); break; }
+      if (b.dead) continue;
+      for (const o of bullets) if (o !== b && !o.dead && !o.friendly && dist(o.x, o.y, b.x, b.y) < o.r + b.r) { o.dead = true; b.dead = true; burst(b.x, b.y, C.ink, 5, 2); break; }
+      continue;
+    }
     if (b.kind === 'boom') {
       b.vx += b.ax; b.rot += 0.45;
       const o = b.owner;
@@ -3637,7 +3717,7 @@ function updateBullets() {
       if (b.kind === 'rock') { burst(b.x, b.y, '#a59c8e', 9, 2.4); dust(b.x, b.y, 4); if (nearView(b.x, b.y)) SFX.thud(); }
       else burst(b.x, b.y, '#8b90a0', 5, 1.6);
     }
-    else if (state === 'play' && P.inv <= 0 && circleRect(b.x, b.y, b.r, P)) { b.dead = true; hurt(b.dmg || 12, b.x, b.word || 'ドン!'); }
+    else if (!b.friendly && state === 'play' && P.inv <= 0 && circleRect(b.x, b.y, b.r, P)) { b.dead = true; hurt(b.dmg || 12, b.x, b.word || 'ドン!'); }
   }
   bullets = bullets.filter(b => !b.dead);
 }
@@ -3683,7 +3763,7 @@ function showResult() {
       <p><span>与えたダメージ</span><b>${ST.dmg}</b></p>
       <p><span>${MATCH.on ? 'マッチ' : '通算成績'}</span><b>${MATCH.on ? `A ${MATCH.players[0].wins} − ${MATCH.players[1].wins} B` : `${SCORE.runner} − ${SCORE.builder}`}</b></p></div>`;
   ['#btnRetry', '#btnRedeck', '#btnRedraw'].forEach(sel => { $(sel).hidden = MATCH.on; });
-  if (NET.role && !COOP) { $('#btnRedeck').hidden = true; $('#btnRedraw').hidden = true; } // オンラインでは、デッキ・キャラの組み直しはなし
+  if (NET.role && !COOP) { $('#btnRedraw').hidden = false; $('#btnRedeck').hidden = !MATCH.on; netUpdateWait(); } // オンライン：自分のぶんだけ組み直せる（フリーのホストはキャラ、ゲストはデッキ）
   $('#btnNextRound').hidden = !MATCH.on || MATCH.over;
   $('#btnRematch').hidden = !MATCH.on || !MATCH.over;
   const rm = $('#resMatch'); rm.hidden = !MATCH.on;
@@ -3917,9 +3997,9 @@ $('#btnBgm').setAttribute('aria-pressed', String(BGM.enabled));
 $('#btnBgm').addEventListener('click', e => { toggleBgm(); e.currentTarget.blur(); });
 ['pointerdown', 'keydown'].forEach(ev => window.addEventListener(ev, () => { SFX.init(); if (screen !== 'scr-game') musicForScreen(screen); }, { capture: true }));
 document.addEventListener('visibilitychange', () => { if (!SFX.ctx) return; if (document.hidden) SFX.ctx.suspend(); else SFX.ctx.resume(); });
-$('#btnRetry').addEventListener('click', () => { resetRound(); gcv.focus({ preventScroll: true }); });
-$('#btnRedeck').addEventListener('click', () => { $('#result').classList.add('hidden'); show('scr-deck'); refreshDeckUI(); });
-$('#btnRedraw').addEventListener('click', () => { $('#result').classList.add('hidden'); show('scr-draw'); });
+$('#btnRetry').addEventListener('click', () => { if (NET.role && !COOP) { netOnlineRetry(); return; } resetRound(); gcv.focus({ preventScroll: true }); });
+$('#btnRedeck').addEventListener('click', () => { if (NET.role && !COOP) { netRedo('deck'); return; } $('#result').classList.add('hidden'); show('scr-deck'); refreshDeckUI(); });
+$('#btnRedraw').addEventListener('click', () => { if (NET.role && !COOP) { netRedo('draw'); return; } $('#result').classList.add('hidden'); show('scr-draw'); });
 $('#btnTitle').addEventListener('click', quitToTitle);
 
 function startGame() {
@@ -4027,7 +4107,7 @@ function step() {
     camY = lerp(camY, clamp(P.y + P.h / 2 - VWH * 0.55, 0, Math.max(0, WH - VWH)), 0.12);
   }
   // ビルダーの視点：自由にスクロールできるが、ランナーより後ろ（横なら左、縦なら下）だけを見ることはできない
-  if (SPLIT === 'h') bCamT = clamp(Math.max(bCamT, P.x + P.w + 120 - VWW), 0, Math.max(0, WW - VWW));
+  if (isH()) bCamT = clamp(Math.max(bCamT, P.x + P.w + 120 - VWW), 0, Math.max(0, WW - VWW));
   else bCamTY = clamp(Math.min(bCamTY, P.y - 120), 0, Math.max(0, WH - VWH));
   bCam = lerp(bCam, bCamT, 0.25); bCamY = lerp(bCamY, bCamTY, 0.25);
   if (tick % 20 === 0) mmDirty = true;
@@ -4849,6 +4929,12 @@ function drawEnemies() {
   }
   for (const b of bullets) {
     if (b.kind === 'boom') { g.save(); g.translate(b.x, b.y); g.rotate(b.rot); drawBoomerang(g, 0, 0, 9); g.restore(); continue; }
+    if (b.kind === 'ink') {
+      g.save(); g.globalAlpha = 0.35; g.fillStyle = b.col; g.beginPath(); g.ellipse(b.x - Math.sign(b.vx) * b.r * 1.4, b.y, b.r * 1.6, b.r * 0.6, 0, 0, TAU); g.fill(); g.restore();
+      g.beginPath(); g.arc(b.x, b.y, b.r, 0, TAU); g.fillStyle = b.col; g.fill(); g.strokeStyle = C.ink; g.lineWidth = 2; g.stroke();
+      g.beginPath(); g.arc(b.x - b.r * 0.3, b.y - b.r * 0.3, b.r * 0.3, 0, TAU); g.fillStyle = 'rgba(255,255,255,0.7)'; g.fill();
+      continue;
+    }
     if (b.kind === 'shot') {
       g.beginPath(); g.arc(b.x, b.y, b.r, 0, TAU); g.fillStyle = '#ff7fa6'; g.fill(); g.strokeStyle = C.ink; g.lineWidth = 2; g.stroke();
       g.beginPath(); g.arc(b.x - 2, b.y - 2, 2.2, 0, TAU); g.fillStyle = '#ffffff'; g.fill();
@@ -4928,7 +5014,32 @@ function drawPlayer() {
     g.lineWidth = 5.5; g.strokeStyle = '#fff'; g.strokeText('⇄ さかさま', 0, 0); g.fillStyle = C.builder; g.fillText('⇄ さかさま', 0, 0);
     g.restore();
   }
-  if (p.atkT > 0) {
+  const atype = ch.atkType || 'slash';
+  if (p.dashT > 0) { // ダッシュ突進：残像と集中線
+    g.save();
+    for (let k = 1; k <= 3; k++) {
+      g.save(); g.globalAlpha = 0.26 / k; g.translate(cx - p.dashDir * k * 16, footY - legH); g.scale(p.facing, 1);
+      g.drawImage(ch.spr, -p.w / 2, -bodyH, p.w, bodyH); g.restore();
+    }
+    g.strokeStyle = ch.color || C.runner; g.lineWidth = 3; g.lineCap = 'round'; g.beginPath();
+    for (let i = 0; i < 4; i++) { const y = p.y + p.h * (0.15 + i * 0.22), x = p.dashDir > 0 ? p.x - 4 : p.x + p.w + 4; g.moveTo(x, y); g.lineTo(x - p.dashDir * (22 + i * 8), y); }
+    g.stroke(); g.restore();
+  }
+  if (p.slam) { // ドスン（空中）：急降下の線
+    g.save(); g.strokeStyle = ch.color || C.runner; g.lineWidth = 3; g.lineCap = 'round'; g.beginPath();
+    for (let i = 0; i < 3; i++) { const x = p.x + p.w * (0.2 + i * 0.3); g.moveTo(x, p.y - 6); g.lineTo(x, p.y - 24 - i * 4); }
+    g.stroke(); g.restore();
+  }
+  if (p.quakeT > 0) { // ドスン：足もとから広がる衝撃波
+    const q = 1 - p.quakeT / 16, R = (p.quakeR || 100) * (0.25 + q * 0.75);
+    g.save(); g.globalAlpha = 1 - q; g.strokeStyle = ch.color || C.runner; g.lineWidth = 6 * (1 - q) + 2;
+    g.beginPath(); g.ellipse(cx, footY, R, R * 0.22, 0, 0, TAU); g.stroke(); g.restore();
+  }
+  if (p.atkT > 0 && atype === 'shot') { // インクショット：発射の光
+    const fx = p.x + p.w / 2 + p.facing * (p.w / 2 + 4), fy = p.y + p.h * 0.42;
+    g.save(); g.globalAlpha = p.atkT / 8; g.fillStyle = ch.color || C.runner; g.beginPath(); g.arc(fx, fy, 6 + (8 - p.atkT), 0, TAU); g.fill(); g.restore();
+  }
+  if (p.atkT > 0 && atype === 'slash') {
     const q = 1 - p.atkT / 16, scx = p.x + p.w / 2 + p.facing * 10, scy = p.y + p.h / 2, R = ch.slashR * (0.78 + q * 0.22);
     const a0 = -Math.PI / 2 - p.facing * 0.3, span = TAU * Math.min(1, q * 1.7) * p.facing;
     g.save(); g.lineCap = 'round'; g.globalAlpha = 1 - q * 0.75;
@@ -5137,7 +5248,7 @@ function drawHUD() {
   // ビルダー（下 or 右）
   const rx = GW - 10 - LP, ry = BY + 8; panel(rx, ry, LP, PH);
   g.textAlign = 'left'; g.font = `13px ${FONT}`; g.fillStyle = C.builder; g.fillText(MATCH.on ? roleWho('builder').label : 'P2', rx + 10, ry + 17);
-  g.fillStyle = C.ink; g.fillText(CARD[tool].name, rx + 32, ry + 17);
+  g.fillStyle = C.ink; g.fillText(SPLIT === 'o' && netIAmRunner() ? 'ビルダー' : CARD[tool].name, rx + 32, ry + 17); // オンライン対戦のランナーには、相手のカードを見せない
   g.textAlign = 'right'; g.font = `12px ${FONT}`; g.fillText(`エネルギー ${Math.floor(energy)}`, rx + LP - 10, ry + 17);
   bar(rx + 10, ry + 23, LP - 20, 13, energy / EMAX, C.builder);
   g.strokeStyle = 'rgba(255,255,255,0.7)'; g.lineWidth = 1; g.beginPath();
@@ -5222,7 +5333,10 @@ function render() {
   const sx = shake ? (Math.random() - 0.5) * shake * 0.6 : 0, sy = shake ? (Math.random() - 0.5) * shake * 0.6 : 0;
   const single = SPLIT === 's';
   if (single) renderView(0, 0, camX, camY, 'single', sx, sy);
-  else {
+  else if (SPLIT === 'o') { // オンライン対戦：自分の画面だけ
+    if (netIAmRunner()) renderView(0, 0, camX, camY, 'runner', sx, sy);
+    else renderView(0, 0, bCam, bCamY, 'builder', 0, 0);
+  } else {
     renderView(0, 0, camX, camY, 'runner', sx, sy);
     renderView(BX, BY, bCam, bCamY, 'builder', 0, 0);
     if (SPLIT === 'h') { g.fillStyle = '#ffffff'; g.fillRect(0, VH - 4, GW, 8); g.fillStyle = C.ink; g.fillRect(0, VH - 2, GW, 4); }
@@ -5240,6 +5354,11 @@ function render() {
       st.story.forEach((line, k) => drawCenterText(line, 15, C.ink, 136 + k * 23, 1, rcx));
       drawCenterText(`ヒント：${st.hint}`, 18, C.builder, 216, 1, rcx);
       drawCenterText(String(n), 90 + f * 30, C.runner, rcy + 60, 0.4 + f * 0.6, rcx);
+    } else if (SPLIT === 'o') {
+      const me = netIAmRunner();
+      drawCenterText(`${MATCH.on ? `ラウンド${MATCH.round}　` : ''}ステージ「${stage.name}」`, 26, C.ink, 100, 1, GW / 2);
+      drawCenterText(me ? 'あなたはランナー：ゴールをめざそう！' : 'あなたはビルダー：今のうちに敵やワナを置こう', 21, me ? C.runner : C.builder, 142, 1, GW / 2);
+      drawCenterText(String(n), 100 + f * 30, C.runner, GH / 2 + 30, 0.4 + f * 0.6, GW / 2);
     } else {
     drawCenterText(`${MATCH.on ? `ラウンド${MATCH.round}　` : ''}ステージ「${stage.name}」`, hz ? 26 : 24, C.ink, hz ? 92 : 110, 1, rcx);
     drawCenterText(String(n), (hz ? 70 : 100) + f * 30, C.runner, single ? rcy - 20 : rcy + (hz ? 34 : 0), 0.4 + f * 0.6, rcx);
@@ -5443,8 +5562,8 @@ function netClose(sendBye) {
   if (sendBye) netSend({ t: 'bye' });
   NET.closing = true;
   const r = NET.role; NET.role = null; netCleanup();
-  document.body.classList.remove('net-host', 'net-guest', 'net-notool'); $('#netPill').hidden = true; $('#resWait').hidden = true;
-  NET.vsMode = null; NET.runnerSide = 'host'; NET.ready = [false, false]; NET.vsDown = false;
+  document.body.classList.remove('net-host', 'net-guest', 'net-notool', 'net-hidecards'); $('#netPill').hidden = true; $('#resWait').hidden = true;
+  NET.vsMode = null; NET.runnerSide = 'host'; NET.ready = [false, false]; NET.vsDown = false; NET.busy = [false, false]; NET.redo = null;
   if (r === 'host') { pointerIsDown = false; releaseGate(); }
   NET.closing = false;
 }
@@ -5538,6 +5657,7 @@ function netOnMessage(raw) {
   if (m.t === 'ping') { netSend({ t: 'pong', ts: m.ts }); return; }
   if (m.t === 'pong') { NET.rtt = performance.now() - m.ts; updateNetPill(); return; }
   if (m.t === 'prep') { netOnPrep(m); return; }
+  if (m.t === 'redo') { NET.busy[m.i] = !!m.on; netUpdateWait(); return; }
   if (m.t === 'bye') {
     if (NET.role === 'guest') { netToast('ホストが部屋を閉じました。タイトルに戻ります。', 6000); netClose(false); quitToTitle(); }
     else { NET.open = false; NET.live = false; netToast('相手が退出しました。', 6000); if (screen === 'scr-game' && (state === 'play' || state === 'countdown')) togglePause(); }
@@ -5631,9 +5751,10 @@ function netTileDiff() {
 }
 function netHostBegin() {
   if (!NET.open) { NET.role = null; document.body.classList.remove('net-host'); updateNetPill(); return; } // 相手がいなければ、ふつうの協力プレイとして続ける
+  NET.busy = [false, false]; NET.redo = null;
   NET.seq = 0; NET.fx.length = 0; NET.idc = 0; NET.mP = new Map(); NET.mE = new Map(); NET.mB = new Map(); NET.small = {}; NET.sE = ''; NET.sB = '';
   NET.shadow = netMakeShadow(); NET.live = true;
-  netApplyRoleClasses();
+  netApplyRoleClasses(); resizeGame(); // カード欄の表示が変わるので、画面の大きさを合わせ直す
   netSend({ t: 'start', seed: NET.seed, idx: storyIdx, lv: COOP_LV, ck: sumArr(tiles), vs: COOP ? 0 : 1, rs: NET.runnerSide, deck: DECK.slice(),
     match: MATCH.on ? { target: MATCH.target, round: MATCH.round, runner: MATCH.runner, wins: MATCH.players.map(p => p.wins), history: MATCH.history } : 0,
     ch: serializeCH(CH) });
@@ -5711,7 +5832,7 @@ function netGuestMsg(m) {
   else if (m.t === 'wait') { NET.guestReady = false; NET.queue = []; $('#result').classList.add('hidden'); onShow('onWait'); $('#waitTitle').textContent = '接続中'; $('#waitMsg').textContent = m.msg; show('scr-online'); }
 }
 async function netStartMirror(m) {
-  NET.guestReady = false; NET.queue = [];
+  NET.guestReady = false; NET.queue = []; NET.busy = [false, false]; NET.redo = null;
   try { CH = await deserializeCH(m.ch); } catch (_e) { netToast('キャラ画像を受け取れませんでした', 6000); return; }
   COOP = !m.vs; COOP_LV = m.lv; storyIdx = m.idx; NET.runnerSide = m.rs || 'host'; NET.seed = m.seed;
   if (m.vs) {
@@ -5793,7 +5914,7 @@ function guestStep() {
   else {
     camY += (NET.camTargetY - camY) * 0.4;
     if (netIAmBuilder()) { // 自分がビルダー：視点は自分で動かす（ランナーより後ろは見られない）
-      if (SPLIT === 'h') bCamT = clamp(Math.max(bCamT, P.x + P.w + 120 - VWW), 0, Math.max(0, WW - VWW));
+      if (isH()) bCamT = clamp(Math.max(bCamT, P.x + P.w + 120 - VWW), 0, Math.max(0, WW - VWW));
       bCam = lerp(bCam, bCamT, 0.25);
       if (Math.abs(bCamT - NET.bSent) > 0.5) { NET.bSent = bCamT; NET.bPend = true; }
     } else bCam += (NET.bTarget - bCam) * 0.4;
@@ -5812,8 +5933,10 @@ function netShowRes(m) {
   if (m.sc) { SCORE.runner = m.sc.r; SCORE.builder = m.sc.b; }
   if (m.mt) { m.mt.wins.forEach((w, i) => { MATCH.players[i].wins = w; }); MATCH.history = m.mt.history; MATCH.over = m.mt.over; }
   updateScoreUI();
-  $$('#result .result-btns .btn').forEach(b => { b.hidden = b.id !== 'btnTitle'; });
-  $('#btnTitle').textContent = '切断してタイトルへ'; $('#resWait').hidden = false;
+  const keep = new Set(['btnTitle']);
+  if (!COOP) { keep.add('btnRedeck'); if (MATCH.on) keep.add('btnRedraw'); } // ゲスト：フリーではデッキ、マッチではキャラとデッキを自分で組み直せる
+  $$('#result .result-btns .btn').forEach(b => { b.hidden = !keep.has(b.id); });
+  $('#btnTitle').textContent = '切断してタイトルへ'; $('#resWait').hidden = false; netUpdateWait();
   $('#result').classList.remove('hidden');
 }
 
@@ -5842,7 +5965,10 @@ const netIAmRunner = () => !NET.role || (NET.role === 'host') === netRunnerIsHos
 const netIAmBuilder = () => !NET.role || (NET.role === 'host') !== netRunnerIsHost();
 const netPtrIntercept = () => NET.role === 'guest' || (NET.role === 'host' && !netIAmBuilder());
 const netMyIdx = () => NET.role === 'host' ? 0 : 1;
-function netApplyRoleClasses() { document.body.classList.toggle('net-notool', !!NET.role && !netIAmBuilder()); }
+function netApplyRoleClasses() {
+  document.body.classList.toggle('net-notool', !!NET.role && !netIAmBuilder());
+  document.body.classList.toggle('net-hidecards', !!NET.role && !COOP && !netIAmBuilder()); // 対戦のランナーには相手のカードを見せない
+}
 function serializeCH(ch) {
   const o = {};
   for (const k in ch) { const v = ch[k]; if (k === 'spr' || typeof v === 'function') continue; o[k] = v; }
@@ -5868,6 +5994,13 @@ function netFixTexts() { // オンライン対戦の準備画面の文言
       $('#btnDeckGo').textContent = '準備完了';
     }
   } else $('#btnDeckGo').textContent = '準備完了';
+  const red = !!NET.redo; // 組み直し中
+  $('#btnRedoCancel1').hidden = !red; $('#btnRedoCancel2').hidden = !red;
+  if (red) {
+    $('#btnGo').textContent = '決定して結果に戻る'; $('#btnDeckGo').textContent = '決定して結果に戻る';
+    $('#drawSub').textContent = '組み直し：描き直して「決定して結果に戻る」を押します。やめるときは「やめて結果に戻る」。';
+    $('#deckSub').textContent = '組み直し：カードを選び直して「決定して結果に戻る」を押します。やめるときは「やめて結果に戻る」。';
+  }
 }
 function netPrepSend() {
   const i = netMyIdx(), pl = MATCH.players[i];
@@ -5882,6 +6015,10 @@ async function netOnPrep(m) {
   const pl = MATCH.players[m.i]; if (!pl) return;
   if (m.ch) { try { pl.ch = await deserializeCH(m.ch); } catch (_e) { return; } pl.strokes = m.strokes || []; pl.name = m.name || pl.ch.name; }
   if (m.deck) pl.deck = m.deck;
+  if (m.redo) { // 組み直しが終わった（ゲームはまだ始めない）
+    if (NET.role === 'host' && !MATCH.on && m.i === 1 && m.deck) DECK = m.deck.slice();
+    NET.busy[m.i] = false; netUpdateWait(); return;
+  }
   NET.ready[m.i] = true;
   netTryStartVersus();
 }
@@ -5894,6 +6031,43 @@ function netTryStartVersus() { // ホスト：2人とも準備できたら始め
   else { MATCH.on = true; Object.assign(MATCH, { phase: 'play', round: 1, runner: 0, over: false, history: [] }); p0.wins = p1.wins = 0; startRound(); }
 }
 function netOnlineRound() { NET.runnerSide = MATCH.runner === 0 ? 'host' : 'guest'; startRound(); } // マッチ：席替えの画面は飛ばして、すぐ次のラウンドへ
+function netBusyGuard() { // ホスト：相手が組み直し中なら、ゲームを始めない
+  if (NET.role === 'host' && NET.busy[1]) { netToast('相手がキャラ・カードを組み直しています。少し待ってください。', 3500); return true; }
+  return false;
+}
+function netUpdateWait() {
+  const el = $('#resWait'), other = 1 - netMyIdx();
+  if (NET.busy[other]) { el.textContent = '相手がキャラ・カードを組み直しています…'; el.hidden = false; }
+  else if (NET.role === 'guest') { el.textContent = 'ホストが次の操作を選んでいます…'; el.hidden = false; }
+  else el.hidden = true;
+}
+function netBackToResult() { show('scr-game'); resizeGame(); $('#result').classList.remove('hidden'); netUpdateWait(); }
+function netRedo(kind) { // 自分のキャラ／デッキを組み直す（相手には「組み直し中」と伝える）
+  const me = netMyIdx(), pl = MATCH.players[me];
+  NET.redo = kind; NET.busy[me] = true; netSend({ t: 'redo', i: me, on: 1 });
+  $('#result').classList.add('hidden');
+  if (kind === 'draw') beginDrawFor(me, true);
+  else { DECK = pl.deck.slice(); setSetupTexts(); show('scr-deck'); refreshDeckUI(); }
+}
+function netRedoDone() {
+  const me = netMyIdx(), pl = MATCH.players[me];
+  NET.redo = null; NET.busy[me] = false;
+  netSend({ t: 'prep', i: me, name: pl.name, ch: pl.ch ? serializeCH(pl.ch) : null, strokes: pl.strokes, deck: pl.deck, redo: 1 });
+  $('#btnRedoCancel1').hidden = true; $('#btnRedoCancel2').hidden = true;
+  netBackToResult();
+}
+function netRedoCancel() {
+  if (!NET.redo) return;
+  const me = netMyIdx();
+  NET.redo = null; NET.busy[me] = false; netSend({ t: 'redo', i: me, on: 0 });
+  $('#btnRedoCancel1').hidden = true; $('#btnRedoCancel2').hidden = true;
+  netBackToResult();
+}
+function netOnlineRetry() { // フリー：組み直したキャラ・デッキで、もう一度
+  if (netBusyGuard()) return;
+  CH = MATCH.players[0].ch; DECK = MATCH.players[1].deck.slice();
+  startGame();
+}
 function netBeginVsHost(mode) {
   if (!NET.open) return;
   NET.vsMode = mode; NET.ready = [false, false]; NET.runnerSide = 'host'; COOP = false;
@@ -5986,6 +6160,8 @@ $('#btnGuestMake').addEventListener('click', async () => {
 $('#btnCopyGuest').addEventListener('click', async e => { const b = e.currentTarget; const ok = await copyText($('#guestAnswer')); b.textContent = ok ? 'コピーしました！' : 'うまくコピーできません（文字を選んでコピーしてください）'; setTimeout(() => { b.textContent = 'コピー'; }, 2500); });
 ['#btnOnBack1', '#btnOnBack2', '#btnOnBack0'].forEach(id => $(id).addEventListener('click', () => { if (id === '#btnOnBack0') { netClose(false); show('scr-title'); } else { netClose(false); onShow('onPick'); } }));
 $('#btnWaitLeave').addEventListener('click', () => quitToTitle());
+$('#btnRedoCancel1').addEventListener('click', netRedoCancel);
+$('#btnRedoCancel2').addEventListener('click', netRedoCancel);
 window.addEventListener('beforeunload', () => { if (NET.role) netSend({ t: 'bye' }); });
 
 /* =====================================================
