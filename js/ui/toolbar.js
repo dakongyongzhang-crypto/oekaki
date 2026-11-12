@@ -10,7 +10,7 @@ function buildToolbar() {
     const c = CARD[id];
     const b = document.createElement('button');
     b.className = 'tool'; b.dataset.id = id; b.tabIndex = -1;
-    b.innerHTML = `<span class="tk">${i + 1}</span><span class="tu"></span><canvas width="104" height="76"></canvas><span class="tn">${c.name}</span><span class="tc">コスト ${c.costLabel}</span>`;
+    b.innerHTML = `<span class="tk">${i + 1}</span><span class="tu"></span><canvas width="104" height="76"></canvas><span class="tx"><span class="tn">${c.name}</span><span class="tc">コスト ${c.costLabel}</span></span>`;
     b.title = c.desc;
     let lastPd = 0;
     b.addEventListener('pointerdown', e => { e.preventDefault(); if (NET.role && !netIAmBuilder()) return; lastPd = performance.now(); selectTool(id); });

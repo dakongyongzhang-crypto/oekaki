@@ -397,20 +397,55 @@ kbd{font-family:inherit;font-size:.82em;border:1.5px solid var(--ink);border-bot
 @media (any-pointer:coarse){.touchpad{display:flex}}
 .touchpad.force{display:flex}
 /* ---------- ゲーム画面：余白を減らして、できるだけ大きく表示 ---------- */
-body.ingame #app{max-width:none;padding:6px 10px 10px}
+body.ingame #app{max-width:none;padding:4px 6px 6px}
 body.ingame #app{position:relative}
-body.ingame .topbar{position:absolute;top:6px;right:10px;margin:0;z-index:2}
+body.ingame .topbar{position:absolute;top:3px;right:6px;margin:0;z-index:2;gap:8px}
+body.ingame .topbar .btn.sm{padding:3px 10px;font-size:13px}
 body.ingame .brand{display:none}
-body.ingame .game-head{margin-bottom:6px;min-height:34px;padding-right:var(--topbarW,0px)}
-body.ingame .ctrl{font-size:12.5px}
-.game-body{display:flex;flex-direction:column;align-items:center;gap:8px}
-.game-body .stage{width:var(--stageW,100%);max-width:100%;margin:0;flex:none}
-.game-body .builder-bar{width:var(--stageW,100%);max-width:100%;margin:0}
-.game-body.side{flex-direction:row;align-items:flex-start;justify-content:center;gap:10px}
-.game-body.side .builder-bar{width:236px;flex:none;align-self:stretch;overflow:auto;padding:8px 10px}
-.game-body.side .tools{grid-template-columns:repeat(2,minmax(0,1fr))}
+body.ingame .game-head{margin-bottom:4px;min-height:28px;padding-right:var(--topbarW,0px)}
+body.ingame .head-btns .btn.sm{padding:3px 10px;font-size:13px}
+body.ingame .ctrl{font-size:12px}
+body.ingame kbd{padding:0 4px}
+.game-body{display:flex;flex-direction:column;align-items:center;gap:6px}
+.game-body .stage{width:var(--stageW,100%);height:var(--stageH,auto);aspect-ratio:auto;max-width:100%;margin:0;flex:none;box-shadow:3px 3px 0 var(--shade)}
+.game-body .builder-bar{width:var(--stageW,100%);max-width:100%;margin:0;padding:5px 8px 6px;border-radius:12px;box-shadow:3px 3px 0 var(--shade)}
+/* ゲーム中のカード欄はコンパクトに（絵の右に名前とコスト） */
+.game-body .bb-label{margin-bottom:4px;font-size:13px;flex-wrap:nowrap;gap:6px}
+.game-body #bbHint{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11.5px}
+.game-body .bb-label .btn.sm{padding:2px 10px;font-size:12.5px;flex:none}
+.game-body .tools{gap:6px}
+.game-body .tool{flex-direction:row;justify-content:flex-start;gap:5px;padding:4px 5px;border-radius:10px}
+.game-body .tool canvas{width:44px;height:32px;flex:none;border-radius:6px}
+.game-body .tool .tx{display:flex;flex-direction:column;min-width:0;align-items:flex-start}
+.game-body .tool .tn{font-size:12px;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.game-body .tool .tc{font-size:10.5px;white-space:nowrap}
+.game-body .tool .tk{top:1px;left:4px;font-size:10px}
+.game-body .tool .tu{top:1px;right:4px;font-size:10px}
+.game-body .tool.on{transform:translateY(-2px)}
+.game-body.side{flex-direction:row;align-items:flex-start;justify-content:center;gap:6px}
+.game-body.side .builder-bar{width:178px;height:var(--stageH,auto);flex:none;overflow:auto;padding:6px}
+.game-body.side .tools{grid-template-columns:1fr}
+.game-body.side .bb-label{flex-wrap:wrap}
 .game-body.side #bbHint{display:none}
 .game-body.side .bb-label .btn{margin-left:0}
+/* 狭い画面：上のボタン列は見出しの上に普通に並べる（見出しが押しつぶされないように） */
+@media (max-width:760px){
+  body.ingame .topbar{position:static;justify-content:flex-end;margin-bottom:4px;flex-wrap:wrap;gap:6px}
+  body.ingame .game-head{padding-right:0}
+}
+@media (max-width:760px) and (any-pointer:coarse){ body.ingame #atkHint, body.ingame .ctrl kbd, body.ingame .ctrl small{display:none} }
+/* カードが4列になる幅では、絵の下に名前を置く（横並びだと名前が切れる） */
+@media (max-width:820px){
+  .game-body:not(.side) .tool{flex-direction:column;align-items:center;gap:1px;padding:3px 3px 4px}
+  .game-body:not(.side) .tool .tx{align-items:center;max-width:100%}
+  .game-body:not(.side) .tool .tn{text-align:center}
+  .game-body:not(.side) .tool canvas{width:40px;height:29px}
+}
+/* 背の低い画面（スマホ横向きなど）：見出し行をしまってゲーム画面に回す */
+@media (max-height:500px){
+  body.ingame .topbar, body.ingame .ctrl{display:none}
+  body.ingame .game-head{padding-right:0;min-height:0;margin-bottom:3px;justify-content:flex-end}
+}
 .touchpad{max-width:var(--stageW,100%)}
 .tp-group{display:flex;gap:10px}
 .tp{width:68px;height:58px;border:2px solid var(--ink);border-radius:14px;background:var(--runner-soft);color:var(--ink);font-weight:900;font-size:17px;box-shadow:2px 3px 0 var(--shade);touch-action:none;user-select:none;-webkit-user-select:none}

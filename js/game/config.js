@@ -3,7 +3,8 @@
 /* =====================================================
    ゲーム定数と画面分割レイアウト
    ===================================================== */
-const GW = 960, GH = 540, T = 20;
+// GW = ゲーム画面の論理的な横幅。オフライン対戦では窓の縦横比に合わせて変わる（fitStage）。高さ GH は常に 540
+let GW = 960; const GH = 540, T = 20, GW_BASE = 960;
 let ROWS = 27, LW = 300;
 // 画面を上下に2分割（上：ランナー / 下：ビルダー）。各画面はステージの高さまるごとを 1/2 の縮尺で映す
 // 画面分割レイアウト。横に進むステージ＝上下分割（1/2縮尺）、上に登るステージ＝左右分割（等倍）
@@ -13,6 +14,7 @@ let SPLIT = 'h', VW = GW, VH = GH / 2, VS = 0.5, BX = 0, BY = GH / 2, VWW = GW *
 const isH = () => SPLIT === 'h' || SPLIT === 'o'; // ビルダーの視点が横にスクロールする配置
 function setLayout(mode) {
   SPLIT = mode;
+  if (mode === 's' || mode === 'o') GW = GW_BASE; // 協力・オンラインは16:9のまま（相手と見える範囲をそろえる）
   if (mode === 'v') { VW = GW / 2; VH = GH; VS = 1; BX = GW / 2; BY = 0; TXS = 1; }
   else if (mode === 'o') { VW = GW; VH = GH; VS = 1; BX = 0; BY = 0; TXS = 1; } // オンライン対戦：自分の役割の画面だけを全面に表示
   else if (mode === 's') { VW = GW; VH = GH; VS = COOP ? GW / (AREA_W + AREA_OV * 2) : 1; BX = 0; BY = 0; TXS = COOP ? 1.25 : 1; }

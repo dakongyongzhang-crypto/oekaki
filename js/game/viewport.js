@@ -6,22 +6,34 @@
 const gcv = $('#game');
 const g = gcv.getContext('2d');
 let dpr = 1;
+const SIDE_W = 178; // 横に並べるときのカード欄の幅（CSS の .game-body.side .builder-bar と合わせる）
 function fitStage() {
-  // ゲーム画面を窓に収まる最大サイズにする。横長の画面では、カード欄を右側に縦に並べてさらに大きくする
+  // ゲーム画面を窓に収まる最大サイズにする。カード欄は下か右の、ゲーム画面が大きくなるほうに置く
+  // オフライン対戦は、窓の縦横比に合わせてゲーム画面の横幅（GW）を変えて余白をなくす
   if (curScreen !== 'scr-game') return;
   const body = $('#gameBody'), bar = body.querySelector('.builder-bar'), tp = $('#touchpad'), root = document.documentElement;
-  const vw = root.clientWidth - 20, vh = window.innerHeight;
-  const tpH = getComputedStyle(tp).display !== 'none' ? tp.offsetHeight + 10 : 0;
+  const vw = root.clientWidth - 12, vh = window.innerHeight;
+  const tpH = getComputedStyle(tp).display !== 'none' ? tp.offsetHeight + 8 : 0;
   root.style.setProperty('--topbarW', ($('.topbar').offsetWidth + 12) + 'px'); // 上のボタン列はゲーム画面の見出しと同じ行に並べる
   body.classList.remove('side');
-  root.style.setProperty('--stageW', Math.min(vw, 1600) + 'px');
+  root.style.setProperty('--stageW', vw + 'px');
   const top = body.getBoundingClientRect().top + window.scrollY;
-  const availH = vh - top - tpH - 10, barH = bar.offsetHeight;
-  const wBottom = Math.min(vw, (availH - barH - 8) * 16 / 9);
-  const wSide = Math.min(vw - 246, availH * 16 / 9);
-  const side = vw >= 900 && wSide > wBottom + 30;
-  body.classList.toggle('side', side);
-  root.style.setProperty('--stageW', Math.floor(Math.max(320, side ? wSide : wBottom)) + 'px');
+  const availH = vh - top - tpH - 8, barH = bar.offsetHeight;
+  const flex = !COOP && !NET.role;
+  const minA = flex ? 4 / 3 : 16 / 9, maxA = flex ? 2.4 : 16 / 9;
+  const fit = (bw, bh) => {
+    let w = Math.max(320, bw), h = Math.max(180, bh);
+    if (w / h > maxA) w = h * maxA; else if (w / h < minA) h = w / minA;
+    return { w: Math.floor(w), h: Math.floor(h) };
+  };
+  const bottom = fit(vw, availH - barH - 6), side = fit(vw - SIDE_W - 6, availH);
+  const useSide = vw >= 600 && side.w * side.h > bottom.w * bottom.h * 1.04;
+  body.classList.toggle('side', useSide);
+  const st = useSide ? side : bottom;
+  root.style.setProperty('--stageW', st.w + 'px');
+  root.style.setProperty('--stageH', st.h + 'px');
+  const ngw = flex ? Math.round(GH * st.w / st.h) : GW_BASE;
+  if (ngw !== GW) { GW = ngw; setLayout(SPLIT); mmDirty = true; }
 }
 function resizeGame() {
   fitStage();

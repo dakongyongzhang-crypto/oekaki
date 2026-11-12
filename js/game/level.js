@@ -17,7 +17,7 @@ const COOP_STAGE = { name: 'いっしょにゴール', terr: '#e3e6ee', grass: t
 // 協力モード専用ステージ：サポーターの助けがないと越えられない「大穴」「絶壁」「スイッチ扉」が交互に出てくる
 function genCoopLevel(rng, ri, seed) {
   const st = pageDef(storyIdx);
-  ROWS = Math.ceil(GH * (AREA_W + AREA_OV * 2) / GW / T); // 協力モードは視点を引いているので、そのぶん下に地面を足す
+  ROWS = Math.ceil(GH * (AREA_W + AREA_OV * 2) / GW_BASE / T); // 協力モードは視点を引いているので、そのぶん下に地面を足す
   const SCR = AREA_W / T; // 1エリアの列数（48）
   LW = (st.kinds.length + 4) * SCR; tiles = new Uint8Array(LW * ROWS); // 生成用の仮の長さ（あとで実際の長さに詰め直す）
   items = []; gates = []; guides = [];
