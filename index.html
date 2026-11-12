@@ -1149,7 +1149,7 @@ function deriveParams(an) {
     slashR: Math.round(32 + s.atk * 0.42),
     dmg: 1 + Math.floor(s.atk / 30),
     atkType: atkTypeOf(s),
-    shotSpd: 7 + s.atk * 0.03, shotR: 6 + Math.round(s.atk * 0.04),
+    shotSpd: 7 + s.atk * 0.03, shotR: 8 + Math.round(s.atk * 0.05),
     dashSpd: Math.max(9, (3.0 + s.spd * 0.042) * 2.4),
     quakeR: Math.round(80 + s.hp * 0.5)
   };
@@ -1570,7 +1570,8 @@ function genCoopLevel(rng, ri, seed) {
   const flat = n => { for (let i = 0; i < n; i++) col(c++, h); };
   const padTo = target => { while (c < target) col(c++, h); };
   const gateDefs = [], lockDefs = [], liftDefs = [];
-  const MAXW = { pit: 23, wall: 10, spikes: 22, key: 18, lift: 16, dark: 36, gate: 15, darkpit: 28 };
+  const MAXW = { pit: 26, wall: 10, spikes: 22, key: 18, lift: 16, dark: 39, gate: 15, darkpit: 33 };
+  const hole = holeMaker(rng);
   st.kinds.forEach((kind, n) => {
     const s0 = c;
     // 助走（洞くつでは天井つき）。段差は画面の境目には置かず、助走の途中に作る
@@ -1584,7 +1585,7 @@ function genCoopLevel(rng, ri, seed) {
     }
     if (lead >= 5 && rng() < 0.3) items.push({ type: 'heart', x: (s0 + 2) * T + T / 2, y: (h - 3) * T, taken: false });
     if (kind === 'pit') {
-      flat(2); const pw = st.ex ? ri(16, 18) : ri(13, 16); guides.push({ kind: 'bridge', row: h, c0: c, c1: c + pw - 1 }); c += pw; flat(3);
+      flat(2); const pw = hole.noJump(st.ex ? ri(16, 18) : ri(13, 16)); guides.push({ kind: 'bridge', row: h, c0: c, c1: c + pw - 1 }); c += pw; flat(3); // ジャンプでは越えられない幅（キャラに合わせる）
     } else if (kind === 'wall') {
       flat(4); const wh = ri(9, 10); guides.push({ kind: 'pad', row: h - 1, c0: c - 3, c1: c - 2 });
       for (let i = 0; i < 3; i++) { col(c, h); for (let r = h - wh; r < h; r++) tiles[idx(c, r)] = 1; c++; }
@@ -1612,14 +1613,14 @@ function genCoopLevel(rng, ri, seed) {
     } else if (kind === 'darkpit') {
       // 暗闇の中の大穴：照らしながら橋をかける
       flat(3); const z0 = c; flat(3);
-      const pw = ri(14, 16); guides.push({ kind: 'bridge', row: h, c0: c, c1: c + pw - 1 }); c += pw;
+      const pw = hole.noJump(ri(14, 16)); guides.push({ kind: 'bridge', row: h, c0: c, c1: c + pw - 1 }); c += pw;
       flat(4); darkZones.push({ x0: z0 * T, x1: c * T }); flat(2);
     } else if (kind === 'dark') {
       // 暗闇ゾーン：P2のカーソルのまわりだけが明るい。小さな穴とトゲが隠れている
       flat(3); const z0 = c;
       for (let k = 0; k < 3; k++) {
         flat(ri(3, 5));
-        if (rng() < 0.55) c += ri(3, 4);
+        if (rng() < 0.55) c += hole.jumpable(0.15, 0.3, 5); // 暗闇の中の小さな穴（跳び越えられる）
         else { const m = ri(3, 4); for (let i = 0; i < m; i++) { col(c, h); tiles[idx(c, h)] = 8; c++; } }
       }
       flat(4); darkZones.push({ x0: z0 * T, x1: c * T });
@@ -1793,6 +1794,18 @@ function drawGates() {
     g.restore();
   }
 }
+// キャラに合わせた穴の大きさ：助走つきジャンプで跳べる横の距離と、体の幅から決める
+function jumpReach() { const ch = CH || {}; return (ch.runSpeed || 4) * 2 * (ch.jumpV || 11) / GRAV; }
+function holeMaker(rng) {
+  const w = (CH && CH.w) || 36, reach = jumpReach();
+  const minT = Math.ceil((w + 24) / T); // 体より広くないと「穴」にならない
+  return {
+    // 跳び越えられる穴（k = 跳べる距離のどれくらいを使うか）
+    jumpable: (k0, k1, maxT = 99) => clamp(Math.round((w + reach * (k0 + rng() * (k1 - k0))) / T), minT, Math.max(minT, maxT)),
+    // ジャンプだけでは絶対に越えられない穴（協力：橋が必要）
+    noJump: base => Math.max(base, Math.ceil((w + reach + 40) / T))
+  };
+}
 function genLevel(seed) {
   const rng = mulberry32(seed);
   const ri = (a, b) => a + Math.floor(rng() * (b - a + 1));
@@ -1803,7 +1816,7 @@ function genLevel(seed) {
   paintT = new Int32Array(N); paintExp = new Int32Array(N); origTile = new Uint8Array(N);
   items = [];
   stage = THEMES[Math.floor(rng() * THEMES.length)];
-  const HMIN = stage.hmin, HMAX = stage.hmax;
+  const HMIN = stage.hmin, HMAX = stage.hmax, hole = holeMaker(rng);
   let c = 0, h = ri(18, 22), lastHeart = 0;
   const col = (cc, hh, to = ROWS) => { if (cc < 0 || cc >= LW) return; for (let r = Math.max(0, hh); r < Math.min(to, ROWS); r++) tiles[idx(cc, r)] = 1; };
   const flat = n => { for (let i = 0; i < n && c < LW; i++) col(c++, h); };
@@ -1818,7 +1831,7 @@ function genLevel(seed) {
     let seg = pick(); if (seg === prev && rng() < 0.5) seg = pick(); prev = seg;
     switch (seg) {
       case 'flat': flat(ri(4, 9)); break;
-      case 'gap': c += ri(2, 4); flat(ri(3, 6)); break;
+      case 'gap': c += hole.jumpable(0.25, 0.55); flat(ri(3, 6)); break;
       case 'up': h = Math.max(HMIN, h - ri(1, 3)); flat(ri(4, 8)); break;
       case 'down': h = Math.min(HMAX, h + ri(1, 3)); flat(ri(4, 8)); break;
       case 'pillar': {
@@ -1827,8 +1840,8 @@ function genLevel(seed) {
         flat(4); break;
       }
       case 'float': {
-        const gap = ri(7, 9), start = c; c += gap;
-        const mid = start + Math.floor(gap / 2) - 1;
+        const half = hole.jumpable(0.12, 0.28), gap = half * 2 + 3, start = c; c += gap;
+        const mid = start + half;
         for (let i = 0; i < 3; i++) setT(mid + i, h - 2, 4);
         flat(ri(3, 5)); break;
       }
@@ -1856,20 +1869,20 @@ function genLevel(seed) {
       case 'islands': {
         const n = ri(3, 5);
         for (let k = 0; k < n; k++) {
-          c += ri(2, 3); h = clamp(h + ri(-1, 1), HMIN, HMAX);
+          c += hole.jumpable(0.12, 0.3); h = clamp(h + ri(-1, 1), HMIN, HMAX);
           const w = ri(2, 4);
           for (let i = 0; i < w; i++) { col(c, h, h + 3); c++; }
           if (k === n - 1) heart((c - w / 2) * T, (h - 1) * T + 4, 0.35);
         }
-        c += ri(2, 3); flat(4); break;
+        c += hole.jumpable(0.12, 0.3); flat(4); break;
       }
       case 'pillars': {
         const n = ri(3, 5);
         for (let k = 0; k < n; k++) {
-          c += 2; h = clamp(h + ri(-2, 1), HMIN, HMAX);
+          c += hole.jumpable(0.08, 0.22); h = clamp(h + ri(-2, 1), HMIN, HMAX);
           const w = ri(2, 3); for (let i = 0; i < w; i++) col(c++, h);
         }
-        c += 2; flat(4); break;
+        c += hole.jumpable(0.08, 0.22); flat(4); break;
       }
       case 'planks': {
         const len = ri(9, 12), c0 = c; flat(len);
@@ -3166,7 +3179,7 @@ function doAttack() {
 }
 function doShot() { // インクショット：前に弾を撃つ
   const p = P, d = p.facing;
-  bullets.push({ kind: 'ink', friendly: true, x: p.x + p.w / 2 + d * (p.w / 2 + 2), y: p.y + p.h * 0.42, vx: d * (CH.shotSpd || 8), vy: 0, r: CH.shotR || 7, life: 46, dmg: CH.dmg, col: CH.color || C.runner, dead: false });
+  bullets.push({ kind: 'ink', friendly: true, x: p.x + p.w / 2 + d * (p.w / 2 + 2), y: p.y + p.h * 0.42, vx: d * (CH.shotSpd || 8), vy: 0, r: CH.shotR || 9, hr: (CH.shotR || 9) + 8, life: 46, dmg: CH.dmg, col: CH.color || C.runner, dead: false });
   SFX.shoot();
 }
 function doQuake(pow) { // ドスン：地面をゆらして両側を攻撃
@@ -3695,9 +3708,9 @@ function updateBullets() {
       b.x += b.vx; b.y += b.vy; b.life--;
       if (b.life <= 0) { b.dead = true; continue; }
       if (solid(Math.floor(b.x / T), Math.floor(b.y / T))) { b.dead = true; if (!breakCells(b.x, b.y, 14, b.x, b.y - 12)) burst(b.x, b.y, b.col, 6, 2); continue; }
-      for (const e of enemies) if (!e.dead && e.spawnT <= 0 && circleRect(b.x, b.y, b.r, e)) { b.dead = true; if (damageEnemy(e, b.dmg, Math.sign(b.vx))) popup(b.x, b.y - 12, 'ビシャッ!', C.runner, 18); burst(b.x, b.y, b.col, 8, 2.4); break; }
+      for (const e of enemies) if (!e.dead && e.spawnT <= 0 && circleRect(b.x, b.y, b.hr || b.r, e)) { b.dead = true; if (damageEnemy(e, b.dmg, Math.sign(b.vx))) popup(b.x, b.y - 12, 'ビシャッ!', C.runner, 18); burst(b.x, b.y, b.col, 8, 2.4); break; }
       if (b.dead) continue;
-      for (const o of bullets) if (o !== b && !o.dead && !o.friendly && dist(o.x, o.y, b.x, b.y) < o.r + b.r) { o.dead = true; b.dead = true; burst(b.x, b.y, C.ink, 5, 2); break; }
+      for (const o of bullets) if (o !== b && !o.dead && !o.friendly && dist(o.x, o.y, b.x, b.y) < o.r + (b.hr || b.r)) { o.dead = true; b.dead = true; burst(b.x, b.y, C.ink, 5, 2); break; }
       continue;
     }
     if (b.kind === 'boom') {
