@@ -15,7 +15,31 @@ function rectNearPlayer(x, y, w, h, R = safeR()) {
   const pcx = P.x + P.w / 2, pcy = P.y + P.h / 2;
   return dist(pcx, pcy, clamp(pcx, x, x + w), clamp(pcy, y, y + h)) < R;
 }
+// 対戦：ワナは1画面（ランナーの画面1つ分の範囲）に TRAP_SCREEN_MAX 個まで
+const TRAP_SCREEN_MAX = 3;
+const trapCapOn = () => !COOP && !dbg('noLimit');
+function trapsNear(cx, cy) {
+  const vert = stage.vertical, half = (vert ? VWH : VWW) / 2, near = (x, y) => Math.abs((vert ? y : x) - (vert ? cy : cx)) < half;
+  let n = 0;
+  for (const e of enemies) if (e.trap && !e.dead && near(e.x + e.w / 2, e.y + e.h / 2)) n++;
+  // トゲブロック（タイル）は4マスで1個と数える
+  let thorn = 0;
+  const c0 = Math.max(0, Math.floor((vert ? 0 : cx - half) / T)), c1 = Math.min(LW - 1, Math.floor((vert ? WW : cx + half) / T));
+  const r0 = Math.max(0, Math.floor((vert ? cy - half : 0) / T)), r1 = Math.min(ROWS - 1, Math.floor((vert ? cy + half : WH) / T));
+  for (let c = c0; c <= c1; c++) for (let r = r0; r <= r1; r++) { const i = idx(c, r); if (tiles[i] === 3 && paintKind[i] === 2) thorn++; }
+  return n + Math.ceil(thorn / 4);
+}
 function placementFor(id, wx, wy) {
+  const pl = placementBase(id, wx, wy);
+  if (pl.ok && CARD[id].cat === 'trap' && trapCapOn()) {
+    const d = ETYPES[id], cx = id === 'thorn' ? pl.x + T : d ? pl.x + d.w / 2 : wx, cy = id === 'thorn' ? pl.y + T : d ? pl.y + d.h / 2 : wy;
+    const n = trapsNear(cx, id === 'rockfall' ? P.y : cy);
+    pl.trapN = n;
+    if (n >= TRAP_SCREEN_MAX) { pl.ok = false; pl.why = `ワナは1画面に${TRAP_SCREEN_MAX}個まで`; }
+  }
+  return pl;
+}
+function placementBase(id, wx, wy) {
   const card = CARD[id];
   if (SUPPORT_BLOCKS[id]) {
     // おすすめ場所の近くなら自動でぴったり合わせる。ふさがっているマスは飛ばして、置けるマスだけに置く（コストもその分だけ）
@@ -125,7 +149,7 @@ function tryPlaceW(wx, wy) {
     updateToolAvailability(); return;
   }
   if (SPAWNS[tool]) for (const [t, ox, oy] of SPAWNS[tool]) { const e = ETYPES[t]; spawnEnemy(t, wx + ox - e.w / 2, wy + oy - e.h / 2); }
-  else spawnEnemy(tool, pl.x, pl.y);
+  else { const e = spawnEnemy(tool, pl.x, pl.y); if (card.cat === 'trap') e.trap = true; }
   SFX.place();
   if (!ETYPES[tool] || !ETYPES[tool].sneaky) burst(wx, wy, C.builder, 8, 2.5); // じらいは置いた場所がばれないように粒を出さない
   updateToolAvailability();

@@ -8,6 +8,7 @@ function ghostLabel(text, x, y, ok) {
   g.lineWidth = 5.5; g.strokeStyle = '#fff'; g.strokeText(text, x, y);
   g.fillStyle = ok ? C.builder : C.bad; g.fillText(text, x, y);
 }
+const trapNote = pl => pl.trapN != null ? `（この画面のワナ ${pl.trapN}/${TRAP_SCREEN_MAX}）` : '';
 function drawGhost() {
   if (!hover.on || !builderActive()) return;
   const wx = bwx(hover.sx), wy = bwy(hover.sy), card = CARD[tool];
@@ -68,13 +69,13 @@ function drawGhost() {
     for (const [c, r] of pl.cells) drawPaintCell(g, PENS[tool].kind, c * T + T / 2, r * T + T / 2, T * 0.62, INKS[0], 1);
     g.globalAlpha = 1;
     g.setLineDash([4, 4]); g.strokeStyle = pl.ok ? C.builder : C.bad; g.lineWidth = 2; g.strokeRect(pl.x - 3, pl.y - 3, T * 2 + 6, T * 2 + 6); g.setLineDash([]);
-    ghostLabel(pl.ok ? `${card.name}  ${card.cost}` : pl.why, pl.x + T, pl.y - 12, pl.ok);
+    ghostLabel(pl.ok ? `${card.name}  ${card.cost}${trapNote(pl)}` : pl.why, pl.x + T, pl.y - 12, pl.ok);
   } else if (tool === 'rockfall') {
     const pl = placementFor(tool, wx, wy), c = Math.floor(wx / T); let r = Math.max(0, Math.floor(camY / T)); while (r < ROWS && !solid(c, r)) r++;
     g.setLineDash([5, 7]); g.strokeStyle = pl.ok ? 'rgba(42,91,215,0.7)' : C.bad; g.lineWidth = 2;
     g.beginPath(); g.moveTo(wx, camY + 70); g.lineTo(wx, Math.min(r * T, WH)); g.stroke(); g.setLineDash([]);
     g.beginPath(); g.ellipse(wx, Math.min(r * T, WH) - 2, 16, 4, 0, 0, TAU); g.fillStyle = 'rgba(36,37,43,0.2)'; g.fill();
-    ghostLabel(pl.ok ? `${card.name}  ${card.cost}` : pl.why, wx, wy - 14, pl.ok);
+    ghostLabel(pl.ok ? `${card.name}  ${card.cost}${trapNote(pl)}` : pl.why, wx, wy - 14, pl.ok);
   } else {
     const pl = placementFor(tool, wx, wy);
     const parts = SPAWNS[tool] ? SPAWNS[tool].map(([t, ox, oy]) => [t, wx + ox - ETYPES[t].w / 2, wy + oy - ETYPES[t].h / 2]) : [[tool, pl.x, pl.y]];
@@ -91,7 +92,7 @@ function drawGhost() {
     if (tool === 'fan') { const zx = pcx < pl.x + d.w / 2 ? pl.x - 230 : pl.x + d.w; g.fillStyle = 'rgba(143,208,232,0.18)'; g.fillRect(zx, pl.y - 18, 230, d.h + 18); }
     if (tool === 'laser') { const dir = pcx < pl.x + d.w / 2 ? -1 : 1, sx = dir > 0 ? pl.x + d.w + 3 : pl.x - 3; g.setLineDash([4, 6]); g.strokeStyle = 'rgba(255,92,132,0.6)'; g.lineWidth = 2; g.beginPath(); g.moveTo(sx, pl.y + 9); g.lineTo(sx + dir * 220, pl.y + 9); g.stroke(); g.setLineDash([]); }
     if (tool === 'bomb') { g.setLineDash([6, 6]); g.strokeStyle = 'rgba(224,122,31,0.6)'; g.lineWidth = 2; g.beginPath(); g.arc(pl.x + d.w / 2, pl.y + d.h / 2, BOMB_R, 0, TAU); g.stroke(); g.setLineDash([]); }
-    ghostLabel(pl.ok ? `${card.name}  ${card.cost}` : pl.why, pl.x + d.w / 2, pl.y - 10 - (ETYPES[tool] && ETYPES[tool].reach ? ETYPES[tool].reach : 0), pl.ok);
+    ghostLabel(pl.ok ? `${card.name}  ${card.cost}${trapNote(pl)}` : pl.why, pl.x + d.w / 2, pl.y - 10 - (ETYPES[tool] && ETYPES[tool].reach ? ETYPES[tool].reach : 0), pl.ok);
   }
   g.restore();
 }
