@@ -34,7 +34,7 @@ function netFixTexts() { // オンライン対戦の準備画面の文言
       $('#btnGo').textContent = '準備完了（相手を待つ）';
     } else {
       $('#deckTitle').innerHTML = '<span class="pill p2">P2</span> ビルダーのカードを選ぼう';
-      $('#deckSub').textContent = 'オンライン対戦：あなたはビルダー（マウス）です。69種類から8枚まで選びます（ワナ・特殊はそれぞれ2枚まで）。';
+      $('#deckSub').textContent = 'オンライン対戦：あなたはビルダー（マウス）です。69種類から8枚まで選びます（特殊は2枚まで）。';
       $('#btnDeckGo').textContent = '準備完了';
     }
   } else $('#btnDeckGo').textContent = '準備完了';

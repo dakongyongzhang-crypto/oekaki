@@ -104,7 +104,7 @@ const CARD = Object.fromEntries(CARDS.map(c => [c.id, c]));
 // クリックで2×2のブロックを置くカード（トゲブロック・かたいペン・てつペン・ハネカエシペン）と、ドラッグで描くペン
 const isBlockCard = id => id === 'thorn' || !!(PENS[id] && PENS[id].block);
 const isDrawPen = id => CARD[id].cat === 'pen' && !isBlockCard(id);
-const CAT_MAX = { trap: 2, special: 2 }; // デッキに入れられる枚数に上限がある種類（ワナ・特殊）
+const CAT_MAX = { special: 2 }; // デッキに入れられる枚数に上限がある種類（特殊）
 const catCount = (deck, cat) => deck.filter(id => CARD[id] && CARD[id].cat === cat).length;
 const catFull = (deck, cat) => CAT_MAX[cat] != null && catCount(deck, cat) >= CAT_MAX[cat];
 const PRESET = ['pen', 'walker', 'hopper', 'flyer', 'spike', 'cannon', 'slime', 'dark'];

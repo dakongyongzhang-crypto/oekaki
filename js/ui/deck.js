@@ -59,7 +59,7 @@ function refreshDeckUI() {
   });
   $('#deckCount').textContent = DECK.length;
   $('#btnDeckGo').disabled = DECK.length === 0;
-  $('#deckHint').textContent = DECK.length ? `枠をクリックで外せます（ワナ ${catCount(DECK, 'trap')}/${CAT_MAX.trap}枚・特殊 ${catCount(DECK, 'special')}/${CAT_MAX.special}枚）` : `カードを1枚以上選んでください（ワナ・特殊はそれぞれ${CAT_MAX.trap}枚まで）`;
+  $('#deckHint').textContent = DECK.length ? `枠をクリックで外せます（特殊 ${catCount(DECK, 'special')}/${CAT_MAX.special}枚）` : `カードを1枚以上選んでください（特殊は${CAT_MAX.special}枚まで）`;
 }
 $('#btnDeckPreset').addEventListener('click', () => { DECK = PRESET.slice(); refreshDeckUI(); });
 $('#btnDeckClear').addEventListener('click', () => { DECK = []; refreshDeckUI(); });
