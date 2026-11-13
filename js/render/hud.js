@@ -34,7 +34,7 @@ function drawGhost() {
     g.beginPath(); g.arc(pcx, pcy, safeR(), 0, TAU); g.stroke(); g.setLineDash([]);
     g.fillStyle = 'rgba(232,48,95,0.06)'; g.fill();
   }
-  if (card.cat === 'pen') {
+  if (isDrawPen(tool)) {
     const pen = PENS[tool], c = Math.floor(wx / T), r = Math.floor(wy / T);
     const cells = pen.thick ? [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]] : [[0, 0]];
     let any = false;
@@ -62,10 +62,10 @@ function drawGhost() {
     g.beginPath(); g.arc(wx, wy, 14, 0, TAU); g.strokeStyle = pl.ok ? C.builder : C.bad; g.lineWidth = 2; g.setLineDash([4, 4]); g.stroke(); g.setLineDash([]);
     const left = usesLeft(tool);
     ghostLabel(pl.ok ? `クリックで「${card.name}」${tool === 'shadow' ? 'を出す' : '発動'}  ${card.cost}${left !== Infinity ? `（のこり${left}回）` : ''}` : pl.why, wx, wy - 22, pl.ok);
-  } else if (tool === 'thorn') {
+  } else if (isBlockCard(tool)) {
     const pl = placementFor(tool, wx, wy);
     g.globalAlpha = 0.5;
-    for (const [c, r] of pl.cells) drawPaintCell(g, 2, c * T + T / 2, r * T + T / 2, T * 0.62, INKS[0], 1);
+    for (const [c, r] of pl.cells) drawPaintCell(g, PENS[tool].kind, c * T + T / 2, r * T + T / 2, T * 0.62, INKS[0], 1);
     g.globalAlpha = 1;
     g.setLineDash([4, 4]); g.strokeStyle = pl.ok ? C.builder : C.bad; g.lineWidth = 2; g.strokeRect(pl.x - 3, pl.y - 3, T * 2 + 6, T * 2 + 6); g.setLineDash([]);
     ghostLabel(pl.ok ? `${card.name}  ${card.cost}` : pl.why, pl.x + T, pl.y - 12, pl.ok);

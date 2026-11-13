@@ -30,7 +30,7 @@ function netHostInput(m) {
     if (m.t === 'pd') {
       hoverW(m.x, m.y, 1);
       if (!builderActive()) return;
-      if (CARD[tool].cat === 'pen') { painting = true; paintInk = (paintInk + 1) % INKS.length; lastPaint = { x: m.x, y: m.y }; paintAt(m.x, m.y); }
+      if (isDrawPen(tool)) { painting = true; paintInk = (paintInk + 1) % INKS.length; lastPaint = { x: m.x, y: m.y }; paintAt(m.x, m.y); }
       else tryPlaceW(m.x, m.y);
       return;
     }

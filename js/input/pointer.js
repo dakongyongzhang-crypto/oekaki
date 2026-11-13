@@ -34,7 +34,7 @@ gcv.addEventListener('pointerdown', e => {
   if (SPLIT !== 's' && (e.button === 1 || e.button === 2)) { panDrag = { sx: p.x, sy: p.y, cx: bCamT, cy: bCamTY }; hover.on = false; return; }
   hover.on = true;
   if (!builderActive()) return;
-  if (CARD[tool].cat === 'pen') {
+  if (isDrawPen(tool)) {
     painting = true; paintInk = (paintInk + 1) % INKS.length;
     lastPaint = { x: bwx(p.x), y: bwy(p.y) }; paintAt(lastPaint.x, lastPaint.y);
   } else tryPlace(p.x, p.y);

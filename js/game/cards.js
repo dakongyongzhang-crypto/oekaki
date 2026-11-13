@@ -13,7 +13,7 @@ const CATS = {
 const PENS = {
   pen: { kind: 0, cost: 1.5, life: 30, hp: 1, solid: true },
   thick: { kind: 0, cost: 1.2, life: 30, hp: 1, solid: true, thick: true },
-  hard: { kind: 1, cost: 3, life: 25, hp: 3, solid: true },
+  hard: { kind: 1, cost: 3, life: 25, hp: 3, solid: true, block: 12 }, // block = トゲブロックと同じく、クリックで2×2を置く（数字は1個のコスト）
   thorn: { kind: 2, cost: 5, life: 8, hp: 1, solid: true },
   ice: { kind: 3, cost: 1.5, life: 25, hp: 1, solid: true },
   bounce: { kind: 4, cost: 2, life: 25, hp: 1, solid: true },
@@ -21,29 +21,29 @@ const PENS = {
   conveyor: { kind: 7, cost: 2, life: 25, hp: 1, solid: true },
   crumble: { kind: 8, cost: 1, life: 30, hp: 1, solid: true },
   eraser: { kind: 6, cost: 3, life: 12, hp: 0, erase: true },
-  steel: { kind: 11, cost: 4, life: 8, hp: 6, solid: true },
+  steel: { kind: 11, cost: 4, life: 8, hp: 6, solid: true, block: 16 },
   quick: { kind: 0, cost: 0.6, life: 6, hp: 1, solid: true },
   hot: { kind: 12, cost: 2, life: 20, hp: 1, solid: true },
   clear: { kind: 13, cost: 2.5, life: 25, hp: 1, solid: true },
-  repel: { kind: 14, cost: 2, life: 25, hp: 1, solid: true }
+  repel: { kind: 14, cost: 2, life: 25, hp: 1, solid: true, block: 8 }
 };
 // ペンの種類ごとの色（0:インク 1:かたい 2:トゲ 3:氷 4:バネ 5:ネバネバ 6:消しゴム 7:コンベア 8:くずれ 9:板 10:足場 11:てつ 12:アツアツ 13:すけすけ 14:ハネカエシ）
 const KCOL = ['#2a5bd7', '#5a6072', '#e0313f', '#9fe0f4', '#33b06a', '#a0703f', '#f7a8c4', '#7a8091', '#8fa6d9', '#c99a68', '#8fd8a8', '#3d4250', '#ff7a3d', '#c7d3e6', '#ff5ca8'];
 const CARDS = [
   { id: 'pen', cat: 'pen', name: 'ペン', desc: 'なぞった線が壁になる。30秒で消える' },
   { id: 'thick', cat: 'pen', name: '太ペン', desc: '太い線で一気に壁を作れる' },
-  { id: 'hard', cat: 'pen', name: 'かたいペン', desc: '何度も斬らないと壊れない頑丈な壁' },
+  { id: 'hard', cat: 'pen', name: 'かたいペン', desc: 'クリックで2×2の頑丈なブロックを置く。何度も斬らないと壊れない。1秒に1個まで' },
   { id: 'ice', cat: 'pen', name: '氷ペン', desc: '乗るとツルツル滑って止まれない足場' },
   { id: 'bounce', cat: 'pen', name: 'バネペン', desc: '乗ると高く跳ね上げられる。トゲとの組み合わせに' },
   { id: 'glue', cat: 'pen', name: 'ネバネバペン', desc: '通り抜けられるが、中では動きもジャンプも鈍る' },
   { id: 'conveyor', cat: 'pen', name: 'コンベアペン', desc: '乗るとスタート側へ押し流される床' },
   { id: 'crumble', cat: 'pen', name: 'くずれペン', desc: '見た目はふつうの壁。乗ると一瞬で崩れる' },
   { id: 'eraser', cat: 'pen', name: '消しゴム', desc: '地面を消して穴をあける。12秒で元に戻る' },
-  { id: 'steel', cat: 'pen', name: 'てつペン', desc: 'かたいペンよりさらに頑丈。高いけど8秒で消える' },
+  { id: 'steel', cat: 'pen', name: 'てつペン', desc: 'クリックで2×2の鉄ブロックを置く。かたいペンよりさらに頑丈。8秒で消える。1秒に1個まで' },
   { id: 'quick', cat: 'pen', name: 'はやがきペン', desc: 'とても安く描けるが、6秒で消えてしまう' },
   { id: 'hot', cat: 'pen', name: 'アツアツペン', desc: '上に乗るとやけどする床。20秒で消える' },
   { id: 'clear', cat: 'pen', name: 'すけすけペン', desc: 'ランナーの画面ではほとんど見えない壁' },
-  { id: 'repel', cat: 'pen', name: 'ハネカエシペン', desc: '横からぶつかると大きく跳ね返される壁' },
+  { id: 'repel', cat: 'pen', name: 'ハネカエシペン', desc: 'クリックで2×2のブロックを置く。横からぶつかると大きく跳ね返される。1秒に1個まで' },
   { id: 'walker', cat: 'enemy', name: 'ノシノシ', cost: 20, desc: '左右に歩いて往復する基本の敵' },
   { id: 'hopper', cat: 'enemy', name: 'ピョンタ', cost: 25, desc: 'ランナーめがけて跳ねてくる' },
   { id: 'flyer', cat: 'enemy', name: 'パタパタ', cost: 30, desc: '空を飛んで追いかけてくる' },
@@ -101,8 +101,11 @@ const CARDS = [
   { id: 'float', cat: 'special', name: 'ふわふわ', cost: 40, desc: '5秒間、重力が弱くなってうまく着地できない' },
   { id: 'seal', cat: 'special', name: 'ふういん', cost: 45, desc: '3秒間、ランナーが攻撃できなくなる' }
 ];
-CARDS.forEach(c => { if (c.cat === 'pen') { c.cost = PENS[c.id].cost; c.per = true; } c.costLabel = c.per ? `${c.cost}/マス` : String(c.cost); });
+CARDS.forEach(c => { if (c.cat === 'pen') { if (PENS[c.id].block) c.cost = PENS[c.id].block; else { c.cost = PENS[c.id].cost; c.per = true; } } c.costLabel = c.per ? `${c.cost}/マス` : String(c.cost); });
 const CARD = Object.fromEntries(CARDS.map(c => [c.id, c]));
+// クリックで2×2のブロックを置くカード（トゲブロック・かたいペン・てつペン・ハネカエシペン）と、ドラッグで描くペン
+const isBlockCard = id => id === 'thorn' || !!(PENS[id] && PENS[id].block);
+const isDrawPen = id => CARD[id].cat === 'pen' && !isBlockCard(id);
 const TRAP_MAX = 2; // デッキに入れられるワナカードの枚数
 const trapCount = deck => deck.filter(id => CARD[id] && CARD[id].cat === 'trap').length;
 const PRESET = ['pen', 'walker', 'hopper', 'flyer', 'spike', 'cannon', 'slime', 'dark'];

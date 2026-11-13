@@ -36,11 +36,12 @@ function placementFor(id, wx, wy) {
     const why = energy < card.cost ? 'エネルギー不足' : effects[SPECIAL_FX[id]] > 0 ? '発動中' : '';
     return { ok: !why, x: wx, y: wy, why };
   }
-  if (id === 'thorn') {
+  if (isBlockCard(id)) {
     const cells = thornCells(wx, wy), x = cells[0][0] * T, y = cells[0][1] * T, box = { x, y, w: T * 2, h: T * 2 };
     let why = '';
-    if ((cardCd.thorn || 0) > 0) why = `あと${(cardCd.thorn / 60).toFixed(1)}秒`;
+    if ((cardCd[id] || 0) > 0) why = `あと${(cardCd[id] / 60).toFixed(1)}秒`;
     else if (energy < card.cost) why = 'エネルギー不足';
+    else if (id !== 'thorn' && penCapOn() && penLive + 4 > VS_PEN_MAX) why = `ペンは${VS_PEN_MAX}マスまで`;
     else if (cells.some(([c, r]) => c < 0 || c >= LW || r < 0 || r >= ROWS || tiles[idx(c, r)] !== 0)) why = 'ここには置けない';
     else if (enemies.some(e => !e.dead && overlap(e, box))) why = 'ここには置けない';
     else if (rectNearPlayer(x, y, T * 2, T * 2)) why = 'ランナーに近すぎ';
@@ -112,14 +113,15 @@ function tryPlaceW(wx, wy) {
     const e = spawnEnemy('shadow', pt[0], pt[1]); e.w = P.w; e.h = P.h; e.dir = pt[2];
     SFX.warp(); updateToolAvailability(); return;
   }
-  if (tool === 'thorn') {
-    const pen = PENS.thorn;
+  if (isBlockCard(tool)) {
+    const pen = PENS[tool];
     for (const [c, r] of pl.cells) {
       const i = idx(c, r);
       tiles[i] = 3; paintKind[i] = pen.kind; paintHp[i] = pen.hp; paintCol[i] = 0; paintT[i] = tick; paintExp[i] = tick + pen.life * 60;
     }
-    cardCd.thorn = THORN_CD; mmDirty = true;
-    SFX.place(); burst(pl.x + T, pl.y + T, '#e0313f', 8, 2.5);
+    cardCd[tool] = THORN_CD; mmDirty = true;
+    if (tool !== 'thorn') { penLive += 4; ST.painted += 4; }
+    SFX.place(); burst(pl.x + T, pl.y + T, KCOL[pen.kind], 8, 2.5);
     updateToolAvailability(); return;
   }
   if (SPAWNS[tool]) for (const [t, ox, oy] of SPAWNS[tool]) { const e = ETYPES[t]; spawnEnemy(t, wx + ox - e.w / 2, wy + oy - e.h / 2); }
