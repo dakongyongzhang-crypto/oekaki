@@ -184,7 +184,7 @@ function updatePlayer() {
   if (p.shield > 0) p.shield--;
 
   // surfaces: ice / bounce / glue / thorn
-  p.onIce = false; let bounce = false, belt = false, thornX = null, hotX = null;
+  p.onIce = false; let bounce = false, thornX = null, hotX = null;
   if (p.onGround) {
     const r = Math.floor((p.y + p.h + 1) / T);
     for (let c = Math.floor((p.x + 1) / T); c <= Math.floor((p.x + p.w - 1) / T); c++) {
@@ -192,14 +192,13 @@ function updatePlayer() {
       const i = idx(c, r);
       if (tiles[i] === 3) {
         const k = paintKind[i];
-        if (k === 3) p.onIce = true; if (k === 4) bounce = true; if (k === 7) belt = true; if (k === 12) hotX = c * T + T / 2;
+        if (k === 3) p.onIce = true; if (k === 4) bounce = true; if (k === 12) hotX = c * T + T / 2;
         if (k === 8 && paintHp[i] !== 9) { paintHp[i] = 9; paintExp[i] = tick + 22; crumbling.push(i); SFX.crumble(); }
       }
     }
   }
   if (effects.slip > 0 && p.onGround) p.onIce = true; // ツルツル：どの床も滑る
   if (hotX !== null) hurt(10, hotX, 'アチッ!');
-  if (belt) p.wind -= 2.2;
   if (bounce) {
     p.vy = -15.5; p.onGround = false; p.coyote = 0; p.squash = 0.7; p.noCut = 30;
     SFX.boing(); burst(p.x + p.w / 2, p.y + p.h, '#33b06a', 6, 2);

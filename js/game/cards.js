@@ -18,7 +18,6 @@ const PENS = {
   ice: { kind: 3, cost: 1.5, life: 25, hp: 1, solid: true },
   bounce: { kind: 4, cost: 2, life: 25, hp: 1, solid: true },
   glue: { kind: 5, cost: 1.2, life: 20, hp: 1, solid: false },
-  conveyor: { kind: 7, cost: 2, life: 25, hp: 1, solid: true },
   crumble: { kind: 8, cost: 1, life: 30, hp: 1, solid: true },
   eraser: { kind: 6, cost: 3, life: 12, hp: 0, erase: true },
   steel: { kind: 11, cost: 4, life: 8, hp: 6, solid: true, block: 16 },
@@ -36,7 +35,6 @@ const CARDS = [
   { id: 'ice', cat: 'pen', name: '氷ペン', desc: '乗るとツルツル滑って止まれない足場' },
   { id: 'bounce', cat: 'pen', name: 'バネペン', desc: '乗ると高く跳ね上げられる。トゲとの組み合わせに' },
   { id: 'glue', cat: 'pen', name: 'ネバネバペン', desc: '通り抜けられるが、中では動きもジャンプも鈍る' },
-  { id: 'conveyor', cat: 'pen', name: 'コンベアペン', desc: '乗るとスタート側へ押し流される床' },
   { id: 'crumble', cat: 'pen', name: 'くずれペン', desc: '見た目はふつうの壁。乗ると一瞬で崩れる' },
   { id: 'eraser', cat: 'pen', name: '消しゴム', desc: '地面を消して穴をあける。12秒で元に戻る' },
   { id: 'steel', cat: 'pen', name: 'てつペン', desc: 'クリックで2×2の鉄ブロックを置く。かたいペンよりさらに頑丈。8秒で消える。1秒に1個まで' },
@@ -106,8 +104,9 @@ const CARD = Object.fromEntries(CARDS.map(c => [c.id, c]));
 // クリックで2×2のブロックを置くカード（トゲブロック・かたいペン・てつペン・ハネカエシペン）と、ドラッグで描くペン
 const isBlockCard = id => id === 'thorn' || !!(PENS[id] && PENS[id].block);
 const isDrawPen = id => CARD[id].cat === 'pen' && !isBlockCard(id);
-const TRAP_MAX = 2; // デッキに入れられるワナカードの枚数
-const trapCount = deck => deck.filter(id => CARD[id] && CARD[id].cat === 'trap').length;
+const CAT_MAX = { trap: 2, special: 2 }; // デッキに入れられる枚数に上限がある種類（ワナ・特殊）
+const catCount = (deck, cat) => deck.filter(id => CARD[id] && CARD[id].cat === cat).length;
+const catFull = (deck, cat) => CAT_MAX[cat] != null && catCount(deck, cat) >= CAT_MAX[cat];
 const PRESET = ['pen', 'walker', 'hopper', 'flyer', 'spike', 'cannon', 'slime', 'dark'];
 let DECK = PRESET.slice();
 // 協力モードでP2（サポーター）が使うカード

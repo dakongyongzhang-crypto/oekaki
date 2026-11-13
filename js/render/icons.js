@@ -44,13 +44,6 @@ function drawPaintCell(ctx, kind, cx, cy, rad, ink, hp) {
       ctx.stroke();
       break;
     }
-    case 7: {
-      const s = rad * 0.9; ctx.save(); rrect(ctx, cx - s, cy - s, s * 2, s * 2, 4); ctx.fillStyle = '#7a8091'; ctx.fill(); ctx.clip();
-      const o = (tick * 0.8) % 8; ctx.strokeStyle = '#ffe24a'; ctx.lineWidth = 2; ctx.beginPath();
-      for (let k = -1; k <= 3; k++) { const x = cx - s + k * 8 - o + 4; ctx.moveTo(x + 3, cy - s * 0.45); ctx.lineTo(x, cy); ctx.lineTo(x + 3, cy + s * 0.45); }
-      ctx.stroke(); ctx.restore();
-      break;
-    }
     case 8: {
       const j = hp === 9 ? (Math.random() - 0.5) * 3 : 0;
       ctx.save(); if (hp === 9) ctx.globalAlpha *= 0.6;
