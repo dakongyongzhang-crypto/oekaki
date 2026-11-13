@@ -68,9 +68,9 @@ const CARDS = [
   { id: 'snowman', cat: 'enemy', name: 'ユキダルマ', cost: 30, desc: '雪玉を投げる。当たると少しの間ひえて動きが鈍る' },
   { id: 'spike', cat: 'trap', name: 'トゲトゲ', cost: 15, desc: '床に置くトゲ。安くて手軽' },
   { id: 'thorn', cat: 'trap', name: 'トゲブロック', cost: 20, desc: 'クリックで2×2のトゲブロックを置く。触れるとダメージ。1秒に1個まで、8秒で消える' },
-  { id: 'hard', cat: 'trap', name: 'かたいペン', cost: 12, desc: 'クリックで2×2の頑丈なブロックを置く。何度も斬らないと壊れない。1秒に1個まで' },
-  { id: 'steel', cat: 'trap', name: 'てつペン', cost: 16, desc: 'クリックで2×2の鉄ブロックを置く。かたいペンよりさらに頑丈。8秒で消える。1秒に1個まで' },
-  { id: 'repel', cat: 'trap', name: 'ハネカエシペン', cost: 8, desc: 'クリックで2×2のブロックを置く。横からぶつかると大きく跳ね返される。1秒に1個まで' },
+  { id: 'hard', cat: 'trap', name: 'かたいブロック', cost: 12, desc: 'クリックで2×2の頑丈なブロックを置く。何度も斬らないと壊れない。1秒に1個まで' },
+  { id: 'steel', cat: 'trap', name: 'てつブロック', cost: 16, desc: 'クリックで2×2の鉄ブロックを置く。かたいブロックよりさらに頑丈。8秒で消える。1秒に1個まで' },
+  { id: 'repel', cat: 'trap', name: 'ハネカエシブロック', cost: 8, desc: 'クリックで2×2のブロックを置く。横からぶつかると大きく跳ね返される。1秒に1個まで' },
   { id: 'cannon', cat: 'trap', name: 'ポンポン砲', cost: 40, desc: 'ランナーを狙って弾を撃つ' },
   { id: 'triple', cat: 'trap', name: '3連砲', cost: 55, desc: '扇状に3発まとめて撃つ' },
   { id: 'bomb', cat: 'trap', name: '時限バクダン', cost: 30, desc: '3秒後に大爆発。ダメージ35で大きく吹き飛ばす。解除できない' },
@@ -101,7 +101,7 @@ const CARDS = [
 ];
 CARDS.forEach(c => { if (c.cat === 'pen') { c.cost = PENS[c.id].cost; c.per = true; } c.costLabel = c.per ? `${c.cost}/マス` : String(c.cost); });
 const CARD = Object.fromEntries(CARDS.map(c => [c.id, c]));
-// クリックで2×2のブロックを置くワナ（トゲブロック・かたいペン・てつペン・ハネカエシペン）と、ドラッグで描くペン
+// クリックで2×2のブロックを置くワナ（トゲブロック・かたいブロック・てつブロック・ハネカエシブロック）と、ドラッグで描くペン
 const isBlockCard = id => id === 'thorn' || !!(PENS[id] && PENS[id].block);
 const isDrawPen = id => CARD[id].cat === 'pen' && !isBlockCard(id);
 const CAT_MAX = { special: 2 }; // デッキに入れられる枚数に上限がある種類（特殊）

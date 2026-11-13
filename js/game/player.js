@@ -157,7 +157,7 @@ function updatePlayer() {
   }
   p.vx = mr.hitX ? 0 : baseVx;
   p.wind = 0;
-  if (mr.hitX && moveDir) { // ハネカエシペン：横からぶつかると跳ね返される
+  if (mr.hitX && moveDir) { // ハネカエシブロック：横からぶつかると跳ね返される
     const c = moveDir > 0 ? Math.floor((p.x + p.w + 1) / T) : Math.floor((p.x - 1) / T);
     for (let r = Math.floor(p.y / T); r <= Math.floor((p.y + p.h - 0.01) / T); r++) {
       if (c < 0 || c >= LW || r < 0 || r >= ROWS || tiles[idx(c, r)] !== 3 || paintKind[idx(c, r)] !== 14) continue;
