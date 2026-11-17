@@ -569,10 +569,11 @@ body.mobile .cta small{display:none}
   body.mobile .note li{margin:2px 0}
   body.mobile .note .win{margin-top:6px;padding-top:6px}
   body.mobile .cta{margin:8px 0 0}
-  body.mobile .mode-row{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;max-width:none}
+  body.mobile .mode-row{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;max-width:none}
   body.mobile .mode-card{padding:8px 9px;gap:5px;box-shadow:2px 2px 0 var(--shade)}
   body.mobile .mode-card h3{font-size:15.5px;line-height:1.25}
-  body.mobile .mode-card p{font-size:10.5px;line-height:1.45;overflow:hidden;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical}
+  body.mobile .mode-card p{font-size:12px;line-height:1.5}
+  body.mobile .mode-card h3{font-size:19px}
   body.mobile .mode-card > .btn{align-self:stretch}
   body.mobile .target-pick,body.mobile .lv-pick{gap:3px;flex-wrap:wrap}
   body.mobile .target-pick .btn.sm,body.mobile .lv-pick .btn.sm{padding:2px 6px;font-size:10.5px}
@@ -648,8 +649,8 @@ body.mobile .cta small{display:none}
   /* 直し：小さい画面（iPhone SE など）ではみ出さないように */
   body.mobile .brand,body.mobile #btnDebug{display:none}
   body.mobile .topbar{justify-content:flex-end}
-  body.mobile .mode-card > .btn.big{font-size:clamp(9.5px,1.6vw,12.5px);padding-left:3px;padding-right:3px}
-  body.mobile .target-pick .btn.sm,body.mobile .lv-pick .btn.sm{font-size:clamp(9px,1.5vw,10.5px)}
+  body.mobile .mode-card > .btn.big{font-size:15px;padding:8px 10px;white-space:nowrap}
+  body.mobile .target-pick .btn.sm,body.mobile .lv-pick .btn.sm{font-size:12.5px;padding:3px 6px}
   body.mobile .btn-grid .btn{white-space:nowrap;font-size:11px;padding:4px 2px}
   body.mobile #scr-draw .go-row .btn.big{white-space:normal;font-size:12px;line-height:1.25}
   body.mobile .online-card .note{background:none;padding:0;box-shadow:none;transform:none;border-radius:0;color:var(--ink-soft)}
