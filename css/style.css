@@ -569,7 +569,7 @@ body.mobile .cta small{display:none}
   body.mobile .note li{margin:2px 0}
   body.mobile .note .win{margin-top:6px;padding-top:6px}
   body.mobile .cta{margin:8px 0 0}
-  body.mobile .mode-row{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;max-width:none}
+  body.mobile .mode-row{grid-template-columns:minmax(0,560px);justify-content:center;gap:12px;max-width:none}
   body.mobile .mode-card{padding:8px 9px;gap:5px;box-shadow:2px 2px 0 var(--shade)}
   body.mobile .mode-card h3{font-size:15.5px;line-height:1.25}
   body.mobile .mode-card p{font-size:12px;line-height:1.5}
@@ -672,3 +672,6 @@ body.mobile .cta small{display:none}
   body.mobile #scr-deck .slot{min-height:44px}
   body.mobile #scr-deck .deck-count span{font-size:10px}
 }
+/* スマホのオンライン協力：ランナーにはサポーターのカード欄と攻撃ボタンを出さない */
+body.mob-net.ingame.net-notool .builder-bar{display:none!important}
+body.mob-net.ingame.mob-coop .tp[data-k="TouchAtk"]{display:none}

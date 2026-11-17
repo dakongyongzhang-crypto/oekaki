@@ -13,6 +13,7 @@ function fitStage() {
   if (curScreen !== 'scr-game') return;
   const mobNet = isMobileUI() && !!NET.role;
   document.body.classList.toggle('mob-net', mobNet);
+  document.body.classList.toggle('mob-coop', mobNet && COOP);
   if (mobNet) { fitStageMobile(); return; }
   const body = $('#gameBody'), bar = body.querySelector('.builder-bar'), tp = $('#touchpad'), root = document.documentElement;
   const vw = root.clientWidth - 12, vh = window.innerHeight;
@@ -50,10 +51,11 @@ function fitStageMobile() {
   root.style.setProperty('--stageW', Math.floor(w) + 'px');
   root.style.setProperty('--stageH', Math.floor(h) + 'px');
   $('#rotateHint').classList.toggle('on', !land);
-  // ポーズなどのボタンは、ゲーム画面の上の真ん中（タイマーのすぐ下）に置く
+  // ポーズなどのボタンは、ゲーム画面の上の真ん中（タイマーのすぐ下）に置く。
+  // 協力モードは開始前にお話が上に出るので、下の真ん中に置く（協力の画面にはミニマップがない）
   const r = $('#stage').getBoundingClientRect();
   root.style.setProperty('--hbX', Math.round(r.left + r.width / 2) + 'px');
-  root.style.setProperty('--hbY', Math.round(r.top + r.height * 0.12) + 'px');
+  root.style.setProperty('--hbY', Math.round(COOP ? r.bottom - 34 : r.top + r.height * 0.12) + 'px');
   if (GW !== GW_BASE) { GW = GW_BASE; setLayout(SPLIT); mmDirty = true; }
 }
 function resizeGame() {
