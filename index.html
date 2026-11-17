@@ -26,24 +26,27 @@
     <div class="hero">
       <h1 class="hand"><span class="r1">ラクガキ</span>・<span class="r2">ランナーズ</span></h1>
       <p>描いたキャラで走れ。描いた壁で阻め。1台で遊ぶ2人対戦アクション</p>
+      <button class="btn sm sp-only" id="btnRules" aria-expanded="false">あそびかた</button>
     </div>
     <div class="roles">
       <article class="note">
-        <h2 class="hand"><span class="pill p1">P1</span>ランナー<span class="dev">キーボード</span></h2>
+        <h2 class="hand"><span class="pill p1">P1</span>ランナー<span class="dev pc-only">キーボード</span><span class="dev sp-only">タッチ</span></h2>
         <ol>
           <li><b>キャラを描く。</b>色・線の太さ・大きさ・形が解析されて「体力・速さ・攻撃」になる</li>
           <li><b>走ってゴールへ。</b>敵は踏むか斬って倒す。描かれた壁も斬れば削れる</li>
         </ol>
-        <div><kbd>A</kbd><kbd>D</kbd> か <kbd>←</kbd><kbd>→</kbd> 移動　<kbd>W</kbd> <kbd>Space</kbd> ジャンプ　<kbd>J</kbd> <kbd>F</kbd> 攻撃</div>
+        <div class="pc-only"><kbd>A</kbd><kbd>D</kbd> か <kbd>←</kbd><kbd>→</kbd> 移動　<kbd>W</kbd> <kbd>Space</kbd> ジャンプ　<kbd>J</kbd> <kbd>F</kbd> 攻撃</div>
+        <div class="sp-only">画面の ◀ ▶ で移動、「ジャンプ」「攻撃」ボタンで操作</div>
         <p class="win">勝利条件：制限時間1分以内にゴールする</p>
       </article>
       <article class="note b">
-        <h2 class="hand"><span class="pill p2">P2</span>ビルダー<span class="dev">マウス</span></h2>
+        <h2 class="hand"><span class="pill p2">P2</span>ビルダー<span class="dev pc-only">マウス</span><span class="dev sp-only">タッチ</span></h2>
         <ol>
           <li><b>カードを8枚選ぶ。</b>敵・ワナ・ペン・特殊の69種類からデッキを組む</li>
           <li><b>置く、描く。</b>クリックで敵やワナが即座に出現。ペン系はドラッグで壁や床を描ける</li>
         </ol>
-        <div>ビルダーは専用の画面で先回りできる。<kbd>1</kbd>〜<kbd>8</kbd> でカード切り替え</div>
+        <div class="pc-only">ビルダーは専用の画面で先回りできる。<kbd>1</kbd>〜<kbd>8</kbd> でカード切り替え</div>
+        <div class="sp-only">カードをタップして選び、画面をタップして置く。2本指でなぞると先回りできる</div>
         <p class="win">勝利条件：ランナーの体力を0にするか、時間切れに持ち込む</p>
       </article>
     </div>

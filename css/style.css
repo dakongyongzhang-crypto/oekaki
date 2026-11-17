@@ -530,3 +530,144 @@ body.mob-net.ingame .result-card{padding:10px 12px}
 /* PC表示のゲーム中は「表示」「全画面」ボタンを出さない（見出しの行を広くとらない） */
 body.ingame #btnUiMode{display:none}
 body:not(.mobile) #btnFull{display:none}
+
+/* ---------- スマホ表示：メニュー・お絵かき・カード選び（横向き前提）---------- */
+.sp-only{display:none}
+body.mobile .sp-only{display:revert}
+body.mobile .pc-only{display:none!important}
+body.mobile .note .dev.sp-only{display:inline-block}
+body.mobile #btnRules{display:inline-flex}
+body.mobile .roles{display:none}
+body.mobile.show-rules .roles{display:grid}
+body.mobile .cta small{display:none}
+@media (orientation:landscape){
+  body.mobile:not(.ingame) #app{padding:4px max(10px,env(safe-area-inset-right)) 6px max(10px,env(safe-area-inset-left));max-width:none}
+  body.mobile .topbar{margin-bottom:4px;gap:8px;flex-wrap:nowrap}
+  body.mobile .brand{font-size:15px;white-space:nowrap}
+  body.mobile .top-right{gap:6px;flex-wrap:nowrap}
+  body.mobile .score{font-size:11px;gap:4px;white-space:nowrap}
+  body.mobile .score b{font-size:13px}
+  body.mobile .topbar .btn.sm{padding:2px 8px;font-size:11px;box-shadow:1px 1px 0 var(--shade);white-space:nowrap}
+  body.mobile .screen-head{margin:0 0 6px;gap:8px;flex-wrap:nowrap;align-items:center}
+  body.mobile .screen-head h2{font-size:19px;white-space:nowrap}
+  body.mobile .screen-head p{font-size:11px;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  body.mobile:not(.ingame) .btn{padding:6px 12px;font-size:13.5px;box-shadow:2px 2px 0 var(--shade)}
+  body.mobile:not(.ingame) .btn.big{font-size:14px;padding:7px 12px}
+  body.mobile:not(.ingame) .btn.sm{padding:3px 8px;font-size:12px}
+  body.mobile .panel{padding:8px 10px;box-shadow:2px 2px 0 var(--shade)}
+  body.mobile .panel h3{font-size:13px;margin-bottom:4px}
+  /* タイトル：ロゴは小さく、モードは横1列 */
+  body.mobile .hero{padding:2px 0 0}
+  body.mobile .hero h1{font-size:34px}
+  body.mobile .hero h1::after{height:8px;bottom:-3px}
+  body.mobile .hero p{font-size:12px;margin:5px 0 0;display:inline}
+  body.mobile #btnRules{margin-left:8px;vertical-align:middle}
+  body.mobile.show-rules .roles{grid-template-columns:1fr 1fr;gap:14px;margin:12px 0 4px;font-size:12px}
+  body.mobile .note{padding:14px 14px 10px}
+  body.mobile .note h2{font-size:18px}
+  body.mobile .note ol{margin:4px 0 6px}
+  body.mobile .note li{margin:2px 0}
+  body.mobile .note .win{margin-top:6px;padding-top:6px}
+  body.mobile .cta{margin:8px 0 0}
+  body.mobile .mode-row{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;max-width:none}
+  body.mobile .mode-card{padding:8px 9px;gap:5px;box-shadow:2px 2px 0 var(--shade)}
+  body.mobile .mode-card h3{font-size:15.5px;line-height:1.25}
+  body.mobile .mode-card p{font-size:10.5px;line-height:1.45;overflow:hidden;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical}
+  body.mobile .mode-card > .btn{align-self:stretch}
+  body.mobile .target-pick,body.mobile .lv-pick{gap:3px;flex-wrap:wrap}
+  body.mobile .target-pick .btn.sm,body.mobile .lv-pick .btn.sm{padding:2px 6px;font-size:10.5px}
+  /* お絵かき：左に道具、真ん中に正方形のキャンバス、右に能力と「次へ」 */
+  body.mobile #scr-draw .draw-grid{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:8px;align-items:start}
+  body.mobile #scr-draw .draw-center{grid-column:auto;order:0}
+  body.mobile .paper-wrap{width:min(calc(100dvh - 84px),44vw);box-shadow:3px 3px 0 var(--shade)}
+  body.mobile .under-paper{display:none}
+  body.mobile #scr-draw .panel{max-height:calc(100dvh - 84px);overflow-y:auto;overscroll-behavior:contain}
+  body.mobile #scr-draw .sect+.sect{margin-top:8px;padding-top:6px}
+  body.mobile .palette{gap:5px}
+  body.mobile .custom-row{margin-top:5px}
+  body.mobile .size-prev{width:26px;height:26px}
+  body.mobile .btn-grid{gap:5px}
+  body.mobile .btn-grid .btn{padding:4px 4px;font-size:12px}
+  body.mobile #btnSample{margin-top:5px!important}
+  body.mobile #scr-draw .draw-grid > aside:last-child{display:flex;flex-direction:column}
+  body.mobile #scr-draw .draw-grid > aside:last-child .sect:nth-child(3){order:3}
+  body.mobile #scr-draw .go-row{order:2;margin-top:8px}
+  body.mobile .name-row input{padding:4px 8px;font-size:14px}
+  body.mobile .stat{margin-bottom:3px}
+  body.mobile .stat-val{font-size:16px}
+  body.mobile .stat-sub{font-size:10px}
+  body.mobile .bar{height:9px}
+  /* カード選び：左にデッキ（固定）、右にカード一覧（スクロール） */
+  body.mobile #scr-deck.active{display:grid;grid-template-columns:262px minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr);column-gap:8px;height:calc(100dvh - 44px)}
+  body.mobile #scr-deck .screen-head{grid-column:1/-1}
+  body.mobile #scr-deck .deck-bar{grid-column:1;grid-row:2/span 2;position:static;flex-direction:column;align-items:stretch;flex-wrap:nowrap;gap:8px;margin:0;overflow-y:auto}
+  body.mobile #scr-deck .deck-slots{flex:none;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+  body.mobile #scr-deck .slot{min-height:50px;padding:3px 1px 2px;font-size:10px}
+  body.mobile #scr-deck .slot canvas{width:40px;height:26px}
+  body.mobile #scr-deck .deck-side{flex:none;gap:6px}
+  body.mobile #scr-deck .deck-count{font-size:11px}
+  body.mobile #scr-deck .deck-count b{font-size:18px}
+  body.mobile #scr-deck .cat-tabs{grid-column:2;grid-row:2;margin:0 0 6px;flex-wrap:nowrap;overflow-x:auto;gap:5px}
+  body.mobile #scr-deck .cat-tabs .btn{padding:3px 9px;font-size:12px;white-space:nowrap;flex:none}
+  body.mobile #scr-deck .card-grid{grid-column:2;grid-row:3;overflow-y:auto;overscroll-behavior:contain;grid-template-columns:repeat(auto-fill,minmax(116px,1fr));gap:7px;padding:2px 4px 8px 2px;align-content:start}
+  body.mobile .card{box-shadow:2px 2px 0 var(--shade);padding-bottom:6px}
+  body.mobile .card .ic{width:80px;height:49px;margin:5px auto 2px}
+  body.mobile .card .nm{font-size:12.5px;padding:0 7px}
+  body.mobile .card .cost{font-size:12.5px}
+  body.mobile .card .cat{font-size:10px;padding:0 7px}
+  body.mobile .card .ds{font-size:10px;line-height:1.4;padding:1px 7px 0;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
+  body.mobile .card .badge{width:22px;height:22px;font-size:12px;top:10px}
+  /* オンライン接続：コードの欄は横に2つ並べる */
+  body.mobile .online-card{margin:4px auto;gap:6px;max-width:none}
+  body.mobile .online-card h3{font-size:18px}
+  body.mobile .online-card ol{flex-direction:row;gap:10px}
+  body.mobile .online-card li{flex:1;min-width:0;gap:4px}
+  body.mobile .online-card textarea{min-height:58px;font-size:10.5px}
+  body.mobile .online-card .note{font-size:11px}
+  /* ストーリーのページ選び・マッチの交代画面 */
+  body.mobile .story-top{margin-bottom:6px;gap:8px}
+  body.mobile .story-grid{gap:6px}
+  body.mobile .story-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+  body.mobile .page-card{padding:4px 8px 4px;background-size:100% 14px}
+  body.mobile .page-card .pc-no,body.mobile .page-card .pc-rank{font-size:10.5px}
+  body.mobile .page-card.ex .pc-name{font-size:17px}
+  body.mobile .page-card .pc-name{font-size:15px}
+  body.mobile .story-intro{margin-top:8px}
+  body.mobile .story-intro .si-head h3{font-size:20px}
+  body.mobile .swap-round{font-size:30px}
+  body.mobile .swap-roles{margin:8px 0 4px;gap:8px}
+  body.mobile .swap-role{padding:8px;gap:4px}
+  body.mobile .swap-role .who{font-size:20px}
+  body.mobile #swapChar{width:70px;height:70px}
+  body.mobile .swap-note{font-size:14px;margin:6px 0}
+  /* 直し：タイトルは1行のヘッダーに、ボタンの文字を折り返さない */
+  body.mobile .hero{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:nowrap}
+  body.mobile .hero p{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0;font-size:11px}
+  body.mobile #btnRules{margin:0;flex:none}
+  body.mobile .hero h1{white-space:nowrap;flex:none;font-size:clamp(26px,4.6vw,40px)}
+  /* 直し：小さい画面（iPhone SE など）ではみ出さないように */
+  body.mobile .brand,body.mobile #btnDebug{display:none}
+  body.mobile .topbar{justify-content:flex-end}
+  body.mobile .mode-card > .btn.big{font-size:clamp(9.5px,1.6vw,12.5px);padding-left:3px;padding-right:3px}
+  body.mobile .target-pick .btn.sm,body.mobile .lv-pick .btn.sm{font-size:clamp(9px,1.5vw,10.5px)}
+  body.mobile .btn-grid .btn{white-space:nowrap;font-size:11px;padding:4px 2px}
+  body.mobile #scr-draw .go-row .btn.big{white-space:normal;font-size:12px;line-height:1.25}
+  body.mobile .online-card .note{background:none;padding:0;box-shadow:none;transform:none;border-radius:0;color:var(--ink-soft)}
+  body.mobile .online-card .note::before{display:none}
+  body.mobile .target-pick .btn.sm,body.mobile .lv-pick .btn.sm{flex:1;white-space:nowrap;padding:2px 3px}
+  /* 直し：お絵かきの左右の欄を詰めて、「次へ」は欄の下に固定 */
+  body.mobile .palette{grid-template-columns:repeat(6,minmax(0,25px));gap:5px;justify-content:space-between}
+  body.mobile .custom-row{font-size:11px}
+  body.mobile .custom-row input[type=color]{width:34px;height:22px}
+  body.mobile #scr-draw .draw-grid > aside:first-child .sect:nth-child(2) h3{display:none}
+  body.mobile #scr-draw .go-row{position:sticky;bottom:-8px;background:var(--surface);padding:6px 0 8px;margin:0;gap:2px;z-index:1}
+  body.mobile #scr-draw .go-row .btn.big{padding:7px 6px}
+  body.mobile #scr-draw .go-row small{font-size:10px}
+  body.mobile .type-badge{font-size:12px;padding:1px 10px}
+  body.mobile .body-size{font-size:11px}
+  body.mobile #scr-draw .draw-grid > aside:last-child .sect{margin-top:6px;padding-top:4px}
+  /* 直し：カード一覧の行がつぶれないように */
+  body.mobile #scr-deck .card-grid{grid-auto-rows:max-content}
+  body.mobile #scr-deck .slot{min-height:44px}
+  body.mobile #scr-deck .deck-count span{font-size:10px}
+}

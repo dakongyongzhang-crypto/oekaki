@@ -35,4 +35,6 @@ function toggleFullscreen() {
   }
 }
 $('#btnFull').hidden = !canFullscreen;
+// タイトルの「あそびかた」（スマホ表示では説明をたたんでおく）
+$('#btnRules').addEventListener('click', () => { const on = document.body.classList.toggle('show-rules'); $('#btnRules').setAttribute('aria-expanded', String(on)); $('#btnRules').textContent = on ? 'あそびかたを閉じる' : 'あそびかた'; });
 $('#btnFull').addEventListener('click', toggleFullscreen);
