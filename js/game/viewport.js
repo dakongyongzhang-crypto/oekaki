@@ -11,6 +11,9 @@ function fitStage() {
   // ゲーム画面を窓に収まる最大サイズにする。カード欄は下か右の、ゲーム画面が大きくなるほうに置く
   // オフライン対戦は、窓の縦横比に合わせてゲーム画面の横幅（GW）を変えて余白をなくす
   if (curScreen !== 'scr-game') return;
+  const mobNet = isMobileUI() && !!NET.role;
+  document.body.classList.toggle('mob-net', mobNet);
+  if (mobNet) { fitStageMobile(); return; }
   const body = $('#gameBody'), bar = body.querySelector('.builder-bar'), tp = $('#touchpad'), root = document.documentElement;
   const vw = root.clientWidth - 12, vh = window.innerHeight;
   const tpH = getComputedStyle(tp).display !== 'none' ? tp.offsetHeight + 8 : 0;
@@ -34,6 +37,24 @@ function fitStage() {
   root.style.setProperty('--stageH', st.h + 'px');
   const ngw = flex ? Math.round(GH * st.w / st.h) : GW_BASE;
   if (ngw !== GW) { GW = ngw; setLayout(SPLIT); mmDirty = true; }
+}
+// スマホ表示のオンライン対戦：画面いっぱいに自分の役割の画面を出す（16:9のまま。カード欄は横向きなら右、縦向きなら下）
+function fitStageMobile() {
+  const body = $('#gameBody'), root = document.documentElement, bar = body.querySelector('.builder-bar');
+  const vw = window.innerWidth, vh = window.innerHeight, land = vw >= vh;
+  const showBar = getComputedStyle(bar).display !== 'none';
+  body.classList.toggle('side', land && showBar);
+  const barW = land && showBar ? 96 : 0, barH = !land && showBar ? 86 : 0;
+  let w = vw - barW - (barW ? 4 : 0), h = vh - barH - (barH ? 4 : 0);
+  if (w / h > 16 / 9) w = h * 16 / 9; else h = w * 9 / 16;
+  root.style.setProperty('--stageW', Math.floor(w) + 'px');
+  root.style.setProperty('--stageH', Math.floor(h) + 'px');
+  $('#rotateHint').classList.toggle('on', !land);
+  // ポーズなどのボタンは、ゲーム画面の上の真ん中（タイマーのすぐ下）に置く
+  const r = $('#stage').getBoundingClientRect();
+  root.style.setProperty('--hbX', Math.round(r.left + r.width / 2) + 'px');
+  root.style.setProperty('--hbY', Math.round(r.top + r.height * 0.12) + 'px');
+  if (GW !== GW_BASE) { GW = GW_BASE; setLayout(SPLIT); mmDirty = true; }
 }
 function resizeGame() {
   fitStage();

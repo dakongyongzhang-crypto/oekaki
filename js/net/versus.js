@@ -12,6 +12,7 @@ const netMyIdx = () => NET.role === 'host' ? 0 : 1;
 function netApplyRoleClasses() {
   document.body.classList.toggle('net-notool', !!NET.role && !netIAmBuilder());
   document.body.classList.toggle('net-hidecards', !!NET.role && !COOP && !netIAmBuilder()); // 対戦のランナーには相手のカードを見せない
+  document.body.classList.toggle('net-nopad', !!NET.role && !netIAmRunner()); // ランナーでなければ操作ボタンはいらない
 }
 function serializeCH(ch) {
   const o = {};

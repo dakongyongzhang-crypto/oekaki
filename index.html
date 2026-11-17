@@ -15,6 +15,7 @@
     <div class="brand hand">ラクガキ・ランナーズ</div>
     <div class="top-right">
       <div class="score" id="scoreBox" aria-live="polite">通算 <span class="r">ランナー</span> <b id="scoreR">0</b> − <b id="scoreB">0</b> <span class="b">ビルダー</span></div>
+      <button class="btn sm" id="btnUiMode" aria-pressed="false" title="スマホ用の画面とPC用の画面を切り替え">表示：PC</button>
       <button class="btn sm" id="btnDebug" aria-pressed="false" title="デバッグモード（ゲーム中はF2でパネルの表示切り替え）">デバッグ OFF</button>
       <button class="btn sm" id="btnBgm" aria-pressed="true" title="対戦中はMキーでも切り替え">BGM ON</button>
     </div>
@@ -70,12 +71,12 @@
           <button class="btn blue big" id="btnCoop">ストーリーをはじめる</button>
         </div>
         <div class="mode-card">
-          <h3 class="hand">オンライン協力（2台のPCで）</h3>
-          <p>協力ストーリーと対戦（フリー／先取マッチ）を、別々のパソコンで遊べます。接続コードをコピペで送り合うだけ（無料・サーバー不要）。</p>
+          <h3 class="hand">オンラインで遊ぶ（2台で・スマホもOK）</h3>
+          <p>協力ストーリーと対戦（フリー／先取マッチ）を、別々のパソコンやスマホで遊べます。接続コードをコピペで送り合うだけ（無料・サーバー不要）。</p>
           <button class="btn blue big" id="btnOnline">オンラインで遊ぶ</button>
         </div>
       </div>
-      <small>タブレットではランナー用のタッチボタンが表示されます</small>
+      <small>スマホ・タブレットではタッチボタンが表示されます。右上の「表示」ボタンでスマホ用／PC用の画面を切り替えられます</small>
     </div>
   </section>
 
@@ -212,7 +213,7 @@
   <!-- ============ ONLINE（オンライン協力の接続） ============ -->
   <section id="scr-online" class="screen">
     <div class="screen-head">
-      <h2 class="hand">オンライン協力：2台のパソコンで遊ぶ</h2>
+      <h2 class="hand">オンライン：2台で遊ぶ（パソコン・スマホ）</h2>
       <p>部屋を作る人が「ホスト」（P1）、入る人が「ゲスト」（P2）です。接続コードを LINE や Discord などで送り合うだけで、つながります。</p>
     </div>
     <div class="panel online-card" id="onPick">
@@ -221,7 +222,7 @@
         <button class="btn primary big" id="btnOnHost">部屋を作る（P1：ランナー）</button>
         <button class="btn blue big" id="btnOnGuest">部屋に入る（P2：サポーター）</button>
       </div>
-      <p class="note">2人とも、ブラウザでこのゲームのページを開いてください。通信は2台のパソコンの間で直接行われます。</p>
+      <p class="note">2人とも、ブラウザでこのゲームのページを開いてください。通信は2台の間で直接行われます。</p>
       <div class="online-btns"><button class="btn" id="btnOnBack0">タイトルへ戻る</button></div>
     </div>
     <div class="panel online-card" id="onHost" hidden>
@@ -322,8 +323,10 @@
       <div class="head-btns">
         <button class="btn sm" id="btnPause">ポーズ</button>
         <button class="btn sm" id="btnMute" aria-pressed="false">効果音 ON</button>
+        <button class="btn sm" id="btnFull" hidden title="全画面">全画面</button>
       </div>
     </div>
+    <div class="rotate-hint" id="rotateHint">スマホを横向きにすると大きく遊べます</div>
     <div class="game-body" id="gameBody">
     <div class="stage" id="stage">
       <canvas id="game" tabindex="0" aria-label="ゲーム画面"></canvas>
@@ -422,6 +425,7 @@
 <script src="js/draw/analyze.js"></script>
 <script src="js/draw/character.js"></script>
 <script src="js/ui/screens.js"></script>
+<script src="js/ui/mobile.js"></script>
 <script src="js/ui/deck.js"></script>
 <script src="js/ui/modes.js"></script>
 <script src="js/ui/toolbar.js"></script>

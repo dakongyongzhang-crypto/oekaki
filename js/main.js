@@ -25,4 +25,5 @@ refreshDeckUI();
 refreshDebugUI();
 if (navigator.maxTouchPoints > 0) $('#touchpad').classList.add('force');
 updateDrawTools();
+applyUIMode();
 analyzeAndShow();

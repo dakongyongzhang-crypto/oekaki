@@ -53,7 +53,7 @@ $$('.tp').forEach(b => {
   const up = e => {
     e.preventDefault();
     if (NET.role === 'guest' && netIAmRunner()) netSend({ t: 'key', c: k, d: 0 });
-    if (NET.role) { b.classList.remove('down'); return; }
+    if (NET.role === 'guest' || (NET.role && !netIAmRunner())) { b.classList.remove('down'); return; }
     keys[k] = false; b.classList.remove('down');
   };
   b.addEventListener('pointerdown', down);

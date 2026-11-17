@@ -22,7 +22,17 @@ function scrollBuilder(d) {
   else bCamTY = clamp(bCamTY + d, 0, Math.max(0, WH - VWH));
 }
 let pointerIsDown = false; // 扉のスイッチは「押している＋カーソルが乗っている」あいだだけ開く
+// タッチ：2本指でなぞるとビルダーの視点を動かす（1本指は置く・描く）
+const touches = new Map(); let pinch = null;
+const touchMid = () => { let x = 0, y = 0; for (const t of touches.values()) { x += t.x; y += t.y; } return { x: x / touches.size, y: y / touches.size }; };
+function touchPanStart() {
+  if (SPLIT === 's' || (NET.role && !netIAmBuilder())) return false;
+  if (NET.role === 'guest') netSend({ t: 'pu' }); else stopPaint();
+  hover.on = false; pinch = { m: touchMid(), cx: bCamT, cy: bCamTY }; return true;
+}
 gcv.addEventListener('pointerdown', e => {
+  if (e.pointerType === 'touch') { touches.set(e.pointerId, gpos(e)); if (touches.size === 2 && touchPanStart()) { e.preventDefault(); return; } }
+  if (pinch) { e.preventDefault(); return; }
   if (netPtrIntercept()) { e.preventDefault(); SFX.init(); netPointer('d', e); return; }
   e.preventDefault(); SFX.init(); pointerIsDown = true;
   const p = gpos(e);
@@ -40,6 +50,11 @@ gcv.addEventListener('pointerdown', e => {
   } else tryPlace(p.x, p.y);
 });
 gcv.addEventListener('pointermove', e => {
+  if (e.pointerType === 'touch' && touches.has(e.pointerId)) touches.set(e.pointerId, gpos(e));
+  if (pinch) {
+    if (touches.size >= 2) { const m = touchMid(); if (isH()) bCamT = clamp(pinch.cx - (m.x - pinch.m.x) / VS, 0, Math.max(0, WW - VWW)); else bCamTY = clamp(pinch.cy - (m.y - pinch.m.y) / VS, 0, Math.max(0, WH - VWH)); }
+    return;
+  }
   if (netPtrIntercept()) { netPointer('m', e); return; }
   const p = gpos(e);
   if (mmDrag) { mmSeek(p); return; }
@@ -55,8 +70,9 @@ gcv.addEventListener('pointermove', e => {
 const stopPaint = () => { painting = false; lastPaint = null; };
 const endPointer = () => { stopPaint(); panDrag = null; mmDrag = false; };
 const releaseGate = () => { if (holdGate) { holdGate.hold = false; holdGate.grace = 14; holdGate = null; } if (holdLift) { holdLift.hold = false; holdLift.grace = 20; holdLift = null; } };
-gcv.addEventListener('pointerup', e => { if (netPtrIntercept()) { netPointer('u', e); return; } pointerIsDown = false; releaseGate(); endPointer(); if (e.pointerType !== 'mouse') hover.on = false; });
-gcv.addEventListener('pointercancel', e => { if (netPtrIntercept()) { netPointer('u', e); return; } pointerIsDown = false; releaseGate(); endPointer(); hover.on = false; });
+const touchEnd = e => { touches.delete(e.pointerId); if (pinch && !touches.size) { pinch = null; return true; } return !!pinch; };
+gcv.addEventListener('pointerup', e => { if (touchEnd(e)) return; if (netPtrIntercept()) { netPointer('u', e); return; } pointerIsDown = false; releaseGate(); endPointer(); if (e.pointerType !== 'mouse') hover.on = false; });
+gcv.addEventListener('pointercancel', e => { if (touchEnd(e)) return; if (netPtrIntercept()) { netPointer('u', e); return; } pointerIsDown = false; releaseGate(); endPointer(); hover.on = false; });
 gcv.addEventListener('pointerleave', () => {
   if (netPtrIntercept()) { if (NET.role === 'guest' && netIAmBuilder() && !NET.vsDown) { hover.on = false; NET.mv = { t: 'pm', x: 0, y: 0, on: 0 }; } return; }
   if (!painting) hover.on = false;
