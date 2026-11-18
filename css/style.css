@@ -645,7 +645,7 @@ body.mobile .cta small{display:none}
   body.mobile.land .hero{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:nowrap}
   body.mobile.land .hero p{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0;font-size:11px}
   body.mobile.land #btnRules{margin:0;flex:none}
-  body.mobile.land .hero h1{white-space:nowrap;flex:none;font-size:clamp(26px,4.6vw,40px)}
+  body.mobile.land .hero h1{white-space:nowrap;flex:none;font-size:clamp(26px,calc(var(--appW) * .046),40px)}
   /* 直し：小さい画面（iPhone SE など）ではみ出さないように */
   body.mobile.land .brand,body.mobile.land #btnDebug{display:none}
   body.mobile.land .topbar{justify-content:flex-end}
@@ -685,3 +685,7 @@ body.mobile{--lh:calc(var(--appH) - var(--saT) - var(--saB));--lw:calc(var(--app
 body.rot{overflow:hidden;padding:0}
 body.rot #app{position:fixed;top:0;left:0;width:var(--appW);height:var(--appH);max-width:none;overflow-x:hidden;overflow-y:auto;transform-origin:0 0;transform:translateX(var(--vw,100vw)) rotate(90deg)}
 body.rot.ingame #app{overflow:hidden}
+/* 画面を回していても同じ見た目になるように、vw ではなく横画面の大きさ（--appW）で決める */
+body.mobile.land .result-card h2{font-size:clamp(24px,calc(var(--appW) * .05),40px)}
+body.mobile.land .ending-wrap h2{font-size:clamp(28px,calc(var(--appW) * .06),52px)}
+body.mobile.land .net-toast{max-width:calc(var(--appW) * .9)}
