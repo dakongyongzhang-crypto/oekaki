@@ -5,7 +5,16 @@
    P1（ランナー）＝ホストがゲーム全体を動かす。P2（サポーター）＝ゲストは操作を送り、状態を受け取って描くだけ。
    接続は「接続コード」をコピペで交換する方式（サーバー不要）。
    ===================================================== */
-const RTC_CFG = { iceServers: [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }] };
+// STUN（Google）に加えて、TURN_CONFIG（js/net/turn-config.js）があれば Metered の中継サーバー（TURN）も使う。
+// TURN があれば、学校・会社のWi-Fiやスマホ回線など、直接つながらない相手とも中継してつながる。
+const TURN_URLS_DEFAULT = ['stun:stun.relay.metered.ca:80', 'turn:global.relay.metered.ca:80', 'turn:global.relay.metered.ca:80?transport=tcp', 'turn:global.relay.metered.ca:443', 'turns:global.relay.metered.ca:443?transport=tcp'];
+const hasTurn = () => !!(window.TURN_CONFIG && TURN_CONFIG.username && TURN_CONFIG.credential);
+function rtcConfig() {
+  const ice = [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }];
+  if (hasTurn()) ice.push({ urls: TURN_CONFIG.urls && TURN_CONFIG.urls.length ? TURN_CONFIG.urls : TURN_URLS_DEFAULT, username: TURN_CONFIG.username, credential: TURN_CONFIG.credential });
+  return { iceServers: ice };
+}
+const ICE_WAIT = () => hasTurn() ? 6000 : 4500; // 中継サーバーの候補を集めるぶん、少し長めに待つ
 const r1 = v => Math.round(v * 10) / 10;
 const sumArr = a => { let h = 0; for (let i = 0; i < a.length; i++) h = (h * 31 + a[i]) | 0; return h; };
 function netToast(msg, ms = 4500) {
@@ -78,7 +87,7 @@ function netWatch(pc) {
     if (NET.pc !== pc) return;
     if (!NET.open) {
       const id = NET.role === 'host' ? 'hostStatus' : 'guestStatus';
-      setStatus(id, '接続できませんでした。学校や会社のWi-Fi、一部のスマホ回線などでは、つながらないことがあります。自宅のネット同士でもう一度ためしてください。', 'err');
+      setStatus(id, hasTurn() ? '接続できませんでした。コードを作り直して、もう一度ためしてください。' : '接続できませんでした。学校や会社のWi-Fi、一部のスマホ回線などでは、つながらないことがあります。自宅のネット同士でもう一度ためしてください。', 'err');
     } else netOnClose('failed');
   };
   pc.oniceconnectionstatechange = () => { if (pc.iceConnectionState === 'failed') failed(); };
@@ -86,10 +95,10 @@ function netWatch(pc) {
 }
 async function netHostCreate() {
   netCleanup(); NET.role = 'host';
-  const pc = NET.pc = new RTCPeerConnection(RTC_CFG);
+  const pc = NET.pc = new RTCPeerConnection(rtcConfig());
   netBind(pc.createDataChannel('rr', { ordered: true })); netWatch(pc);
   await pc.setLocalDescription(await pc.createOffer());
-  await waitIce(pc, 4500);
+  await waitIce(pc, ICE_WAIT());
   return codeEncode({ v: 1, d: { type: pc.localDescription.type, sdp: pc.localDescription.sdp } });
 }
 async function netHostAccept(text) {
@@ -101,11 +110,11 @@ async function netGuestAnswer(text) {
   const o = await codeDecode(text);
   if (!o || o.v !== 1 || !o.d || o.d.type !== 'offer') throw new Error('これは「接続コード」ではありません（ホストが作ったコードを貼ってください）');
   netCleanup(); NET.role = 'guest';
-  const pc = NET.pc = new RTCPeerConnection(RTC_CFG);
+  const pc = NET.pc = new RTCPeerConnection(rtcConfig());
   pc.ondatachannel = e => netBind(e.channel); netWatch(pc);
   await pc.setRemoteDescription(o.d);
   await pc.setLocalDescription(await pc.createAnswer());
-  await waitIce(pc, 4500);
+  await waitIce(pc, ICE_WAIT());
   return codeEncode({ v: 1, d: { type: pc.localDescription.type, sdp: pc.localDescription.sdp } });
 }
 function netOnOpen() {

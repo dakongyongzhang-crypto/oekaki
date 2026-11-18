@@ -1,0 +1,39 @@
+# main にプッシュすると GitHub Pages に公開する。
+# そのとき Secrets の TURN_USERNAME / TURN_CREDENTIAL から js/net/turn-config.js を作る（リポジトリには入れない）。
+# 使う前に：Settings → Pages → Build and deployment の Source を「GitHub Actions」にする。
+name: GitHub Pages に公開
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: TURN の設定を書き込む（Secrets から）
+        env:
+          TURN_USERNAME: ${{ secrets.TURN_USERNAME }}
+          TURN_CREDENTIAL: ${{ secrets.TURN_CREDENTIAL }}
+          TURN_URLS: ${{ vars.TURN_URLS }}
+        run: node .github/scripts/write-turn-config.js
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - id: deployment
+        uses: actions/deploy-pages@v4

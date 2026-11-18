@@ -9,6 +9,7 @@ index.html          画面のHTML（スクリプトの読み込み順もここ�
 manifest.webmanifest PWA（アプリとして追加）の設定
 sw.js               PWA のオフライン対応（index.html に書かれたファイルを自動で保存する）
 icons/              アプリのアイコン
+.github/            GitHub Pages への公開（TURN の設定を Secrets から書き込む）
 css/style.css       見た目
 js/
   core/util.js      共通ユーティリティ（$ / clamp / 乱数など）
@@ -53,3 +54,22 @@ js/
 - `index.html` をダブルクリックして開いた場合（file://）は、ふつうに遊べますが PWA にはなりません。
 - 更新したファイルは、次にアプリを開いたときに新しくなります（開くときは保存済みのものを使い、裏で最新版を取りに行くため）。
 - JS や CSS のファイルを増やしても、`index.html` に書けば `sw.js` は直さなくて大丈夫です。
+
+## オンライン対戦の中継サーバー（TURN・Metered）
+
+学校や会社のWi-Fi、スマホ回線などで直接つながらないときに、Metered の TURN サーバーで中継します。
+ユーザー名とパスワードはリポジトリには入れず、GitHub の Secrets で管理します。
+
+1. **Secrets を登録する**：Settings → Secrets and variables → Actions → New repository secret
+   - `TURN_USERNAME`：Metered のダッシュボードに出ている TURN の Username
+   - `TURN_CREDENTIAL`：同じく Credential（パスワード）
+2. **公開のしかたを変える**：Settings → Pages → Build and deployment の Source を「GitHub Actions」にする
+3. main にプッシュすると `.github/workflows/pages.yml` が動き、Secrets から `js/net/turn-config.js` を作って GitHub Pages に公開します
+   （Actions タブの「GitHub Pages に公開」から手動でも動かせます）
+
+- TURN の URL は Metered の標準（`global.relay.metered.ca`）を使います。ダッシュボードの URL が違うときは、
+  Settings → Secrets and variables → Actions → Variables に `TURN_URLS`（カンマ区切り）を登録してください。
+- リポジトリの `js/net/turn-config.js` は `null`（TURN なし）のままにしておきます。手元で開いたときは STUN だけで接続します。
+- **注意**：公開したページを開いた人のブラウザには、TURN のユーザー名とパスワードが届きます（ブラウザが TURN に接続するために必要なため）。
+  Secrets で管理するのは「リポジトリに書かない」ためで、ページを調べれば見えてしまいます。
+  Metered のダッシュボードで、使える通信量の上限やアラートを設定しておくと安心です。
