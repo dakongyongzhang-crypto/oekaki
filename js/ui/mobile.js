@@ -64,3 +64,24 @@ $('#btnInstall').addEventListener('click', async () => {
 updateInstallButton();
 // アプリとして開いているときは、全画面ボタンはいらない
 if (isStandalone()) $('#btnFull').hidden = true;
+
+/* ---------- 起動したら自動で横画面にする ----------
+   - アプリとして開いているとき：すぐに画面の向きを横に固定する
+   - ブラウザで開いているとき（Android の Chrome など）：全画面と向きの固定は「画面に触れたあと」しかできないので、
+     起動後に最初に画面に触れたとき、自動で全画面にして横向きに固定する
+   - iPhone は向きを変える機能がないので、縦持ちなら画面ごと回して横画面で見せる（body.rot） */
+function lockLandscape() {
+  try { const p = screen.orientation && screen.orientation.lock && screen.orientation.lock('landscape'); if (p && p.catch) p.catch(() => {}); } catch (_e) {}
+}
+(function autoLandscape() {
+  if (!isMobileUI()) return;
+  lockLandscape();
+  if (isStandalone() || !canFullscreen) return;
+  const once = () => {
+    document.removeEventListener('pointerup', once, true); document.removeEventListener('click', once, true);
+    const d = document;
+    if (!isMobileUI() || d.fullscreenElement || d.webkitFullscreenElement) return;
+    toggleFullscreen();
+  };
+  document.addEventListener('pointerup', once, true); document.addEventListener('click', once, true);
+})();
