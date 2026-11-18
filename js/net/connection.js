@@ -19,7 +19,7 @@ const r1 = v => Math.round(v * 10) / 10;
 const sumArr = a => { let h = 0; for (let i = 0; i < a.length; i++) h = (h * 31 + a[i]) | 0; return h; };
 function netToast(msg, ms = 4500) {
   let el = $('#netToast');
-  if (!el) { el = document.createElement('div'); el.id = 'netToast'; el.className = 'net-toast'; el.setAttribute('role', 'status'); document.body.appendChild(el); }
+  if (!el) { el = document.createElement('div'); el.id = 'netToast'; el.className = 'net-toast'; el.setAttribute('role', 'status'); $('#app').appendChild(el); }
   el.textContent = msg; el.hidden = false; clearTimeout(netToast.t); netToast.t = setTimeout(() => { el.hidden = true; }, ms);
 }
 function setStatus(id, msg, cls) { const el = $('#' + id); el.textContent = msg; el.className = 'net-status' + (cls ? ' ' + cls : ''); }

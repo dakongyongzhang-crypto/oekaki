@@ -16,12 +16,12 @@ function fitStage() {
   document.body.classList.toggle('mob-coop', mobNet && COOP);
   if (mobNet) { fitStageMobile(); return; }
   const body = $('#gameBody'), bar = body.querySelector('.builder-bar'), tp = $('#touchpad'), root = document.documentElement;
-  const vw = root.clientWidth - 12, vh = window.innerHeight;
+  const vw = (isRot() ? viewW() : root.clientWidth) - 12, vh = viewH();
   const tpH = getComputedStyle(tp).display !== 'none' ? tp.offsetHeight + 8 : 0;
   root.style.setProperty('--topbarW', ($('.topbar').offsetWidth + 12) + 'px'); // 上のボタン列はゲーム画面の見出しと同じ行に並べる
   body.classList.remove('side');
   root.style.setProperty('--stageW', vw + 'px');
-  const top = body.getBoundingClientRect().top + window.scrollY;
+  const top = isRot() ? body.offsetTop : body.getBoundingClientRect().top + window.scrollY;
   const availH = vh - top - tpH - 8, barH = bar.offsetHeight;
   const flex = !COOP && !NET.role;
   const minA = flex ? 4 / 3 : 16 / 9, maxA = flex ? 2.4 : 16 / 9;
@@ -42,7 +42,8 @@ function fitStage() {
 // スマホ表示のオンライン対戦：画面いっぱいに自分の役割の画面を出す（16:9のまま。カード欄は横向きなら右、縦向きなら下）
 function fitStageMobile() {
   const body = $('#gameBody'), root = document.documentElement, bar = body.querySelector('.builder-bar');
-  const vw = window.innerWidth, vh = window.innerHeight, land = vw >= vh;
+  const vw = viewW(), vh = viewH(), land = vw >= vh;
+  $('#app').scrollTop = 0;
   const showBar = getComputedStyle(bar).display !== 'none';
   body.classList.toggle('side', land && showBar);
   const barW = land && showBar ? 96 : 0, barH = !land && showBar ? 86 : 0;
@@ -53,14 +54,14 @@ function fitStageMobile() {
   $('#rotateHint').classList.toggle('on', !land);
   // ポーズなどのボタンは、ゲーム画面の上の真ん中（タイマーのすぐ下）に置く。
   // 協力モードは開始前にお話が上に出るので、下の真ん中に置く（協力の画面にはミニマップがない）
-  const r = $('#stage').getBoundingClientRect();
-  root.style.setProperty('--hbX', Math.round(r.left + r.width / 2) + 'px');
-  root.style.setProperty('--hbY', Math.round(COOP ? r.bottom - 34 : r.top + r.height * 0.12) + 'px');
+  const st = $('#stage'), L = st.offsetLeft, T0 = st.offsetTop, W = st.offsetWidth, H = st.offsetHeight; // 回転していても使えるように、画面上の位置ではなくレイアウト上の位置で
+  root.style.setProperty('--hbX', Math.round(L + W / 2) + 'px');
+  root.style.setProperty('--hbY', Math.round(COOP ? T0 + H - 34 : T0 + H * 0.12) + 'px');
   if (GW !== GW_BASE) { GW = GW_BASE; setLayout(SPLIT); mmDirty = true; }
 }
 function resizeGame() {
   fitStage();
-  const cssW = gcv.getBoundingClientRect().width || GW;
+  const cssW = gcv.offsetWidth || GW;
   dpr = Math.max(1, Math.min(cssW * (window.devicePixelRatio || 1), 2400) / GW);
   gcv.width = Math.round(GW * dpr); gcv.height = Math.round(GH * dpr);
 }

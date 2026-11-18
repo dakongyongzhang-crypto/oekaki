@@ -5,7 +5,7 @@
    ===================================================== */
 const hover = { sx: 0, sy: 0, on: false };
 let painting = false, lastPaint = null;
-function gpos(e) { const r = gcv.getBoundingClientRect(); return { x: (e.clientX - r.left) / r.width * GW, y: (e.clientY - r.top) / r.height * GH }; }
+function gpos(e) { const f = localFrac(e, gcv); return { x: f.fx * GW, y: f.fy * GH }; }
 const builderActive = () => state === 'play' || state === 'countdown';
 const bwx = sx => (sx - BX) / VS + (SPLIT === 's' ? camX : bCam); // ビルダー画面上の座標 → ワールド座標
 const bwy = sy => (sy - BY) / VS + (SPLIT === 's' ? camY : bCamY);

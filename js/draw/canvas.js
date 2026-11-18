@@ -41,7 +41,7 @@ $('#btnClear').addEventListener('click', () => { D.strokes = []; redrawDrawing()
 $('#btnSample').addEventListener('click', () => sampleDoodle());
 function undo() { D.strokes.pop(); redrawDrawing(); analyzeAndShow(); }
 
-function dpos(e) { const r = dc.getBoundingClientRect(); return { x: (e.clientX - r.left) / r.width * DS, y: (e.clientY - r.top) / r.height * DS }; }
+function dpos(e) { const f = localFrac(e, dc); return { x: f.fx * DS, y: f.fy * DS }; }
 function strokePath(ctx, pts) {
   ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);
   if (pts.length === 1) ctx.lineTo(pts[0].x + 0.01, pts[0].y);

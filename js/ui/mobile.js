@@ -12,9 +12,17 @@ let uiPref = null;
 try { uiPref = localStorage.getItem(UI_KEY); } catch (_e) {}
 const autoMobile = () => matchMedia('(any-pointer:coarse)').matches && Math.min(screen.width, screen.height) < 700;
 const isMobileUI = () => uiPref ? uiPref === 'mobile' : autoMobile();
+// スマホ表示は常に横画面：縦持ちなら画面全体を回す（rot）。横レイアウトを使うときは land
+function updateOrient() {
+  const m = document.body.classList.contains('mobile'), portrait = window.innerHeight > window.innerWidth;
+  document.body.classList.toggle('rot', m && portrait);
+  document.body.classList.toggle('land', m);
+}
+window.addEventListener('resize', () => { const was = isRot(); updateOrient(); if (was !== isRot() && typeof curScreen !== 'undefined' && curScreen === 'scr-game') resizeGame(); });
 function applyUIMode() {
   const m = isMobileUI();
   document.body.classList.toggle('mobile', m);
+  updateOrient();
   $('#btnUiMode').textContent = m ? '表示：スマホ' : '表示：PC';
   $('#btnUiMode').setAttribute('aria-pressed', String(m));
   if (curScreen === 'scr-game') resizeGame();
