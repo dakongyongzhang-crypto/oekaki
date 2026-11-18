@@ -4,6 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ラクガキ・ランナーズ</title>
+<meta name="description" content="描いたキャラで走れ。描いた壁で阻め。2人対戦アクション">
+<meta name="theme-color" content="#e9eef5">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/favicon-64.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ラクガキ">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Yusei+Magic&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
@@ -15,6 +24,7 @@
     <div class="brand hand">ラクガキ・ランナーズ</div>
     <div class="top-right">
       <div class="score" id="scoreBox" aria-live="polite">通算 <span class="r">ランナー</span> <b id="scoreR">0</b> − <b id="scoreB">0</b> <span class="b">ビルダー</span></div>
+      <button class="btn sm" id="btnInstall" hidden title="ホーム画面やデスクトップにアプリとして追加">アプリにする</button>
       <button class="btn sm" id="btnUiMode" aria-pressed="false" title="スマホ用の画面とPC用の画面を切り替え">表示：PC</button>
       <button class="btn sm" id="btnDebug" aria-pressed="false" title="デバッグモード（ゲーム中はF2でパネルの表示切り替え）">デバッグ OFF</button>
       <button class="btn sm" id="btnBgm" aria-pressed="true" title="対戦中はMキーでも切り替え">BGM ON</button>

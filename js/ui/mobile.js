@@ -38,3 +38,21 @@ $('#btnFull').hidden = !canFullscreen;
 // タイトルの「あそびかた」（スマホ表示では説明をたたんでおく）
 $('#btnRules').addEventListener('click', () => { const on = document.body.classList.toggle('show-rules'); $('#btnRules').setAttribute('aria-expanded', String(on)); $('#btnRules').textContent = on ? 'あそびかたを閉じる' : 'あそびかた'; });
 $('#btnFull').addEventListener('click', toggleFullscreen);
+
+/* ---------- PWA：オフライン対応とアプリとして追加 ---------- */
+const isStandalone = () => matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches || navigator.standalone === true;
+if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+  window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
+}
+let installPrompt = null;
+const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+function updateInstallButton() { $('#btnInstall').hidden = isStandalone() || !(installPrompt || isIOS); }
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installPrompt = e; updateInstallButton(); });
+window.addEventListener('appinstalled', () => { installPrompt = null; updateInstallButton(); });
+$('#btnInstall').addEventListener('click', async () => {
+  if (installPrompt) { installPrompt.prompt(); try { await installPrompt.userChoice; } catch (_e) {} installPrompt = null; updateInstallButton(); return; }
+  if (isIOS) netToast('Safari の共有ボタン（□に↑）→「ホーム画面に追加」で、アプリとして遊べます', 9000);
+});
+updateInstallButton();
+// アプリとして開いているときは、全画面ボタンはいらない
+if (isStandalone()) $('#btnFull').hidden = true;

@@ -528,7 +528,7 @@ body.mob-net.ingame .rotate-hint.on{display:block;position:fixed;top:max(6px,env
 body.mob-net.ingame .overlay{padding:6px}
 body.mob-net.ingame .result-card{padding:10px 12px}
 /* PC表示のゲーム中は「表示」「全画面」ボタンを出さない（見出しの行を広くとらない） */
-body.ingame #btnUiMode{display:none}
+body.ingame #btnUiMode,body.ingame #btnInstall{display:none!important}
 body:not(.mobile) #btnFull{display:none}
 
 /* ---------- スマホ表示：メニュー・お絵かき・カード選び（横向き前提）---------- */

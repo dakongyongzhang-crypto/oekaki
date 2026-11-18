@@ -64,7 +64,7 @@ function resizeGame() {
   dpr = Math.max(1, Math.min(cssW * (window.devicePixelRatio || 1), 2400) / GW);
   gcv.width = Math.round(GW * dpr); gcv.height = Math.round(GH * dpr);
 }
-window.addEventListener('resize', () => { if (curScreen === 'scr-game') resizeGame(); });
+window.addEventListener('resize', () => { if (typeof curScreen !== 'undefined' && curScreen === 'scr-game') resizeGame(); }); // 読み込みの途中で呼ばれることもある
 const hatch = (() => {
   const c = document.createElement('canvas'); c.width = c.height = 10;
   const x = c.getContext('2d'); x.strokeStyle = 'rgba(36,37,43,0.16)'; x.lineWidth = 1.1;
