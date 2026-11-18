@@ -42,7 +42,7 @@ function fitStage() {
 // スマホ表示のオンライン対戦：画面いっぱいに自分の役割の画面を出す（16:9のまま。カード欄は横向きなら右、縦向きなら下）
 function fitStageMobile() {
   const body = $('#gameBody'), root = document.documentElement, bar = body.querySelector('.builder-bar');
-  const vw = viewW(), vh = viewH(), land = vw >= vh;
+  const vw = body.clientWidth || viewW(), vh = body.clientHeight || viewH(), land = viewW() >= viewH(); // .game-body は安全領域（ノッチなど）を除いた枠
   $('#app').scrollTop = 0;
   const showBar = getComputedStyle(bar).display !== 'none';
   body.classList.toggle('side', land && showBar);
@@ -54,7 +54,7 @@ function fitStageMobile() {
   $('#rotateHint').classList.toggle('on', !land);
   // ポーズなどのボタンは、ゲーム画面の上の真ん中（タイマーのすぐ下）に置く。
   // 協力モードは開始前にお話が上に出るので、下の真ん中に置く（協力の画面にはミニマップがない）
-  const st = $('#stage'), L = st.offsetLeft, T0 = st.offsetTop, W = st.offsetWidth, H = st.offsetHeight; // 回転していても使えるように、画面上の位置ではなくレイアウト上の位置で
+  const gcs = getComputedStyle(body), st = $('#stage'), L = st.offsetLeft + (parseFloat(gcs.left) || 0), T0 = st.offsetTop + (parseFloat(gcs.top) || 0), W = st.offsetWidth, H = st.offsetHeight; // 回転していても使えるように、画面上の位置ではなくレイアウト上の位置で
   root.style.setProperty('--hbX', Math.round(L + W / 2) + 'px');
   root.style.setProperty('--hbY', Math.round(COOP ? T0 + H - 34 : T0 + H * 0.12) + 'px');
   if (GW !== GW_BASE) { GW = GW_BASE; setLayout(SPLIT); mmDirty = true; }

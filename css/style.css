@@ -497,7 +497,7 @@ body.mob-net.ingame .topbar,body.mob-net.ingame .ctrl,body.mob-net.ingame .dbg-p
 body.mob-net.ingame .game-head{position:fixed;top:var(--hbY,4px);left:var(--hbX,50%);transform:translateX(-50%);z-index:30;margin:0;min-height:0;padding:0}
 body.mob-net.ingame .head-btns{gap:4px}
 body.mob-net.ingame .head-btns .btn.sm{padding:2px 8px;font-size:11px;opacity:.8;box-shadow:1px 1px 0 var(--shade)}
-body.mob-net.ingame .game-body{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+body.mob-net.ingame .game-body{position:fixed;inset:var(--saT) var(--saR) var(--saB) var(--saL);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
 body.mob-net.ingame .game-body.side{flex-direction:row}
 body.mob-net.ingame .stage{border-width:1.5px;border-radius:6px;box-shadow:none}
 /* ビルダーのカード欄：横向きは右に縦1列、縦向きは下に横スクロール */
@@ -518,13 +518,13 @@ body.mob-net.ingame .tool .tc{font-size:9.5px}
 body.mob-net.ingame .tool .tk{display:none}
 body.mob-net.ingame .tool.on{transform:none;outline:2.5px solid var(--builder)}
 /* ランナーの操作ボタン：画面の下の左右に半透明で重ねる */
-body.mob-net.ingame .touchpad{display:flex!important;position:fixed;left:0;right:0;bottom:0;max-width:none;margin:0;padding:0 max(10px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));z-index:25;pointer-events:none}
+body.mob-net.ingame .touchpad{display:flex!important;position:fixed;left:0;right:0;bottom:0;max-width:none;margin:0;padding:0 max(10px,var(--saR)) max(10px,var(--saB)) max(10px,var(--saL));z-index:25;pointer-events:none}
 body.mob-net.ingame .touchpad .pill{display:none}
 body.mob-net.ingame .tp{pointer-events:auto;width:64px;height:64px;border-radius:50%;opacity:.62;font-size:15px;box-shadow:none;border-width:2px}
 body.mob-net.ingame .tp.big{width:78px;height:78px}
 body.mob-net.ingame .tp.down{opacity:.9}
 body.mob-net.ingame.net-nopad .touchpad{display:none!important}
-body.mob-net.ingame .rotate-hint.on{display:block;position:fixed;top:max(6px,env(safe-area-inset-top));right:6px;z-index:31;background:var(--hilite);color:#24252b;font-size:11px;font-weight:900;padding:3px 8px;border-radius:999px;border:1.5px solid var(--ink)}
+body.mob-net.ingame .rotate-hint.on{display:block;position:fixed;top:max(6px,var(--saT));right:6px;z-index:31;background:var(--hilite);color:#24252b;font-size:11px;font-weight:900;padding:3px 8px;border-radius:999px;border:1.5px solid var(--ink)}
 body.mob-net.ingame .overlay{padding:6px}
 body.mob-net.ingame .result-card{padding:10px 12px}
 /* PC表示のゲーム中は「表示」「全画面」ボタンを出さない（見出しの行を広くとらない） */
@@ -541,7 +541,7 @@ body.mobile .roles{display:none}
 body.mobile.show-rules .roles{display:grid}
 body.mobile .cta small{display:none}
 /* 以下、スマホの横画面レイアウト（.land）。縦持ちのときは画面ごと90°回して同じレイアウトを使う（.rot） */
-  body.mobile.land:not(.ingame) #app{padding:4px max(10px,env(safe-area-inset-right)) 6px max(10px,env(safe-area-inset-left));max-width:none}
+  body.mobile.land:not(.ingame) #app{padding:calc(4px + var(--saT)) max(10px,var(--saR)) calc(6px + var(--saB)) max(10px,var(--saL));max-width:none}
   body.mobile.land .topbar{margin-bottom:4px;gap:8px;flex-wrap:nowrap}
   body.mobile.land .brand{font-size:15px;white-space:nowrap}
   body.mobile.land .top-right{gap:6px;flex-wrap:nowrap}
@@ -676,7 +676,12 @@ body.mob-net.ingame.net-notool .builder-bar{display:none!important}
 body.mob-net.ingame.mob-coop .tp[data-k="TouchAtk"]{display:none}
 
 /* ---------- スマホ表示は常に横画面：縦持ちなら画面全体を90°回す ---------- */
-body.mobile{--lh:100vh;--lh:100dvh;--lw:100vw}
-body.rot{--lh:100vw;--lw:100vh;--lw:100dvh;overflow:hidden}
-body.rot #app{position:fixed;top:0;left:0;width:100vh;width:100dvh;height:100vw;max-width:none;overflow-x:hidden;overflow-y:auto;transform-origin:0 0;transform:translateX(100vw) rotate(90deg)}
+/* 画面の大きさは JS で実際に見えている大きさを測って入れる（--vw/--vh。iPhone の 100vh はツールバーの分ずれるため）。
+   --saT/R/B/L は横画面で見たときの上・右・下・左の安全領域（ノッチ・ダイナミックアイランド・ホームバー）。
+   回転しているときは、端末の上→横画面の左、下→右、右→上、左→下 に置きかえる */
+:root{--saT:env(safe-area-inset-top,0px);--saR:env(safe-area-inset-right,0px);--saB:env(safe-area-inset-bottom,0px);--saL:env(safe-area-inset-left,0px);--appW:var(--vw,100vw);--appH:var(--vh,100vh)}
+body.rot{--saT:env(safe-area-inset-right,0px);--saR:env(safe-area-inset-bottom,0px);--saB:env(safe-area-inset-left,0px);--saL:env(safe-area-inset-top,0px);--appW:var(--vh,100vh);--appH:var(--vw,100vw)}
+body.mobile{--lh:calc(var(--appH) - var(--saT) - var(--saB));--lw:calc(var(--appW) - var(--saL) - var(--saR))}
+body.rot{overflow:hidden;padding:0}
+body.rot #app{position:fixed;top:0;left:0;width:var(--appW);height:var(--appH);max-width:none;overflow-x:hidden;overflow-y:auto;transform-origin:0 0;transform:translateX(var(--vw,100vw)) rotate(90deg)}
 body.rot.ingame #app{overflow:hidden}

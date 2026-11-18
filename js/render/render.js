@@ -54,9 +54,9 @@ function render() {
       drawCenterText(`ヒント：${st.hint}`, 18, C.builder, 216, 1, rcx);
       drawCenterText(String(n), 90 + f * 30, C.runner, rcy + 60, 0.4 + f * 0.6, rcx);
     } else if (SPLIT === 'o') {
-      const me = netIAmRunner();
-      drawCenterText(`${MATCH.on ? `ラウンド${MATCH.round}　` : ''}ステージ「${stage.name}」`, 26, C.ink, 100, 1, GW / 2);
-      drawCenterText(me ? 'あなたはランナー：ゴールをめざそう！' : 'あなたはビルダー：今のうちに敵やワナを置こう', 21, me ? C.runner : C.builder, 142, 1, GW / 2);
+      const me = netIAmRunner(), dy = document.body.classList.contains('mob-net') ? 52 : 0; // スマホはタイマーの下にボタンがあるので、少し下に
+      drawCenterText(`${MATCH.on ? `ラウンド${MATCH.round}　` : ''}ステージ「${stage.name}」`, 26, C.ink, 100 + dy, 1, GW / 2);
+      drawCenterText(me ? 'あなたはランナー：ゴールをめざそう！' : 'あなたはビルダー：今のうちに敵やワナを置こう', 21, me ? C.runner : C.builder, 142 + dy, 1, GW / 2);
       drawCenterText(String(n), 100 + f * 30, C.runner, GH / 2 + 30, 0.4 + f * 0.6, GW / 2);
     } else {
     drawCenterText(`${MATCH.on ? `ラウンド${MATCH.round}　` : ''}ステージ「${stage.name}」`, hz ? 26 : 24, C.ink, hz ? 92 : 110, 1, rcx);

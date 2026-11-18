@@ -14,11 +14,22 @@ const autoMobile = () => matchMedia('(any-pointer:coarse)').matches && Math.min(
 const isMobileUI = () => uiPref ? uiPref === 'mobile' : autoMobile();
 // スマホ表示は常に横画面：縦持ちなら画面全体を回す（rot）。横レイアウトを使うときは land
 function updateOrient() {
-  const m = document.body.classList.contains('mobile'), portrait = window.innerHeight > window.innerWidth;
-  document.body.classList.toggle('rot', m && portrait);
+  const m = document.body.classList.contains('mobile'), W = window.innerWidth, H = window.innerHeight;
+  const root = document.documentElement;
+  root.style.setProperty('--vw', W + 'px'); root.style.setProperty('--vh', H + 'px'); // 実際に見えている大きさ（iPhone の 100vh はずれるため）
+  document.body.classList.toggle('rot', m && H > W);
   document.body.classList.toggle('land', m);
 }
-window.addEventListener('resize', () => { const was = isRot(); updateOrient(); if (was !== isRot() && typeof curScreen !== 'undefined' && curScreen === 'scr-game') resizeGame(); });
+// iPhone は向きが変わったあと少し遅れて大きさが決まるので、何回か測り直す
+function onViewportChange() {
+  const was = isRot(), size = innerWidth + 'x' + innerHeight;
+  updateOrient();
+  if (typeof curScreen !== 'undefined' && curScreen === 'scr-game' && (was !== isRot() || size !== onViewportChange.last)) resizeGame();
+  onViewportChange.last = size;
+}
+window.addEventListener('resize', onViewportChange);
+window.addEventListener('orientationchange', () => { for (const t of [50, 250, 600]) setTimeout(onViewportChange, t); });
+if (window.visualViewport) visualViewport.addEventListener('resize', onViewportChange);
 function applyUIMode() {
   const m = isMobileUI();
   document.body.classList.toggle('mobile', m);
