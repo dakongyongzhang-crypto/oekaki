@@ -829,3 +829,5 @@ body.mobile.land #scr-story .story-grid{display:contents}
 body.mobile.land #scr-story .run-map{order:1}
 body.mobile.land #scr-story .story-intro{order:2}
 body.mobile.land #scr-story .page-card.ex{order:3;margin-top:8px}
+.si-theme{font-weight:700;color:#8a5a00;margin:4px 0}
+body.mobile.land #scr-story .si-theme{font-size:11.5px;margin:2px 0}

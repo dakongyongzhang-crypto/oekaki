@@ -122,7 +122,7 @@ function nodeInfoHtml(nd) {
   const st = makeNodePage(nd), counts = {}; st.kinds.forEach(k => { counts[k] = (counts[k] || 0) + 1; });
   const meta = Object.entries(counts).map(([k, n]) => `${KIND_JP[k]}×${n}`).join('・') + (st.cave ? '・低い天井' : '') + (st.erase ? '・地面けし' : '') + (st.boss ? '・ボス戦' : '');
   return `<div class="si-text">${nd.type === 'elite' ? `<p class="si-elite">${t.desc}</p>` : ''}${st.story.map(x => `<p>${x}</p>`).join('')}</div>
-    <p class="si-meta">関門：${meta}　制限時間：${st.time}秒　大王の強さ：${CPU_LV[COOP_LV].name}${nd.type === 'elite' ? '（強敵）' : ''}</p><p class="si-hint">ヒント：${st.hint}</p>`;
+    <p class="si-meta">関門：${meta}　制限時間：${st.time}秒　大王の強さ：${CPU_LV[COOP_LV].name}${nd.type === 'elite' ? '（強敵）' : ''}</p>${themeOf(st) ? `<p class="si-theme">ステージの特徴「${THEME[themeOf(st)].name}」：${THEME[themeOf(st)].desc}</p>` : ''}<p class="si-hint">ヒント：${st.hint}</p>`;
 }
 function showStory() {
   const sv = storySave[COOP_LV], run = ensureRunMap(sv.run);

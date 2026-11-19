@@ -256,6 +256,7 @@ function drawEnemies() {
       g.save(); g.translate(b.x, b.y); g.rotate(b.rot); rrect(g, -8, -5, 16, 10, 3); g.fillStyle = '#fbe6ee'; g.fill(); g.strokeStyle = C.ink; g.lineWidth = 1.6; g.stroke(); g.restore();
       continue;
     }
+    if (b.kind === 'bolt') { drawBolt(b); continue; }
     if (b.kind === 'rock') {
       g.save(); g.translate(b.x, b.y); g.rotate(b.rot); g.beginPath();
       for (let k = 0; k < 8; k++) { const a = k / 8 * TAU, q = b.r * (0.85 + 0.15 * ((k * 5) % 3) / 2); if (k) g.lineTo(Math.cos(a) * q, Math.sin(a) * q); else g.moveTo(Math.cos(a) * q, Math.sin(a) * q); }

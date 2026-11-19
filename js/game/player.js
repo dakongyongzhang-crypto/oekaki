@@ -144,9 +144,9 @@ function updatePlayer() {
   if (p.kb > 0) p.kb--;
   else if (p.stuck > 0) { p.stuck--; p.vx = 0; }
   else {
-    const acc = p.onIce ? 0.14 : (p.onGround ? 0.75 : 0.5);
+    const acc = p.onIce ? 0.14 : p.slide === 2 ? 0.2 : p.slide === 1 ? 0.32 : (p.onGround ? 0.75 : 0.5); // slide：雪山・こおりの洞くつの地面
     if (dir) { p.vx += dir * acc; p.facing = dir; }
-    else { p.vx *= p.onIce ? 0.988 : (p.onGround ? 0.72 : 0.93); if (Math.abs(p.vx) < 0.08) p.vx = 0; }
+    else { p.vx *= p.onIce ? 0.988 : p.slide === 2 ? 0.967 : p.slide === 1 ? 0.94 : (p.onGround ? 0.72 : 0.93); if (Math.abs(p.vx) < 0.08) p.vx = 0; }
     p.vx = clamp(p.vx, -maxSp * (p.onIce ? 1.25 : 1), maxSp * (p.onIce ? 1.25 : 1));
   }
   if (p.onGround) p.coyote = 7; else if (p.coyote > 0) p.coyote--;
@@ -173,6 +173,10 @@ function updatePlayer() {
   p.onLift = null;
   for (const lf of lifts) {
     if (p.x + p.w > lf.x + 2 && p.x < lf.x + lf.w - 2 && p.vy >= 0 && prevBottom <= lf.y + 12 && p.y + p.h >= lf.y) { p.y = lf.y - p.h; p.vy = 0; p.onGround = true; p.onLift = lf; }
+  }
+  p.onMover = null; // 動く足場（空のステージ）
+  for (const m of movers) {
+    if (p.x + p.w > m.x + 2 && p.x < m.x + m.w - 2 && p.vy >= 0 && prevBottom <= m.y + 12 && p.y + p.h >= m.y) { p.y = m.y - p.h; p.vy = 0; p.onGround = true; p.onMover = m; }
   }
   p.vx = mr.hitX ? 0 : baseVx;
   p.wind = 0;
@@ -209,6 +213,7 @@ function updatePlayer() {
     }
   }
   if (effects.slip > 0 && p.onGround) p.onIce = true; // ツルツル：どの床も滑る
+  p.slide = p.onGround ? groundSlide(p) : 0; // 雪山・こおりの洞くつ：地面が滑る
   if (bounce) {
     p.vy = -15.5; p.onGround = false; p.coyote = 0; p.squash = 0.7; p.noCut = 30;
     SFX.boing(); burst(p.x + p.w / 2, p.y + p.h, '#33b06a', 6, 2);

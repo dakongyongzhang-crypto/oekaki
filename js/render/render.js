@@ -13,7 +13,7 @@ function renderView(ox, oy, cx, cy, mode, sx, sy) {
   g.save(); g.scale(VS, VS);
   drawBackground();
   g.save(); g.translate(-viewX, -viewY);
-  drawStart(); drawTerrain(); drawGates(); drawLocksAndLifts(); drawGuides(); drawBossArena(); drawGoal(); drawItems(); drawEnemies(); drawPlayer(); drawParticles(); drawDarkZones(); drawDebugBoxes();
+  drawStart(); drawTerrain(); drawGates(); drawLocksAndLifts(); drawThemeBack(); drawGuides(); drawBossArena(); drawGoal(); drawItems(); drawEnemies(); drawPlayer(); drawParticles(); drawThemeFront(); drawDarkZones(); drawDebugBoxes();
   if (mode !== 'builder' && effects.dark > 0) {
     const a = clamp(Math.min(effects.dark, 360 - effects.dark) / 20, 0, 1);
     const px = P.x + P.w / 2, py = P.y + P.h / 2;
@@ -52,6 +52,7 @@ function render() {
       drawCenterText(`${pageLabel(storyIdx)}「${stage.name}」`, 26, st.ex ? C.bad : C.ink, 96, 1, rcx);
       st.story.forEach((line, k) => drawCenterText(line, 15, C.ink, 136 + k * 23, 1, rcx));
       drawCenterText(`ヒント：${st.hint}`, 18, C.builder, 216, 1, rcx);
+      const th = themeOf(st); if (th) drawCenterText(`ステージの特徴「${THEME[th].name}」：${THEME[th].desc}`, 16, '#8a5a00', 246, 1, rcx);
       drawCenterText(String(n), 90 + f * 30, C.runner, rcy + 60, 0.4 + f * 0.6, rcx);
     } else if (SPLIT === 'o') {
       const me = netIAmRunner(), dy = document.body.classList.contains('mob-net') ? 52 : 0; // スマホはタイマーの下にボタンがあるので、少し下に

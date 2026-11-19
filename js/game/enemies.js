@@ -369,6 +369,7 @@ function updateBullets() {
       for (const o of bullets) if (o !== b && !o.dead && !o.friendly && dist(o.x, o.y, b.x, b.y) < o.r + (b.hr || b.r)) { o.dead = true; b.dead = true; burst(b.x, b.y, C.ink, 5, 2); break; }
       continue;
     }
+    if (b.kind === 'bolt') { updateBolt(b); continue; } // かみなり（嵐のステージ）
     if (b.kind === 'boom') {
       b.vx += b.ax; b.rot += 0.45;
       const o = b.owner;

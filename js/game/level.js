@@ -42,7 +42,9 @@ function genCoopLevel(rng, ri, seed) {
     }
     if (lead >= 5 && rng() < (st.heart != null ? st.heart : 0.2)) items.push({ type: 'heart', x: (s0 + 2) * T + T / 2, y: (h - 3) * T, taken: false });
     if (kind === 'pit') {
-      flat(2); const pw = hole.noJump(st.ex ? ri(18, 20) : ri(15, 18)); guides.push({ kind: 'bridge', row: h, c0: c, c1: c + pw - 1 }); c += pw; flat(3); // ジャンプでは越えられない幅（キャラに合わせる）
+      flat(2); const pw = hole.noJump(st.ex ? ri(18, 20) : ri(15, 18)); guides.push({ kind: 'bridge', row: h, c0: c, c1: c + pw - 1 });
+      if (themeOf(st) === 'sky') movers.push({ c0: c, pw, row: h }); // 空のステージ：穴の上を動く足場
+      c += pw; flat(3); // ジャンプでは越えられない幅（キャラに合わせる）
     } else if (kind === 'wall') {
       flat(4); const wh = ri(9, 10); guides.push({ kind: 'pad', row: h - 1, c0: c - 3, c1: c - 2 });
       for (let i = 0; i < 3; i++) { col(c, h); for (let r = h - wh; r < h; r++) tiles[idx(c, r)] = 1; c++; }
@@ -140,8 +142,8 @@ function holeMaker(rng) {
 function genLevel(seed) {
   const rng = mulberry32(seed);
   const ri = (a, b) => a + Math.floor(rng() * (b - a + 1));
-  LW = VS_LW; ROWS = 27; gates = []; holdGate = null; guides = []; bossInfo = null; bossCut = null; locks = []; lifts = []; darkZones = []; holdLift = null;
-  if (COOP) { genCoopLevel(rng, ri, seed); return; }
+  LW = VS_LW; ROWS = 27; gates = []; holdGate = null; guides = []; bossInfo = null; bossCut = null; locks = []; lifts = []; darkZones = []; holdLift = null; movers = []; foliage = [];
+  if (COOP) { genCoopLevel(rng, ri, seed); themeGen(rng); return; } // themeGen：ステージの特徴（動く足場・木の葉）
   const N = LW * ROWS;
   tiles = new Uint8Array(N); paintCol = new Uint8Array(N); paintKind = new Uint8Array(N); paintHp = new Uint8Array(N);
   paintT = new Int32Array(N); paintExp = new Int32Array(N); origTile = new Uint8Array(N);
@@ -258,9 +260,10 @@ function resetRound() {
   };
   enemies = []; bullets = []; particles = []; popups = [];
   energy = COOP ? Math.min(EMAX, 60 + 20 * runBoost('energy')) : EMAX; timeLeft = roundLen(); tick = 0; state = 'countdown'; countT = COOP ? 300 : 180; camX = 0; shake = 0; hitStop = 0; banner = null; // 対戦：ビルダーはエネルギー満タンで始まる
-  effects = { dark: 0, rev: 0, heavy: 0, boost: 0, freeze: 0, slip: 0, float: 0, seal: 0, regen: 0, jumpup: 0, djump: 0, tail: 0, cushion: 0, spikeproof: 0, lamp: 0, slow: 0, nojam: 0 };
+  effects = { dark: 0, rev: 0, heavy: 0, boost: 0, freeze: 0, slip: 0, float: 0, seal: 0, gust: 0, gustDir: 1, regen: 0, jumpup: 0, djump: 0, tail: 0, cushion: 0, spikeproof: 0, lamp: 0, slow: 0, nojam: 0 };
   cpu = { energy: 40, timer: 90 };
   trail = []; spawnQueue = [];
+  if (COOP) themeStart(); // ステージの特徴（城のファイアバーなど）
   atkPressed = false; painting = false; lastPaint = null; penLive = 0;
   ST = { kills: 0, broken: 0, placed: 0, painted: 0, dmg: 0, startX: sx, startY: sy0 };
   $('#result').classList.add('hidden'); $('#pauseMenu').classList.add('hidden');

@@ -50,12 +50,14 @@ function step() {
     if (effects.heavy > 0) effects.heavy--;
     if (effects.boost > 0) effects.boost--;
     if (effects.freeze > 0) effects.freeze--;
-    for (const k of ['slip', 'float', 'seal', 'regen', 'jumpup', 'djump', 'tail', 'cushion', 'spikeproof', 'lamp', 'slow', 'nojam']) if (effects[k] > 0) effects[k]--;
+    for (const k of ['slip', 'float', 'seal', 'gust', 'regen', 'jumpup', 'djump', 'tail', 'cushion', 'spikeproof', 'lamp', 'slow', 'nojam']) if (effects[k] > 0) effects[k]--;
     if (effects.lamp > 0) effects.dark = 0; // ランタン：暗くならない
     if (effects.regen > 0 && state === 'play' && effects.regen % 20 === 0 && P.hp > 0 && P.hp < P.maxHp) P.hp = Math.min(P.maxHp, P.hp + 1); // いやしの光
     for (const k in cardCd) if (cardCd[k] > 0) cardCd[k]--;
   }
   if (state === 'play' && lifts.length) updateLifts();
+  if (movers.length) updateMovers();
+  updateTheme(); // ステージの特徴（風・落石・かみなり）
   if (state === 'play') { if (!dbg('freezeTime')) timeLeft--; updatePlayer(); }
   if (state === 'play' && bossInfo && !bossInfo.spawned && P.x > bossInfo.arenaStart) spawnBoss();
   if (state === 'play' && bossInfo && !bossCut && overlap(P, { x: bossInfo.sx - 18, y: bossInfo.sy - 62, w: 36, h: 62 })) triggerBossSwitch();
