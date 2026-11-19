@@ -211,21 +211,22 @@ function useSupport(id, wx, wy, pl) {
   }
   SFX.special();
   if (SUPPORT_TIME[id]) { // 時間で切れる効果
-    effects[SUPPORT_EFFECT[id]] = SUPPORT_TIME[id] * 60;
+    effects[SUPPORT_EFFECT[id]] = Math.round((CARD[id].pow || SUPPORT_TIME[id]) * 60); // アップグレードで長くなる
     if (id === 's_lamp') effects.dark = 0;
     banner = { text: CARD[id].name + '！', life: 40, color: C.builder };
   }
-  if (id === 's_timer') { timeLeft += 15 * 60; banner = { text: '時間が15秒のびた！', life: 50, color: C.builder }; }
+  if (id === 's_timer') { const s = CARD.s_timer.pow || 15; timeLeft += s * 60; banner = { text: `時間が${s}秒のびた！`, life: 50, color: C.builder }; }
   if (id === 's_clear') {
-    let n = 0; for (const b of bullets) if (!b.dead && !b.friendly && b.x > viewX - 40 && b.x < viewX + VWW + 40) { b.dead = true; n++; burst(b.x, b.y, '#7ddc94', 4, 2); }
+    const M = CARD.s_clear.pow || 40; let n = 0; for (const b of bullets) if (!b.dead && !b.friendly && b.x > viewX - M && b.x < viewX + VWW + M) { b.dead = true; n++; burst(b.x, b.y, '#7ddc94', 4, 2); }
     popup(P.x + P.w / 2, P.y - 20, n ? `弾を${n}個消した！` : '消す弾がない', C.builder, 18);
   }
   if (id === 's_shot') {
     const d = P.facing || 1;
-    for (const vy of [-1.6, 0, 1.6]) bullets.push({ kind: 'ink', friendly: true, x: P.x + P.w / 2 + d * (P.w / 2 + 2), y: P.y + P.h * 0.42, vx: d * 8, vy, r: 9, hr: 17, life: 60, dmg: Math.max(2, CH.dmg), col: '#2a9d5c', dead: false });
+    const n = CARD.s_shot.pow || 3;
+    for (let j = 0; j < n; j++) { const vy = (j - (n - 1) / 2) * (n > 3 ? 1.1 : 1.6); bullets.push({ kind: 'ink', friendly: true, x: P.x + P.w / 2 + d * (P.w / 2 + 2), y: P.y + P.h * 0.42, vx: d * 8, vy, r: 9, hr: 17, life: 60, dmg: Math.max(2, CH.dmg), col: '#2a9d5c', dead: false }); }
   }
   if (id === 's_push') {
-    const R = 110;
+    const R = CARD.s_push.pow || 110;
     for (const e of enemies) if (!e.dead && e.type !== 'boss' && circleRect(wx, wy, R, e)) {
       const dir = e.x + e.w / 2 < wx ? -1 : 1;
       damageEnemy(e, 1, dir);
@@ -234,7 +235,7 @@ function useSupport(id, wx, wy, pl) {
     particles.push({ x: wx, y: wy, vx: 0, vy: 0, life: 18, max: 18, r: R, color: '#9fd3f4', g: 0, ring: true });
   }
   if (id === 's_thunder') {
-    const cx = P.x + P.w / 2, near = enemies.filter(e => !e.dead && e.spawnT <= 0 && Math.abs(e.x - cx) < 520).sort((a, b) => Math.abs(a.x - cx) - Math.abs(b.x - cx)).slice(0, 3);
+    const cx = P.x + P.w / 2, near = enemies.filter(e => !e.dead && e.spawnT <= 0 && Math.abs(e.x - cx) < 520).sort((a, b) => Math.abs(a.x - cx) - Math.abs(b.x - cx)).slice(0, CARD.s_thunder.pow || 3);
     for (const e of near) {
       if (e.type === 'boss') { e.stun = Math.max(e.stun || 0, 60); popup(e.x + e.w / 2, e.y - 24, 'ビリビリ…', C.builder, 20); }
       else damageEnemy(e, 3, 0);
@@ -244,8 +245,8 @@ function useSupport(id, wx, wy, pl) {
     if (!near.length) popup(cx, P.y - 20, '近くに敵がいない', C.builder, 16);
   }
   if (id === 's_column') {
-    const c0 = Math.floor(wx / T) - 1; let n = 0;
-    for (let c = c0; c <= c0 + 2; c++) for (let r = 0; r < ROWS; r++) {
+    const w = CARD.s_column.pow || 3, c0 = Math.floor(wx / T) - Math.floor(w / 2); let n = 0;
+    for (let c = c0; c < c0 + w; c++) for (let r = 0; r < ROWS; r++) {
       if (c < 0 || c >= LW) continue;
       const i = idx(c, r);
       if ((tiles[i] === 3 || tiles[i] === 5) && paintCol[i] !== 7) { tiles[i] = 0; n++; burst(c * T + T / 2, r * T + T / 2, INKS[paintCol[i] % INKS.length], 2, 2); }

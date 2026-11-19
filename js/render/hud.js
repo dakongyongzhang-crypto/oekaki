@@ -58,8 +58,8 @@ function drawGhost() {
       ghostLabel(pl.ok ? `${card.name}  ${pl.cost}${pl.snapped ? '　ぴったり！' : ''}` : pl.why, pl.x + pl.w * T / 2, pl.y - 10, pl.ok);
       g.restore(); return;
     }
-    if (tool === 's_push' || tool === 's_column') { g.setLineDash([6, 6]); g.strokeStyle = 'rgba(42,157,92,0.7)'; g.lineWidth = 2; if (tool === 's_push') { g.beginPath(); g.arc(wx, wy, 110, 0, TAU); g.stroke(); } else g.strokeRect((Math.floor(wx / T) - 1) * T, 0, 3 * T, WH); g.setLineDash([]); }
-    if (tool === 's_bomb') { g.setLineDash([6, 6]); g.strokeStyle = 'rgba(42,157,92,0.7)'; g.lineWidth = 2; g.beginPath(); g.arc(wx, wy, 90, 0, TAU); g.stroke(); g.setLineDash([]); }
+    if (tool === 's_push' || tool === 's_column') { g.setLineDash([6, 6]); g.strokeStyle = 'rgba(42,157,92,0.7)'; g.lineWidth = 2; if (tool === 's_push') { g.beginPath(); g.arc(wx, wy, card.pow || 110, 0, TAU); g.stroke(); } else { const w = card.pow || 3; g.strokeRect((Math.floor(wx / T) - Math.floor(w / 2)) * T, 0, w * T, WH); } g.setLineDash([]); }
+    if (tool === 's_bomb') { g.setLineDash([6, 6]); g.strokeStyle = 'rgba(42,157,92,0.7)'; g.lineWidth = 2; g.beginPath(); g.arc(wx, wy, card.pow || 90, 0, TAU); g.stroke(); g.setLineDash([]); }
     if (tool === 's_heart') { g.globalAlpha = 0.6; drawHeart(g, wx, wy, 11); g.fillStyle = '#f27eb1'; g.fill(); g.globalAlpha = 1; }
     g.beginPath(); g.arc(wx, wy, 14, 0, TAU); g.strokeStyle = pl.ok ? C.builder : C.bad; g.lineWidth = 2; g.setLineDash([4, 4]); g.stroke(); g.setLineDash([]);
     const left = usesLeft(tool);
