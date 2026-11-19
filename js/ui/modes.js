@@ -155,12 +155,12 @@ function runContinue() { const run = curRun(); if (!run) { newRun(); startStoryP
 const rewardOnline = () => (NET.role === 'host' && NET.open && !NET.vsMode) || NET.role === 'guest';
 function showReward() {
   const run = curRun(), guest = NET.role === 'guest'; if (!run) { if (!guest) showStory(); return; }
-  if (!guest) { NET.rwHov = null; NET.rwPick = null; }
+  if (!guest) { NET.rwHov = null; NET.rwPick = null; NET.rwSug = null; }
   if (!guest && (!run.choices || !run.choices.length)) { run.choices = rollRewards(run); saveStory(); }
   run.choices = run.choices || [];
   const online = rewardOnline();
   $('#rewardTitle').textContent = `ステージ${run.stage} クリア！ ごほうびを1枚えらぼう`;
-  $('#rewardSub').textContent = `次はステージ${run.stage + 1}「${STORY[run.stage].name}」。えらんだごほうびは、この冒険のあいだずっと続きます。` + (guest ? '　ホストがえらんでいます…（えらんでいるカードが光ります）' : online ? '　えらんでいるカードは、相手の画面にも表示されます' : '');
+  $('#rewardSub').textContent = `次はステージ${run.stage + 1}「${STORY[run.stage].name}」。えらんだごほうびは、この冒険のあいだずっと続きます。` + (guest ? '　カードをタップすると、ホストに「これがいい！」と提案できます（決めるのはホスト）' : online ? '　サポーターの提案には「P2のおすすめ」がつきます。えらんでいるカードは相手の画面にも見えます' : '');
   const row = $('#rewardRow'); row.innerHTML = ''; row.classList.toggle('watch', guest);
   if (!run.choices.length) { // もう選べるものがないとき
     row.innerHTML = '<p class="rw-none">ごほうびは全部そろいました！</p>' + (guest ? '' : '<button class="btn blue big" id="rwSkip">次のステージへ</button>');
@@ -178,13 +178,13 @@ function showReward() {
     b.innerHTML = `<span class="rw-kind">${isCard ? 'サポーターのカード' : isUp ? 'カードのアップグレード' : isRup ? 'ランナーのアップグレード' : bo.who === 'runner' ? 'ランナーの強化' : 'サポーターの強化'}</span>
       ${isCard || isUp ? '<canvas width="208" height="128"></canvas>' : `<span class="rw-mark">${bo.mark}</span>`}
       <span class="rw-name hand">${isUp ? `${CARD[r.id].name} <b class="tlv">${stars(r.lv)}</b>` : isRup ? `${BOOSTS[r.id].name} <b class="tlv">${stars(r.lv - 1)}</b>` : rewardName(r)}</span>
-      <span class="rw-desc">${desc}</span>`;
+      <span class="rw-desc">${desc}</span>${online ? '<span class="rw-badges"><i class="p1">P1</i><i class="p2">P2のおすすめ</i></span>' : ''}`;
     if (isCard || isUp) iconCanvas(b.querySelector('canvas'), r.id, 104, 64);
     if (!guest) {
       b.addEventListener('pointerenter', () => rewardHover(ci));
       b.addEventListener('focus', () => rewardHover(ci));
       b.addEventListener('click', () => rewardPick(ci));
-    } else b.tabIndex = -1;
+    } else b.addEventListener('click', () => rewardSuggest(ci)); // ゲスト：タップで提案
     row.appendChild(b);
   });
   $('#rewardHave').innerHTML = `<div><b>サポーターのカード（${run.deck.length}枚）</b><div class="rw-deck">${deckIconsHtml(run.deck, run.ups)}</div></div><div><b>強化</b><div class="rw-boosts">${boostSummary(run)}</div></div>`;
@@ -195,7 +195,16 @@ function showReward() {
 }
 // えらんでいるカード（hov）・決めたカード（chosen）を光らせる
 function markReward() {
-  document.querySelectorAll('#rewardRow .rw-pick').forEach((b, i) => { b.classList.toggle('hov', NET.rwHov === i && NET.rwPick == null); b.classList.toggle('chosen', NET.rwPick === i); });
+  document.querySelectorAll('#rewardRow .rw-pick').forEach((b, i) => {
+    b.classList.toggle('hov', NET.rwHov === i && NET.rwPick == null); b.classList.toggle('chosen', NET.rwPick === i);
+    b.classList.toggle('sug', NET.rwSug === i); // サポーター（ゲスト）のおすすめ
+  });
+}
+// ゲスト：このごほうびがいい！とホストに提案する（もう一度タップで取り消し）
+function rewardSuggest(i) {
+  if (NET.rwPick != null) return;
+  NET.rwSug = NET.rwSug === i ? null : i; markReward(); SFX.pick();
+  netSend({ t: 'rwsug', i: NET.rwSug });
 }
 function rewardHover(i) {
   if (NET.rwPick != null || NET.rwHov === i) return;

@@ -15,6 +15,11 @@ function supporterDown() {
 // ゲストにも、ごほうびをえらぶ画面を見せる
 function netSendReward() { if (NET.role === 'host' && NET.open && !NET.vsMode) netSend({ t: 'rw', lv: COOP_LV, run: runShare(curRun()) }); }
 function netHostInput(m) {
+  if (m.t === 'rwsug') { // ゲストのおすすめ（ごほうび）
+    if (curScreen !== 'scr-reward' || NET.rwPick != null) return;
+    NET.rwSug = m.i; markReward(); if (m.i != null) { SFX.pick(); netToast('サポーターが「これがいい！」と提案しています', 2500); }
+    return;
+  }
   if (curScreen !== 'scr-game' || !NET.live) return;
   if (m.t === 'key') { // ゲストがランナーのとき：キー操作を受け取る
     if (netIAmRunner()) return;

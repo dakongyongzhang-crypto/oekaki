@@ -5,9 +5,9 @@
    ===================================================== */
 function netGuestMsg(m) {
   if (m.t === 'start') netStartMirror(m);
-  else if (m.t === 'rw') { // ホストがごほうびをえらぶ画面を、ゲストにも同じように見せる（えらぶのはホスト）
+  else if (m.t === 'rw') { // ホストがごほうびをえらぶ画面を、ゲストにも同じように見せる（ゲストは提案できる。決めるのはホスト）
     NET.guestReady = false; NET.queue = []; NET.live = false; $('#result').classList.add('hidden');
-    COOP = true; COOP_LV = m.lv; NET.mrun = m.run; NET.rwHov = null; NET.rwPick = null;
+    COOP = true; COOP_LV = m.lv; NET.mrun = m.run; NET.rwHov = null; NET.rwPick = null; NET.rwSug = null;
     showReward();
   }
   else if (m.t === 'rwhov') { NET.rwHov = m.i; if (m.pick) { NET.rwPick = m.i; SFX.pick(); } if (curScreen === 'scr-reward') markReward(); }
