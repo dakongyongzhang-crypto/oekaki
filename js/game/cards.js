@@ -12,14 +12,14 @@ const CATS = {
 // paint kinds: 0 ink, 1 hard, 2 thorn, 3 ice, 4 bounce, 5 glue
 const PENS = {
   pen: { kind: 0, cost: 1.5, life: 10, hp: 1, solid: true },
-  hard: { kind: 1, cost: 3, life: 25, hp: 3, solid: true, block: true }, // block = トゲブロックと同じく、クリックで2×2を置くワナ（コストは CARDS 側）
-  thorn: { kind: 2, cost: 5, life: 8, hp: 1, solid: true },
+  hard: { kind: 1, cost: 3, life: 6, hp: 3, solid: true, block: true }, // block = トゲブロックと同じく、クリックで2×2を置くワナ（コストは CARDS 側）
+  thorn: { kind: 2, cost: 5, life: 6, hp: 1, solid: true },
   ice: { kind: 3, cost: 1.5, life: 10, hp: 1, solid: true },
   bounce: { kind: 4, cost: 2, life: 10, hp: 1, solid: true },
   glue: { kind: 5, cost: 1.2, life: 10, hp: 1, solid: false },
   eraser: { kind: 6, cost: 3, life: 10, hp: 0, erase: true },
   quick: { kind: 0, cost: 0.6, life: 6, hp: 1, solid: true },
-  clear: { kind: 13, cost: 3, life: 25, hp: 1, solid: true, block: true, size: 1 } // size = ブロックの大きさ（マス。ないときは2×2）
+  clear: { kind: 13, cost: 3, life: 6, hp: 1, solid: true, block: true, size: 1 } // size = ブロックの大きさ（マス。ないときは2×2）
 };
 // ペンの種類ごとの色（0:インク 1:かたい 2:トゲ 3:氷 4:バネ 5:ネバネバ 6:消しゴム 7:（未使用） 8:（未使用） 9:板 10:足場 11:（未使用） 12:（未使用） 13:すけすけ 14:（未使用））
 const KCOL = ['#2a5bd7', '#5a6072', '#e0313f', '#9fe0f4', '#33b06a', '#a0703f', '#f7a8c4', '#7a8091', '#8fa6d9', '#c99a68', '#8fd8a8', '#3d4250', '#ff7a3d', '#c7d3e6', '#ff5ca8'];
@@ -58,9 +58,9 @@ const CARDS = [
   { id: 'ufo', cat: 'enemy', name: 'ユーフォー', cost: 40, desc: '頭上から光線でランナーを吸い上げる。15秒で消える' },
   { id: 'snowman', cat: 'enemy', name: 'ユキダルマ', cost: 30, desc: '雪玉を投げる。当たると少しの間ひえて動きが鈍る' },
   { id: 'spike', cat: 'trap', name: 'トゲトゲ', cost: 15, desc: '床に置くトゲ。安くて手軽' },
-  { id: 'thorn', cat: 'trap', name: 'トゲブロック', cost: 20, desc: 'クリックで2×2のトゲブロックを置く。触れるとダメージ。1秒に1個まで、8秒で消える' },
-  { id: 'hard', cat: 'trap', name: 'かたいブロック', cost: 12, desc: 'クリックで2×2の頑丈なブロックを置く。何度も斬らないと壊れない。1秒に1個まで' },
-  { id: 'clear', cat: 'trap', name: 'すけすけブロック', cost: 3, desc: 'クリックで1マスのブロックを置く。ランナーの画面ではまったく見えない。1秒に1個まで' },
+  { id: 'thorn', cat: 'trap', name: 'トゲブロック', cost: 20, desc: 'クリックで2×2のトゲブロックを置く。触れるとダメージ。1秒に1個まで、6秒で消える' },
+  { id: 'hard', cat: 'trap', name: 'かたいブロック', cost: 12, desc: 'クリックで2×2の頑丈なブロックを置く。何度も斬らないと壊れない。1秒に1個まで、6秒で消える' },
+  { id: 'clear', cat: 'trap', name: 'すけすけブロック', cost: 3, desc: 'クリックで1マスのブロックを置く。ランナーの画面ではまったく見えない。1秒に1個まで、6秒で消える' },
   { id: 'cannon', cat: 'trap', name: 'ポンポン砲', cost: 40, desc: 'ランナーを狙って弾を撃つ' },
   { id: 'triple', cat: 'trap', name: '3連砲', cost: 55, desc: '扇状に3発まとめて撃つ' },
   { id: 'bomb', cat: 'trap', name: '時限バクダン', cost: 30, desc: '3秒後に大爆発。ダメージ35で大きく吹き飛ばす。解除できない' },
