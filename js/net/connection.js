@@ -71,6 +71,7 @@ function netClose(sendBye) {
   NET.closing = true;
   const r = NET.role; NET.role = null; netCleanup();
   document.body.classList.remove('net-host', 'net-guest', 'net-notool', 'net-hidecards', 'net-nopad', 'mob-net', 'mob-coop'); $('#netPill').hidden = true; $('#resWait').hidden = true;
+  NET.mrun = undefined; NET.rwHov = null; NET.rwPick = null;
   NET.vsMode = null; NET.runnerSide = 'host'; NET.ready = [false, false]; NET.vsDown = false; NET.busy = [false, false]; NET.redo = null;
   if (r === 'host') { pointerIsDown = false; releaseGate(); }
   NET.closing = false;

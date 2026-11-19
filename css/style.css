@@ -763,3 +763,10 @@ body.mobile.land #scr-story .si-hint{font-size:12px;margin:2px 0 4px}
 .game-body:not(.side) .tools.many{grid-auto-flow:column;grid-template-columns:none;grid-auto-columns:calc((100% - 7 * 6px) / 8.4);overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;padding-bottom:2px}
 .rw-pick.rup{background:linear-gradient(180deg,#fff4c9,var(--runner-soft))}
 .rw-pick.rup .rw-desc b{color:#c0392b}
+/* オンライン：ホストがえらんでいるごほうびを、両方の画面で光らせる */
+.rw-pick.hov{outline:4px dashed var(--hilite);outline-offset:2px;transform:translateY(-3px)}
+.rw-pick.chosen{outline:5px solid var(--hilite);outline-offset:-1px;transform:translateY(-3px);box-shadow:0 0 0 3px #fff,0 0 24px rgba(255,210,63,.9)}
+.reward-row.watch .rw-pick{cursor:default}
+.reward-row.watch .rw-pick:hover{transform:none}
+.reward-row.watch .rw-pick.hov{transform:translateY(-3px)}
+.reward-row.watch .rw-pick.chosen{transform:translateY(-3px)}

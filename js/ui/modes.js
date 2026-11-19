@@ -151,17 +151,22 @@ function showStory() {
 }
 function runContinue() { const run = curRun(); if (!run) { newRun(); startStoryPage(0); return; } if (run.pending) showReward(); else startStoryPage(run.stage); }
 // ごほうび：3枚の中から1枚えらぶと、次のステージへ
+// オンライン：ホストがえらんでいる様子を、ゲスト（サポーター）の画面にも同じように見せる
+const rewardOnline = () => (NET.role === 'host' && NET.open && !NET.vsMode) || NET.role === 'guest';
 function showReward() {
-  const run = curRun(); if (!run) { showStory(); return; }
-  if (!run.choices || !run.choices.length) { run.choices = rollRewards(run); saveStory(); }
+  const run = curRun(), guest = NET.role === 'guest'; if (!run) { if (!guest) showStory(); return; }
+  if (!guest) { NET.rwHov = null; NET.rwPick = null; }
+  if (!guest && (!run.choices || !run.choices.length)) { run.choices = rollRewards(run); saveStory(); }
+  run.choices = run.choices || [];
+  const online = rewardOnline();
   $('#rewardTitle').textContent = `ステージ${run.stage} クリア！ ごほうびを1枚えらぼう`;
-  $('#rewardSub').textContent = `次はステージ${run.stage + 1}「${STORY[run.stage].name}」。えらんだごほうびは、この冒険のあいだずっと続きます。`;
-  const row = $('#rewardRow'); row.innerHTML = '';
+  $('#rewardSub').textContent = `次はステージ${run.stage + 1}「${STORY[run.stage].name}」。えらんだごほうびは、この冒険のあいだずっと続きます。` + (guest ? '　ホストがえらんでいます…（えらんでいるカードが光ります）' : online ? '　えらんでいるカードは、相手の画面にも表示されます' : '');
+  const row = $('#rewardRow'); row.innerHTML = ''; row.classList.toggle('watch', guest);
   if (!run.choices.length) { // もう選べるものがないとき
-    row.innerHTML = '<p class="rw-none">ごほうびは全部そろいました！</p><button class="btn blue big" id="rwSkip">次のステージへ</button>';
-    $('#rwSkip').addEventListener('click', () => { run.pending = false; run.choices = null; saveStory(); startStoryPage(run.stage); });
+    row.innerHTML = '<p class="rw-none">ごほうびは全部そろいました！</p>' + (guest ? '' : '<button class="btn blue big" id="rwSkip">次のステージへ</button>');
+    if (!guest) $('#rwSkip').addEventListener('click', () => { run.pending = false; run.choices = null; saveStory(); startStoryPage(run.stage); });
   }
-  run.choices.forEach(r => {
+  run.choices.forEach((r, ci) => {
     const b = document.createElement('button');
     const isCard = r.type === 'card', isUp = r.type === 'up', isRup = r.type === 'rup', bo = (r.type === 'boost' || isRup) && BOOSTS[r.id];
     b.className = 'rw-pick ' + (isCard ? 'card' : isUp ? 'up' : isRup ? 'runner rup' : bo.who);
@@ -175,15 +180,36 @@ function showReward() {
       <span class="rw-name hand">${isUp ? `${CARD[r.id].name} <b class="tlv">${stars(r.lv)}</b>` : isRup ? `${BOOSTS[r.id].name} <b class="tlv">${stars(r.lv - 1)}</b>` : rewardName(r)}</span>
       <span class="rw-desc">${desc}</span>`;
     if (isCard || isUp) iconCanvas(b.querySelector('canvas'), r.id, 104, 64);
-    b.addEventListener('click', () => {
-      applyReward(run, r); run.pending = false; run.choices = null; saveStory();
-      SFX.pick(); startStoryPage(run.stage);
-    });
+    if (!guest) {
+      b.addEventListener('pointerenter', () => rewardHover(ci));
+      b.addEventListener('focus', () => rewardHover(ci));
+      b.addEventListener('click', () => rewardPick(ci));
+    } else b.tabIndex = -1;
     row.appendChild(b);
   });
   $('#rewardHave').innerHTML = `<div><b>サポーターのカード（${run.deck.length}枚）</b><div class="rw-deck">${deckIconsHtml(run.deck, run.ups)}</div></div><div><b>強化</b><div class="rw-boosts">${boostSummary(run)}</div></div>`;
   drawDeckIcons($('#rewardHave'));
   show('scr-reward');
+  markReward();
+  if (!guest) netSendReward(); // オンライン：ゲストにも同じごほうびを見せる
+}
+// えらんでいるカード（hov）・決めたカード（chosen）を光らせる
+function markReward() {
+  document.querySelectorAll('#rewardRow .rw-pick').forEach((b, i) => { b.classList.toggle('hov', NET.rwHov === i && NET.rwPick == null); b.classList.toggle('chosen', NET.rwPick === i); });
+}
+function rewardHover(i) {
+  if (NET.rwPick != null || NET.rwHov === i) return;
+  NET.rwHov = i; markReward();
+  if (rewardOnline()) netSend({ t: 'rwhov', i });
+}
+// ごほうびを決める。オンラインでは決めたカードを両方の画面で少し見せてから次のステージへ
+function rewardPick(i) {
+  const run = curRun(); if (!run || !run.choices || !run.choices[i] || NET.rwPick != null) return;
+  const go = () => { applyReward(run, run.choices[i]); run.pending = false; run.choices = null; saveStory(); NET.rwPick = null; NET.rwHov = null; startStoryPage(run.stage); };
+  SFX.pick();
+  if (!rewardOnline()) { go(); return; }
+  NET.rwPick = i; markReward(); netSend({ t: 'rwhov', i, pick: 1 });
+  setTimeout(go, 900);
 }
 function startStoryPage(i) { storyIdx = i; CH = runCharacter(storyCH); startCoopGame(); } // 冒険中はランナーの強化を反映したキャラで
 function showEnding() {

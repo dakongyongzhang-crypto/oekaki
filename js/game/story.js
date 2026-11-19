@@ -163,7 +163,9 @@ const RUN_UP = {
 };
 const runLv = k => Math.min(3, runBoost(k));
 const runVal = k => RUN_UP[k].v[runLv(k)];
-const curRun = () => storySave[COOP_LV].run;
+// オンラインのゲストは、ホストから届いた冒険（NET.mrun）を使う
+const curRun = () => NET.role === 'guest' && NET.mrun !== undefined ? NET.mrun : storySave[COOP_LV].run;
+const runShare = run => run ? { stage: run.stage, deck: run.deck, ups: run.ups || {}, boosts: run.boosts, pending: run.pending, choices: run.choices } : null;
 const inRun = () => COOP && storyIdx !== EX_IDX && !!curRun();
 const runBoost = k => inRun() ? (curRun().boosts[k] || 0) : 0;
 const runUps = () => inRun() ? (curRun().ups || {}) : {};
