@@ -68,8 +68,9 @@ function drawGhost() {
     g.globalAlpha = 0.5;
     for (const [c, r] of pl.cells) drawPaintCell(g, PENS[tool].kind, c * T + T / 2, r * T + T / 2, T * 0.62, INKS[0], 1);
     g.globalAlpha = 1;
-    g.setLineDash([4, 4]); g.strokeStyle = pl.ok ? C.builder : C.bad; g.lineWidth = 2; g.strokeRect(pl.x - 3, pl.y - 3, T * 2 + 6, T * 2 + 6); g.setLineDash([]);
-    ghostLabel(pl.ok ? `${card.name}  ${card.cost}${trapNote(pl)}` : pl.why, pl.x + T, pl.y - 12, pl.ok);
+    const S = blockSize(tool) * T;
+    g.setLineDash([4, 4]); g.strokeStyle = pl.ok ? C.builder : C.bad; g.lineWidth = 2; g.strokeRect(pl.x - 3, pl.y - 3, S + 6, S + 6); g.setLineDash([]);
+    ghostLabel(pl.ok ? `${card.name}  ${card.cost}${trapNote(pl)}` : pl.why, pl.x + S / 2, pl.y - 12, pl.ok);
   } else if (tool === 'rockfall') {
     const pl = placementFor(tool, wx, wy), c = Math.floor(wx / T); let r = Math.max(0, Math.floor(camY / T)); while (r < ROWS && !solid(c, r)) r++;
     g.setLineDash([5, 7]); g.strokeStyle = pl.ok ? 'rgba(42,91,215,0.7)' : C.bad; g.lineWidth = 2;

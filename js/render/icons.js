@@ -76,6 +76,10 @@ function drawCardIcon(ctx, id, W, H) {
   ctx.save();
   ctx.lineJoin = 'round'; ctx.lineCap = 'round';
   const k = H / 38;
+  if (isBlockCard(id) && id !== 'thorn' && blockSize(id) === 1) { // 1マスのブロックのワナ
+    drawPaintCell(ctx, PENS[id].kind, W / 2, H / 2, H * 0.3, INKS[0], 9);
+    ctx.restore(); return;
+  }
   if (isBlockCard(id) && id !== 'thorn') { // 2×2のブロックのワナ
     const r = H * 0.17, kind = PENS[id].kind;
     for (const [dx, dy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) drawPaintCell(ctx, kind, W / 2 + dx * r * 1.05, H / 2 + dy * r * 1.05, r, INKS[0], 9);

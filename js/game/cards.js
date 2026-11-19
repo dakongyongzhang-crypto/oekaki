@@ -23,7 +23,7 @@ const PENS = {
   steel: { kind: 11, cost: 4, life: 8, hp: 6, solid: true, block: true },
   quick: { kind: 0, cost: 0.6, life: 6, hp: 1, solid: true },
   hot: { kind: 12, cost: 2, life: 20, hp: 1, solid: true },
-  clear: { kind: 13, cost: 2.5, life: 25, hp: 1, solid: true },
+  clear: { kind: 13, cost: 3, life: 25, hp: 1, solid: true, block: true, size: 1 }, // size = ブロックの大きさ（マス。ないときは2×2）
   repel: { kind: 14, cost: 2, life: 25, hp: 1, solid: true, block: true }
 };
 // ペンの種類ごとの色（0:インク 1:かたい 2:トゲ 3:氷 4:バネ 5:ネバネバ 6:消しゴム 7:コンベア 8:くずれ 9:板 10:足場 11:てつ 12:アツアツ 13:すけすけ 14:ハネカエシ）
@@ -38,7 +38,6 @@ const CARDS = [
   { id: 'eraser', cat: 'pen', name: '消しゴム', desc: '地面を消して穴をあける。12秒で元に戻る' },
   { id: 'quick', cat: 'pen', name: 'はやがきペン', desc: 'とても安く描けるが、6秒で消えてしまう' },
   { id: 'hot', cat: 'pen', name: 'アツアツペン', desc: '上に乗るとやけどする床。20秒で消える' },
-  { id: 'clear', cat: 'pen', name: 'すけすけペン', desc: 'ランナーの画面ではほとんど見えない壁' },
   { id: 'walker', cat: 'enemy', name: 'ノシノシ', cost: 20, desc: '左右に歩いて往復する基本の敵' },
   { id: 'hopper', cat: 'enemy', name: 'ピョンタ', cost: 25, desc: 'ランナーめがけて跳ねてくる' },
   { id: 'flyer', cat: 'enemy', name: 'パタパタ', cost: 30, desc: '空を飛んで追いかけてくる' },
@@ -70,6 +69,7 @@ const CARDS = [
   { id: 'thorn', cat: 'trap', name: 'トゲブロック', cost: 20, desc: 'クリックで2×2のトゲブロックを置く。触れるとダメージ。1秒に1個まで、8秒で消える' },
   { id: 'hard', cat: 'trap', name: 'かたいブロック', cost: 12, desc: 'クリックで2×2の頑丈なブロックを置く。何度も斬らないと壊れない。1秒に1個まで' },
   { id: 'steel', cat: 'trap', name: 'てつブロック', cost: 16, desc: 'クリックで2×2の鉄ブロックを置く。かたいブロックよりさらに頑丈。8秒で消える。1秒に1個まで' },
+  { id: 'clear', cat: 'trap', name: 'すけすけブロック', cost: 3, desc: 'クリックで1マスのブロックを置く。ランナーの画面ではまったく見えない。1秒に1個まで' },
   { id: 'repel', cat: 'trap', name: 'ハネカエシブロック', cost: 8, desc: 'クリックで2×2のブロックを置く。横からぶつかると大きく跳ね返される。1秒に1個まで' },
   { id: 'cannon', cat: 'trap', name: 'ポンポン砲', cost: 40, desc: 'ランナーを狙って弾を撃つ' },
   { id: 'triple', cat: 'trap', name: '3連砲', cost: 55, desc: '扇状に3発まとめて撃つ' },
@@ -104,6 +104,8 @@ const CARD = Object.fromEntries(CARDS.map(c => [c.id, c]));
 // クリックで2×2のブロックを置くワナ（トゲブロック・かたいブロック・てつブロック・ハネカエシブロック）と、ドラッグで描くペン
 const isBlockCard = id => id === 'thorn' || !!(PENS[id] && PENS[id].block);
 const isDrawPen = id => CARD[id].cat === 'pen' && !isBlockCard(id);
+const blockSize = id => (PENS[id] && PENS[id].size) || 2; // ブロックのワナの大きさ（1なら1×1、2なら2×2）
+const blockCells = (id, wx, wy) => blockSize(id) === 1 ? [[Math.floor(wx / T), Math.floor(wy / T)]] : thornCells(wx, wy);
 const CAT_MAX = { special: 2 }; // デッキに入れられる枚数に上限がある種類（特殊）
 const catCount = (deck, cat) => deck.filter(id => CARD[id] && CARD[id].cat === cat).length;
 const catFull = (deck, cat) => CAT_MAX[cat] != null && catCount(deck, cat) >= CAT_MAX[cat];

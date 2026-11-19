@@ -22,18 +22,18 @@ function trapsNear(cx, cy) {
   const vert = stage.vertical, half = (vert ? VWH : VWW) / 2, near = (x, y) => Math.abs((vert ? y : x) - (vert ? cy : cx)) < half;
   let n = 0;
   for (const e of enemies) if (e.trap && !e.dead && near(e.x + e.w / 2, e.y + e.h / 2)) n++;
-  // ブロックのワナ（タイル）は種類ごとに4マスで1個と数える
+  // ブロックのワナ（タイル）は種類ごとに「ブロック1個ぶんのマス数」で1個と数える（すけすけは1マス、ほかは4マス）
   const blocks = {};
   const c0 = Math.max(0, Math.floor((vert ? 0 : cx - half) / T)), c1 = Math.min(LW - 1, Math.floor((vert ? WW : cx + half) / T));
   const r0 = Math.max(0, Math.floor((vert ? cy - half : 0) / T)), r1 = Math.min(ROWS - 1, Math.floor((vert ? cy + half : WH) / T));
   for (let c = c0; c <= c1; c++) for (let r = r0; r <= r1; r++) { const i = idx(c, r); if (tiles[i] === 3 && BLOCK_KINDS.has(paintKind[i])) blocks[paintKind[i]] = (blocks[paintKind[i]] || 0) + 1; }
-  for (const k in blocks) n += Math.ceil(blocks[k] / 4);
+  for (const k in blocks) n += Math.ceil(blocks[k] / (+k === 13 ? 1 : 4));
   return n;
 }
 function placementFor(id, wx, wy) {
   const pl = placementBase(id, wx, wy);
   if (pl.ok && CARD[id].cat === 'trap' && trapCapOn()) {
-    const blk = isBlockCard(id), d = ETYPES[id], cx = blk ? pl.x + T : d ? pl.x + d.w / 2 : wx, cy = blk ? pl.y + T : d ? pl.y + d.h / 2 : wy;
+    const blk = isBlockCard(id), half = blockSize(id) * T / 2, d = ETYPES[id], cx = blk ? pl.x + half : d ? pl.x + d.w / 2 : wx, cy = blk ? pl.y + half : d ? pl.y + d.h / 2 : wy;
     const n = trapsNear(cx, id === 'rockfall' ? P.y : cy);
     pl.trapN = n;
     if (n >= TRAP_SCREEN_MAX) { pl.ok = false; pl.why = `ワナは1画面に${TRAP_SCREEN_MAX}個まで`; }
@@ -62,15 +62,15 @@ function placementBase(id, wx, wy) {
     return { ok: !why, x: wx, y: wy, why };
   }
   if (isBlockCard(id)) {
-    const cells = thornCells(wx, wy), x = cells[0][0] * T, y = cells[0][1] * T, box = { x, y, w: T * 2, h: T * 2 };
+    const n = blockSize(id), S = n * T, cells = blockCells(id, wx, wy), x = cells[0][0] * T, y = cells[0][1] * T, box = { x, y, w: S, h: S };
     let why = '';
     if ((cardCd[id] || 0) > 0) why = `あと${(cardCd[id] / 60).toFixed(1)}秒`;
     else if (energy < card.cost) why = 'エネルギー不足';
     else if (cells.some(([c, r]) => c < 0 || c >= LW || r < 0 || r >= ROWS || tiles[idx(c, r)] !== 0)) why = 'ここには置けない';
     else if (enemies.some(e => !e.dead && overlap(e, box))) why = 'ここには置けない';
-    else if (rectNearPlayer(x, y, T * 2, T * 2)) why = 'ランナーに近すぎ';
-    else if (inGoalZone(x, y, T * 2, T * 2)) why = 'ゴール前には置けない';
-    return { ok: !why, x, y, why, cells };
+    else if (rectNearPlayer(x, y, S, S)) why = 'ランナーに近すぎ';
+    else if (inGoalZone(x, y, S, S)) why = 'ゴール前には置けない';
+    return { ok: !why, x, y, why, cells, size: n };
   }
   if (id === 'shadow') {
     const why = energy < card.cost ? 'エネルギー不足' : enemies.some(e => !e.dead && e.type === 'shadow') ? 'カゲぼうしは1体まで' : liveEnemies() >= MAX_EN ? 'これ以上置けない' : '';
@@ -144,7 +144,7 @@ function tryPlaceW(wx, wy) {
       tiles[i] = 3; paintKind[i] = pen.kind; paintHp[i] = pen.hp; paintCol[i] = 0; paintT[i] = tick; paintExp[i] = tick + pen.life * 60;
     }
     cardCd[tool] = THORN_CD; mmDirty = true;
-    SFX.place(); burst(pl.x + T, pl.y + T, KCOL[pen.kind], 8, 2.5);
+    SFX.place(); if (tool !== 'clear') burst(pl.x + pl.size * T / 2, pl.y + pl.size * T / 2, KCOL[pen.kind], 8, 2.5); // すけすけは置いた場所がばれないように粒を出さない
     updateToolAvailability(); return;
   }
   if (SPAWNS[tool]) for (const [t, ox, oy] of SPAWNS[tool]) { const e = ETYPES[t]; spawnEnemy(t, wx + ox - e.w / 2, wy + oy - e.h / 2); }
@@ -229,7 +229,7 @@ function useSupport(id, wx, wy, pl) {
 
 // 対戦：いま残っているペン系のマス（ペン・ネバネバ・消しゴム跡。ワナのブロックは数えない）
 const penCapOn = () => !COOP && !dbg('noLimit');
-const BLOCK_KINDS = new Set([2, 1, 11, 14]); // ワナのブロック（トゲ・かたい・てつ・ハネカエシ）。ペンの上限には数えない
+const BLOCK_KINDS = new Set([2, 1, 11, 14, 13]); // ワナのブロック（トゲ・かたい・てつ・ハネカエシ・すけすけ）。ペンの上限には数えない
 function countPenCells() {
   let n = 0;
   for (let i = 0; i < tiles.length; i++) { const t = tiles[i]; if ((t === 3 && !BLOCK_KINDS.has(paintKind[i])) || t === 5 || t === 6) n++; }
