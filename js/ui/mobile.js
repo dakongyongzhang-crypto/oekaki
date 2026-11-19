@@ -13,7 +13,10 @@ try { uiPref = localStorage.getItem(UI_KEY); } catch (_e) {}
 const autoMobile = () => matchMedia('(any-pointer:coarse)').matches && Math.min(screen.width, screen.height) < 700;
 const isMobileUI = () => uiPref ? uiPref === 'mobile' : autoMobile();
 // スマホ表示は常に横画面：縦持ちなら画面全体を回す（rot）。横レイアウトを使うときは land
+// 文字を入力している間（キーボードが出ている間）は、画面の大きさが小さくなっても測り直さない（レイアウトが崩れるため）
+const typing = () => { const a = document.activeElement; return !!a && (a.tagName === 'TEXTAREA' || (a.tagName === 'INPUT' && !/^(range|color|button|checkbox|radio)$/i.test(a.type))); };
 function updateOrient() {
+  if (typing() && document.documentElement.style.getPropertyValue('--vw')) return;
   const m = document.body.classList.contains('mobile'), W = window.innerWidth, H = window.innerHeight;
   const root = document.documentElement;
   root.style.setProperty('--vw', W + 'px'); root.style.setProperty('--vh', H + 'px'); // 実際に見えている大きさ（iPhone の 100vh はずれるため）
@@ -28,6 +31,7 @@ function onViewportChange() {
   onViewportChange.last = size;
 }
 window.addEventListener('resize', onViewportChange);
+document.addEventListener('focusout', () => setTimeout(onViewportChange, 300)); // キーボードが閉じたら測り直す
 window.addEventListener('orientationchange', () => { for (const t of [50, 250, 600]) setTimeout(onViewportChange, t); });
 if (window.visualViewport) visualViewport.addEventListener('resize', onViewportChange);
 function applyUIMode() {

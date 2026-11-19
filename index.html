@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <title>ラクガキ・ランナーズ</title>
 <meta name="description" content="描いたキャラで走れ。描いた壁で阻め。2人対戦アクション">
 <meta name="theme-color" content="#e9eef5">
@@ -252,7 +252,7 @@
           <div class="online-btns"><button class="btn sm" id="btnCopyHost">コピー</button></div></li>
         <li><b>② 相手から届いた返事コード</b><span class="note">相手が作った「返事コード」を貼り付けて、「接続」を押します。</span>
           <textarea id="hostReply" spellcheck="false" autocomplete="off" aria-label="相手から届いた返事コード"></textarea>
-          <div class="online-btns"><button class="btn primary" id="btnHostConnect" disabled>接続</button></div></li>
+          <div class="online-btns"><button class="btn sm" id="btnPasteHost" data-target="#hostReply">貼り付け</button><button class="btn primary" id="btnHostConnect" disabled>接続</button></div></li>
       </ol>
       <p class="net-status" id="hostStatus"></p>
       <p class="note">コードには、あなたのネットワーク情報（IPアドレスなど）が含まれます。一緒に遊ぶ相手にだけ送ってください。</p>
@@ -275,7 +275,7 @@
       <ol>
         <li><b>① ホストの接続コード</b><span class="note">ホストから届いたコードを貼り付けて、「返事コードを作る」を押します。</span>
           <textarea id="guestCode" spellcheck="false" autocomplete="off" aria-label="ホストの接続コード"></textarea>
-          <div class="online-btns"><button class="btn primary" id="btnGuestMake">返事コードを作る</button></div></li>
+          <div class="online-btns"><button class="btn sm" id="btnPasteGuest" data-target="#guestCode">貼り付け</button><button class="btn primary" id="btnGuestMake">返事コードを作る</button></div></li>
         <li id="guestAnswerBox" hidden><b>② あなたの返事コード</b><span class="note">コピーして、ホストに送ります。ホストが「接続」を押すと、自動でつながります。</span>
           <textarea id="guestAnswer" readonly spellcheck="false" autocomplete="off" aria-label="あなたの返事コード"></textarea>
           <div class="online-btns"><button class="btn sm" id="btnCopyGuest">コピー</button></div></li>

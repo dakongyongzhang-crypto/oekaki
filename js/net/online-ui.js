@@ -23,6 +23,18 @@ $('#btnOnHost').addEventListener('click', async () => {
   } catch (e) { setStatus('hostStatus', '接続コードを作れませんでした：' + e.message, 'err'); }
 });
 bindCopyButton('#btnCopyHost', '#hostCode');
+// 貼り付けボタン：キーボードを出さずに、コピーしたコードを入れる（使えないブラウザでは、長押しで貼り付けてもらう）
+for (const id of ['#btnPasteHost', '#btnPasteGuest']) {
+  $(id).addEventListener('click', async e => {
+    const b = e.currentTarget, ta = $(b.dataset.target);
+    try {
+      const t = (await navigator.clipboard.readText()).trim();
+      if (t) { ta.value = t; ta.dispatchEvent(new Event('input')); b.textContent = '貼り付けました！'; setTimeout(() => { b.textContent = '貼り付け'; }, 2000); return; }
+      b.textContent = 'コピーされたコードがありません';
+    } catch (_e) { b.textContent = '欄を長押しして「ペースト」してください'; }
+    setTimeout(() => { b.textContent = '貼り付け'; }, 2500);
+  });
+}
 $('#btnHostConnect').addEventListener('click', async () => {
   const t = $('#hostReply').value.trim();
   if (!t) { setStatus('hostStatus', '② の欄に、相手から届いた返事コードを貼り付けてください。', 'err'); return; }
