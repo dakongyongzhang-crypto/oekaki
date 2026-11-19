@@ -703,3 +703,55 @@ body.mobile.land .head-nav{gap:5px}
 .og-card li{margin:2px 0}
 .og-note{color:var(--ink-soft);font-size:12px}
 .og-btns{display:flex;gap:8px;align-items:center;margin-top:8px}
+/* ---------- 協力ストーリー：冒険（15ステージを順に進む）・ごほうび ---------- */
+.story-grid{grid-template-columns:repeat(5,minmax(0,1fr))}
+.page-card.run-card{cursor:default}
+.page-card.run-card:hover{transform:none}
+.si-run{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:10px 0}
+.si-btns{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:8px}
+.rw-deck{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.rw-card{display:flex;flex-direction:column;align-items:center;gap:1px;font-size:11px;font-weight:700}
+.rw-card canvas{width:48px;height:32px;background:var(--paper);border:1.5px solid var(--ink);border-radius:6px}
+.rw-boosts{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.rw-chip{display:inline-block;font-size:12px;font-weight:900;padding:2px 10px;border-radius:999px;border:1.5px solid var(--ink)}
+.rw-chip.runner{background:var(--runner-soft)} .rw-chip.support{background:var(--builder-soft)}
+.rw-none{font-size:12px;color:var(--ink-soft)}
+.reward-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;max-width:900px;margin:10px auto 14px}
+.rw-pick{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 12px;font:inherit;color:var(--ink);background:var(--surface);border:2px solid var(--ink);border-radius:14px;box-shadow:4px 4px 0 var(--shade);cursor:pointer;text-align:center;transition:transform .08s}
+.rw-pick:hover{transform:translateY(-3px)}
+.rw-pick.card{background:var(--builder-soft)} .rw-pick.runner{background:var(--runner-soft)} .rw-pick.support{background:#e3f4e8}
+.rw-kind{font-size:12px;font-weight:900;color:var(--ink-soft)}
+.rw-pick canvas{width:104px;height:64px;background:var(--paper);border-radius:8px;border:1.5px solid var(--ink)}
+.rw-mark{display:grid;place-items:center;width:64px;height:64px;border-radius:50%;background:var(--surface);border:2px solid var(--ink);font-size:30px;font-weight:900}
+.rw-name{font-size:22px}
+.rw-desc{font-size:13px;color:var(--ink-soft);line-height:1.5}
+.reward-have{max-width:900px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:14px}
+@media (max-width:640px){.reward-row,.reward-have,.si-run{grid-template-columns:1fr}.story-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+body.mobile.land .story-grid{grid-template-columns:repeat(8,minmax(0,1fr))}
+body.mobile.land .page-card .pc-name{font-size:12.5px}
+body.mobile.land .page-card .pc-medal{display:none}
+body.mobile.land .si-run{gap:8px;margin:6px 0}
+body.mobile.land .reward-row{gap:10px;margin:4px auto 8px}
+body.mobile.land .rw-pick{padding:8px;gap:3px}
+body.mobile.land .rw-pick canvas{width:80px;height:49px}
+body.mobile.land .rw-mark{width:44px;height:44px;font-size:22px}
+body.mobile.land .rw-name{font-size:16px}
+body.mobile.land .rw-desc{font-size:11px}
+body.mobile.land .reward-have{font-size:12px;padding:6px 10px}
+body.mobile.land .rw-card canvas{width:40px;height:26px}
+body.mobile.land .page-card.run-card{gap:0;padding:3px 6px}
+body.mobile.land .page-card.run-card>*{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.mobile.land .page-card.run-card .pc-no{font-size:9.5px}
+body.mobile.land .page-card.run-card .pc-rank{font-size:9.5px}
+/* スマホ横画面：「つづける」ボタンがすぐ押せるよう、説明パネルをステージ一覧より上に */
+body.mobile.land #scr-story.active{display:flex;flex-direction:column}
+body.mobile.land #scr-story .story-intro{order:1;margin:0 0 8px}
+body.mobile.land #scr-story .story-grid{order:2}
+body.mobile.land #scr-story .story-intro{display:flex;flex-direction:column;padding:8px 12px}
+body.mobile.land #scr-story .story-intro>*{order:2}
+body.mobile.land #scr-story .si-head{order:0}
+body.mobile.land #scr-story .si-btns{order:1;margin:4px 0 2px}
+body.mobile.land #scr-story .si-btns .btn.big{font-size:16px;padding:6px 16px}
+body.mobile.land #scr-story .si-text p{margin:2px 0;font-size:12.5px}
+body.mobile.land #scr-story .si-meta{font-size:11px;margin:4px 0 2px}
+body.mobile.land #scr-story .si-hint{font-size:12px;margin:2px 0 4px}

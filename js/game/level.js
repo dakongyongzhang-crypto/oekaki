@@ -257,7 +257,7 @@ function resetRound() {
     safeX: sx, safeY: sy0, squash: 1, walk: 0, wind: 0, onIce: false, glued: false
   };
   enemies = []; bullets = []; particles = []; popups = [];
-  energy = COOP ? 60 : EMAX; timeLeft = roundLen(); tick = 0; state = 'countdown'; countT = COOP ? 300 : 180; camX = 0; shake = 0; hitStop = 0; banner = null; // 対戦：ビルダーはエネルギー満タンで始まる
+  energy = COOP ? Math.min(EMAX, 60 + 20 * runBoost('energy')) : EMAX; timeLeft = roundLen(); tick = 0; state = 'countdown'; countT = COOP ? 300 : 180; camX = 0; shake = 0; hitStop = 0; banner = null; // 対戦：ビルダーはエネルギー満タンで始まる
   effects = { dark: 0, rev: 0, heavy: 0, boost: 0, freeze: 0, slip: 0, float: 0, seal: 0 };
   cpu = { energy: 40, timer: 90 };
   trail = []; spawnQueue = [];
@@ -270,7 +270,7 @@ function resetRound() {
   scrIdx = Math.floor((P.x + P.w / 2) / AREA_W); if (SPLIT === 's') { camX = areaCamX(scrIdx, P.x + P.w / 2); camY = Math.max(0, WH - VWH); camSlide = { from: camX, to: camX, t: 1 }; }
   if (isH()) { bCam = bCamT = clamp(480, 0, Math.max(0, WW - VWW)); bCamY = bCamTY = 0; }
   else { bCam = bCamT = 0; bCamY = bCamTY = clamp(camY - 400, 0, Math.max(0, WH - VWH)); }
-  mmDirty = true; cardCd = {}; supUses = { ...SUPPORT_LIMIT }; if (COOP && pageDef(storyIdx).limit) for (const k in supUses) supUses[k] = pageDef(storyIdx).limit; refreshDebugUI();
+  mmDirty = true; cardCd = {}; supUses = { ...SUPPORT_LIMIT }; if (COOP && pageDef(storyIdx).limit) for (const k in supUses) supUses[k] = pageDef(storyIdx).limit; for (const k in supUses) supUses[k] += runBoost('uses'); refreshDebugUI();
   playStageMusic();
   if (NET.role === 'host') netHostBegin();
 }

@@ -78,7 +78,7 @@
         </div>
         <div class="mode-card pc-only">
           <h3 class="hand">協力ストーリー</h3>
-          <p>2人で全8ページのノートを旅する協力モード。ランナーは攻撃ボタンが使えないけど、敵は踏んで倒せる。サポーターのブロックと道具で、消しゴム大王のいじわるを突破しよう。</p>
+          <p>2人で全15ステージのノートを旅する協力モード。クリアするたびにカードや強化をえらんで、だんだん強くなっていく。ランナーは攻撃ボタンが使えないけど、敵は踏んで倒せる。サポーターのブロックと道具で、消しゴム大王のいじわるを突破しよう。</p>
           <div class="lv-pick" role="group" aria-label="CPUの強さ">
             <button class="btn sm" data-lv="easy">やさしい</button><button class="btn sm on" data-lv="normal">ふつう</button><button class="btn sm" data-lv="hard">むずかしい</button>
           </div>
@@ -291,21 +291,31 @@
     </div>
   </section>
 
-  <!-- ============ STORY（協力ストーリーのページ選択） ============ -->
+  <!-- ============ STORY（協力ストーリー：冒険の記録） ============ -->
   <section id="scr-story" class="screen">
     <div class="screen-head">
       <h2 class="hand">協力ストーリー：消しゴム大王をとめろ！</h2>
-      <p>8ページのノートを2人で旅しよう。どのページも長めの道のり。クリアすると次のページが開きます。</p>
+      <p>15のステージを1から順に2人で旅する冒険。クリアするたびに、3枚の中からごほうびを1枚えらべます。</p>
     </div>
     <div class="story-top">
       <div class="lv-pick" role="group" aria-label="CPUの強さ">
         <button class="btn sm" data-lv="easy">やさしい</button><button class="btn sm on" data-lv="normal">ふつう</button><button class="btn sm" data-lv="hard">むずかしい</button>
       </div>
       <span id="storyProg"></span>
-      <div class="story-top-btns"><button class="btn sm" id="btnDbgUnlock" hidden>全ページ解放</button><button class="btn sm" id="btnDbgMedal" hidden>虹メダル全部</button><button class="btn sm" id="btnDbgReset" hidden>記録リセット</button><button class="btn sm" id="btnStoryRedraw">キャラを描き直す</button><button class="btn sm" id="btnStoryTitle">タイトルへ</button></div>
+      <div class="story-top-btns"><button class="btn sm" id="btnDbgUnlock" hidden>EX解放</button><button class="btn sm" id="btnDbgMedal" hidden>虹メダル全部</button><button class="btn sm" id="btnDbgReset" hidden>記録リセット</button><button class="btn sm" id="btnStoryRedraw">キャラを描き直す</button><button class="btn sm" id="btnStoryTitle">タイトルへ</button></div>
     </div>
     <div class="story-grid" id="storyGrid"></div>
     <div class="panel story-intro" id="storyIntro"></div>
+  </section>
+
+  <!-- ============ REWARD（冒険：ステージクリアのごほうびを3枚から1枚えらぶ） ============ -->
+  <section id="scr-reward" class="screen">
+    <div class="screen-head">
+      <h2 class="hand" id="rewardTitle">ごほうびを1枚えらぼう</h2>
+      <p id="rewardSub"></p>
+    </div>
+    <div class="reward-row" id="rewardRow"></div>
+    <div class="panel reward-have" id="rewardHave"></div>
   </section>
 
   <!-- ============ ENDING（協力ストーリーのエンディング） ============ -->
@@ -315,7 +325,7 @@
       <div class="ending-stage"><img id="endingChar" alt="ランナーのキャラ"></div>
       <div class="ending-text" id="endingText"></div>
       <div class="ending-ranks" id="endingRanks"></div>
-      <div class="vic-btns"><button class="btn primary big" id="btnEndMap">ページ選択へ</button><button class="btn big" id="btnEndTitle">タイトルへ</button></div>
+      <div class="vic-btns"><button class="btn primary big" id="btnEndMap">冒険の記録へ</button><button class="btn big" id="btnEndTitle">タイトルへ</button></div>
     </div>
   </section>
 
@@ -352,7 +362,7 @@
           <p class="result-reason" id="pauseNote">Esc か P でも再開できます</p>
           <div class="result-btns">
             <button class="btn primary" id="btnResume">再開</button>
-            <button class="btn" id="btnPauseStory" hidden>ページ選択へ</button>
+            <button class="btn" id="btnPauseStory" hidden>冒険の記録へ</button>
             <button class="btn" id="btnPauseTitle">タイトルへ戻る</button>
           </div>
         </div>
@@ -367,9 +377,9 @@
           <div class="result-btns">
             <button class="btn primary" id="btnNextRound" hidden>次のラウンドへ（役割交代）</button>
             <button class="btn primary" id="btnRematch" hidden>もう一度マッチ</button>
-            <button class="btn primary" id="btnNextPage" hidden>次のページへ</button>
+            <button class="btn primary" id="btnNextPage" hidden>次へ：ごほうびをえらぶ</button>
             <button class="btn primary" id="btnRetry">同じ設定で再戦</button>
-            <button class="btn" id="btnStoryMap" hidden>ページ選択へ</button>
+            <button class="btn" id="btnStoryMap" hidden>冒険の記録へ</button>
             <button class="btn" id="btnRedeck">カードを選び直す</button>
             <button class="btn" id="btnRedraw">キャラを描き直す</button>
             <button class="btn" id="btnTitle">タイトルへ</button>

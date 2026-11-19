@@ -4,68 +4,131 @@
    協力ストーリー（ページ定義・EXステージ・セーブデータ・メダル）
    ===================================================== */
 let COOP = false, COOP_LV = 'normal', cpu = { energy: 0, timer: 0 };
-// 協力ストーリーの全8ページ（kinds = 出てくる関門の順番 / cpu = 大王の強さの倍率 / pool = 使ってくる敵の種類の多さ）
+// 協力ストーリーの全15ステージ（1から順に進む。kinds = 出てくる関門の順番 / cpu = 大王の強さの倍率 / pool = 使ってくる敵の種類の多さ）
 const STORY = [
-  { name: 'はじまりの草原', bg: 'meadow', terr: '#e3e6ee', kinds: ['pit', 'key', 'wall', 'gate', 'lift', 'spikes', 'pit'], time: 130, cpu: 0.65, pool: 0.4,
+  { name: 'はじまりの草原', bg: 'meadow', terr: '#e3e6ee', kinds: ['pit', 'key', 'wall', 'gate', 'lift', 'spikes', 'pit'], time: 130, cpu: 0.6, pool: 0.4,
     hint: 'カギは高い所に。ジャンプ台で取りに行こう。高すぎる崖はP2がレバーを押さえてリフトで登る',
     story: ['ノートのすみっこで生まれたラクガキが、目をさました。', 'ところが、ページのあちこちが何者かに消されて、道がボロボロになっている。', 'サポーター「だいじょうぶ。足りない道は、わたしがつなぐから！」'] },
-  { name: 'とびらの森', bg: 'forest', terr: '#e0ebe0', kinds: ['gate', 'key', 'lift', 'spikes', 'gate', 'dark', 'key', 'pit'], time: 140, cpu: 0.8, pool: 0.6,
+  { name: 'とびらの森', bg: 'forest', terr: '#e0ebe0', kinds: ['gate', 'key', 'lift', 'spikes', 'gate', 'dark', 'key', 'pit'], time: 140, cpu: 0.66, pool: 0.45,
     hint: '扉・カギ・リフトが続く森。暗い場所ではP2のカーソルだけが明かりになる',
     story: ['森の奥には、カギのかかった扉がならんでいる。', '消しゴム大王「ケシケシ…このノートは、まっさらに消してやるのだ！」', 'いたずらの犯人が、ついに姿をあらわした。'] },
-  { name: 'トゲトゲ谷', bg: 'canyon', terr: '#e7e2d6', kinds: ['spikes', 'key', 'spikes', 'pit', 'lift', 'spikes', 'gate', 'spikes'], time: 145, cpu: 0.85, pool: 0.65,
+  { name: 'ひだまりの丘', bg: 'meadow', terr: '#e3e6ee', kinds: ['key', 'pit', 'gate', 'spikes', 'lift', 'wall', 'pit'], time: 135, cpu: 0.72, pool: 0.52,
+    hint: 'これまでの仕掛けがひととおり出てくる丘。ジャンプ台・橋・リフトを使い分けよう',
+    story: ['草原を抜けると、あたたかい日の当たる丘に出た。', 'ランナー「ここは静かだね…」', 'サポーター「油断しないで。大王のいたずらは、まだまだ続いてる」'] },
+  { name: 'トゲトゲ谷', bg: 'canyon', terr: '#e7e2d6', kinds: ['spikes', 'key', 'spikes', 'pit', 'lift', 'spikes', 'gate', 'spikes'], time: 145, cpu: 0.8, pool: 0.6,
     hint: 'トゲ地帯がいくつも続く谷。足場ブロックやくもブロックで、トゲの上に橋をかけよう',
     story: ['谷底いっぱいに、とがった線が描きなぐられている。', '消しゴム大王「このトゲの谷は、だれにも越えられまい！」', 'サポーター「トゲの上に、橋をかけていこう！」'] },
-  { name: 'どうくつ迷路', bg: 'cave', terr: '#d8dbe5', grass: false, cave: true, kinds: ['dark', 'pit', 'gate', 'dark', 'key', 'spikes', 'dark', 'gate'], time: 145, cpu: 0.95, pool: 0.8,
+  { name: 'まよいの森', bg: 'forest', terr: '#e0ebe0', kinds: ['dark', 'key', 'gate', 'dark', 'pit', 'lift', 'dark', 'spikes'], time: 150, cpu: 0.84, pool: 0.66,
+    hint: '暗闇が何度も来る森。P2はカーソルで先を照らして、ランナーを導こう',
+    story: ['谷の先には、木々が空をおおう深い森が広がっていた。', 'ランナー「さっきから、同じところを回ってる気がする…」', 'サポーター「わたしが照らす方へ進んで。きっと出口はある！」'] },
+  { name: 'どうくつ迷路', bg: 'cave', terr: '#d8dbe5', grass: false, cave: true, kinds: ['dark', 'pit', 'gate', 'dark', 'key', 'spikes', 'dark', 'gate'], time: 145, cpu: 0.88, pool: 0.7,
     hint: '暗闇が何度も来る。P2はカーソルで先を照らしながら、ブロックも置いていこう',
     story: ['谷を抜けた先は、ページのすき間にある、まっくらな洞くつ。', 'ランナー「何も見えない…どこへ進めばいいの？」', 'サポーター「わたしが照らす！ 光のほうへ走って！」'] },
-  { name: 'くものうえ', bg: 'sky', terr: '#e1e9f3', kinds: ['pit', 'pit', 'lift', 'key', 'pit', 'gate', 'pit', 'dark'], time: 150, cpu: 1.0, pool: 0.85,
+  { name: 'くものうえ', bg: 'sky', terr: '#e1e9f3', kinds: ['pit', 'pit', 'lift', 'key', 'pit', 'gate', 'pit', 'dark'], time: 150, cpu: 0.94, pool: 0.78,
     hint: '大穴が続く空の上。安い「くもブロック」も使って、エネルギーを大事にしよう',
     story: ['洞くつを抜けると、ページの上のほうの白い空に出た。', '足場になる線が、ほとんどない。', 'サポーター「エネルギーは無限じゃない。大事に使っていこう」'] },
-  { name: 'がけっぷち山', bg: 'mountain', terr: '#e7e2d6', kinds: ['wall', 'lift', 'wall', 'key', 'spikes', 'lift', 'wall', 'gate'], time: 155, cpu: 1.05, pool: 0.9,
+  { name: '大王の見張り塔', bg: 'castle', terr: '#ece4e4', kinds: ['gate', 'key', 'lift', 'spikes', 'wall', 'gate'], time: 150, cpu: 0.98, pool: 0.82, boss: true,
+    hint: 'ノートの真ん中にそびえる塔。最後は大王との対決！ スイッチまでたどりつこう',
+    story: ['ノートの真ん中に、大王の見張り塔が建っていた。', '消しゴム大王「ここから先へは行かせぬ！ まずはわしが相手だ！」', 'サポーター「スイッチまでたどりつけば、塔のとびらが開くはず！」'] },
+  { name: 'がけっぷち山', bg: 'mountain', terr: '#e7e2d6', kinds: ['wall', 'lift', 'wall', 'key', 'spikes', 'lift', 'wall', 'gate'], time: 155, cpu: 1.02, pool: 0.86,
     hint: '高い崖が続く山。ジャンプ台で越えられる崖と、リフトが必要な崖を見分けよう',
     story: ['そびえ立つ崖に、消しゴムのカスが雪のように積もっている。', 'ランナー「こんな高い崖、どうやって登るの…？」', 'サポーター「ジャンプ台とリフトで、いっしょに登ろう！」'] },
-  { name: 'あらしの空', bg: 'storm', terr: '#e4e1ef', kinds: ['dark', 'pit', 'gate', 'lift', 'dark', 'key', 'spikes', 'pit'], time: 160, cpu: 1.1, pool: 1, erase: true,
+  { name: '夕やけ渓谷', bg: 'canyon', terr: '#e7e2d6', kinds: ['spikes', 'wall', 'pit', 'spikes', 'key', 'lift', 'gate', 'spikes', 'pit'], time: 165, cpu: 1.06, pool: 0.9,
+    hint: 'トゲと大穴がたくさんの長い渓谷。エネルギーの使いどころを考えよう',
+    story: ['山をこえると、夕日に染まった渓谷が続いていた。', '消しゴム大王「見張り塔を抜けたくらいで、いい気になるな！」', 'ランナー「どんな道でも、2人ならつないでいける！」'] },
+  { name: 'こおりの洞くつ', bg: 'cave', terr: '#d8dbe5', grass: false, cave: true, kinds: ['dark', 'darkpit', 'gate', 'key', 'dark', 'spikes', 'lift', 'darkpit'], time: 165, cpu: 1.1, pool: 0.94,
+    hint: '暗闇の中に大穴がある洞くつ。照らしながら橋をかけよう',
+    story: ['渓谷の底には、つめたい風が吹きぬける洞くつがあった。', 'ランナー「足もとが見えない…落ちたらどうしよう」', 'サポーター「光と橋は、わたしにまかせて！」'] },
+  { name: '雲の上の塔', bg: 'sky', terr: '#e1e9f3', kinds: ['lift', 'pit', 'lift', 'key', 'pit', 'wall', 'gate', 'pit', 'lift'], time: 170, cpu: 1.13, pool: 0.97,
+    hint: 'リフトと大穴が続く、空にうかぶ塔。リフトはP2がレバーを押さえているあいだだけ上がる',
+    story: ['洞くつを抜けると、雲の上まで続く高い塔が見えた。', '消しゴム大王「城はこの先だ…来られるものなら来てみろ！」', 'サポーター「いっしょに、てっぺんまで登ろう！」'] },
+  { name: 'あらしの空', bg: 'storm', terr: '#e4e1ef', kinds: ['dark', 'pit', 'gate', 'lift', 'dark', 'key', 'spikes', 'pit'], time: 160, cpu: 1.16, pool: 1, erase: true,
     hint: '大王が地面を消してくる！ 暗闇と嵐の中、消された穴にもすぐ橋をかけよう',
     story: ['城の手前の空には、消しゴムの竜巻が吹きあれている。', '消しゴム大王「地面ごと消してしまえば、走れまい！」', '道が消えるなら、そのたびにつなぎ直すだけだ。'] },
-  { name: '消しゴム大王の城', bg: 'castle', terr: '#ece4e4', kinds: ['lift', 'gate', 'dark', 'key', 'spikes', 'pit', 'wall', 'gate'], time: 175, cpu: 1.15, pool: 1, erase: true, boss: true,
+  { name: 'かみなり峠', bg: 'storm', terr: '#e4e1ef', kinds: ['dark', 'wall', 'pit', 'gate', 'key', 'spikes', 'darkpit', 'lift', 'gate'], time: 180, cpu: 1.2, pool: 1, erase: true,
+    hint: '城の目の前の峠。大王が地面を消してくる中、暗闇の大穴もこえていこう',
+    story: ['嵐をぬけた先は、かみなりの鳴りひびく峠だった。', '消しゴム大王「城には一歩も近づけさせぬ！」', '2人「あと少し…ここをこえれば、城だ！」'] },
+  { name: '消しゴム大王の城', bg: 'castle', terr: '#ece4e4', kinds: ['lift', 'gate', 'dark', 'key', 'spikes', 'pit', 'wall', 'gate'], time: 185, cpu: 1.25, pool: 1, erase: true, boss: true,
     hint: 'すべての仕掛けを2人で突破して、最後は大王との対決！ ボムとストップは3回まで',
     story: ['ついに最後のページ。消しゴム大王の城がそびえている。', '消しゴム大王「ここまで来たか…この橋の先へは、ぜったいに通さぬぞ！」', '2人「スイッチを押して、いっしょにゴールするんだ！」'] }
 ];
 const ENDING = ['最後のゴールにたどりつくと、消しゴム大王はしょんぼりとうなだれた。', '大王「…ほんとうは、みんなといっしょにラクガキしたかっただけなのだ」', 'その日から、ノートには3人ぶんの新しいラクガキが描き足されていった。おしまい。'];
 const KIND_JP = { pit: '大穴', wall: '絶壁', gate: 'スイッチ扉', spikes: 'トゲ地帯', key: 'カギの扉', lift: 'リフト', dark: '暗闇', darkpit: '暗闇の大穴' };
-// ---- EXステージ：全ページで金メダル以上を取ると解放される、とても難しいページ ----
+// ---- EXステージ：15ステージの冒険を最後までクリアすると解放される、とても難しいステージ（冒険とは別に1回ずつ遊ぶ） ----
 const EX_IDX = STORY.length;
 const EX_PAGE = { name: '真っ白なページ', bg: 'ex', terr: '#e6e1f0', ex: true,
   kinds: ['darkpit', 'lift', 'spikes', 'key', 'gate', 'darkpit', 'wall', 'lift', 'spikes', 'gate', 'key', 'darkpit'],
   time: 225, cpu: 1.6, pool: 1, erase: true, boss: true, regen: 0.13, limit: 2,
   hint: '暗闇の中の大穴、長いトゲ、強い妨害、少ないエネルギー。ボム・ストップ・ハートは2回まで',
-  story: ['すべてのページで輝くメダルを集めると、ノートの最後に、まっしろなページが現れた。', '真・消しゴム大王「ここは、すべてを消し去るためのページ…生きて帰れると思うな！」', '2人「最後の最後まで、いっしょに描き続けるんだ！」'] };
+  story: ['15のステージをすべてクリアすると、ノートの最後に、まっしろなページが現れた。', '真・消しゴム大王「ここは、すべてを消し去るためのページ…生きて帰れると思うな！」', '2人「最後の最後まで、いっしょに描き続けるんだ！」'] };
 const pageDef = i => i === EX_IDX ? EX_PAGE : STORY[i];
-const pageLabel = i => i === EX_IDX ? 'EXステージ' : `ページ${i + 1}`;
+const pageLabel = i => i === EX_IDX ? 'EXステージ' : `ステージ${i + 1}`;
 const isEX = () => COOP && storyIdx === EX_IDX;
 let storyIdx = 0, storySel = 0, storyCH = null, storyStrokes = null;
 const STORY_KEY = 'rr-story-v2';
-const newSave = () => ({ open: 1, ranks: [], medals: [], pages: STORY.length });
+// セーブ：ステージごとのベストランク・メダル／cleared = 冒険を最後までクリアした（EX解放）／run = いまの冒険のつづき
+const newSave = () => ({ open: 1, ranks: [], medals: [], pages: STORY.length, cleared: false, run: null });
 let storySave = { easy: newSave(), normal: newSave(), hard: newSave() };
 try {
   const sv = JSON.parse(localStorage.getItem(STORY_KEY) || 'null');
   if (sv) for (const k of Object.keys(storySave)) {
     const o = sv[k]; if (!o) continue;
-    if (o.pages === STORY.length) { storySave[k] = { open: o.open || 1, ranks: o.ranks || [], medals: o.medals || [], pages: STORY.length }; continue; }
-    // 4ページ版の記録を8ページ版の同じページへ移す（草原→1, 森→2, 洞くつ→4, 城→8）
-    const MAP = [0, 1, 3, 7], ranks = [], medals = [];
-    (o.ranks || []).forEach((r, i) => { if (MAP[i] != null) ranks[MAP[i]] = r; });
-    (o.medals || []).forEach((m, i) => { if (MAP[i] != null) medals[MAP[i]] = m; });
-    let open = 1; while (open < STORY.length && ranks[open - 1]) open++;
-    storySave[k] = { open, ranks, medals, pages: STORY.length };
+    if (o.pages === STORY.length) { storySave[k] = Object.assign(newSave(), { open: o.open || 1, ranks: o.ranks || [], medals: o.medals || [], cleared: !!o.cleared, run: o.run || null }); continue; }
+    // 前の版（4ページ・8ページ）の記録を、15ステージ版の同じステージへ移す
+    const MAP = o.pages === 8 ? [0, 1, 3, 5, 6, 8, 12, 14] : [0, 1, 5, 14], EXOLD = o.pages === 8 ? 8 : 4, ranks = [], medals = [];
+    (o.ranks || []).forEach((r, i) => { if (i === EXOLD) ranks[EX_IDX] = r; else if (MAP[i] != null) ranks[MAP[i]] = r; });
+    (o.medals || []).forEach((m, i) => { if (i === EXOLD) medals[EX_IDX] = m; else if (MAP[i] != null) medals[MAP[i]] = m; });
+    storySave[k] = Object.assign(newSave(), { ranks, medals, cleared: !!(o.ranks && o.ranks[MAP.length - 1]) });
   }
 } catch (_e) {}
+
+/* ---------- 冒険（ローグライク）：ステージ1から順に進み、クリアするたびに3枚の中から1枚ごほうびを選ぶ ---------- */
+const START_DECK = ['s_pen', 's_cloud', 's_bounce']; // サポーターの最初のカード（これだけでどの関門も越えられる）
+// ごほうび：サポーターのカード（まだ持っていないもの）か、強化（何度でも重ねられる。max まで）
+const BOOSTS = {
+  hp: { who: 'runner', name: '体力アップ', desc: 'ランナーの最大HPが +20', mark: '♥', max: 6 },
+  spd: { who: 'runner', name: '速さアップ', desc: 'ランナーの走る速さが少し上がる', mark: '»', max: 4 },
+  jump: { who: 'runner', name: 'ジャンプ力アップ', desc: 'ランナーのジャンプが少し高くなる', mark: '↑', max: 4 },
+  guard: { who: 'runner', name: 'ダメージ軽減', desc: 'ランナーが受けるダメージが 15% へる', mark: '◆', max: 4 },
+  regen: { who: 'support', name: 'エネルギー回復アップ', desc: 'サポーターのエネルギーがたまる速さ +15%', mark: '⚡', max: 5 },
+  energy: { who: 'support', name: 'スタートエネルギー', desc: 'ステージ開始時のエネルギーが +20', mark: '★', max: 2 },
+  uses: { who: 'support', name: '使用回数アップ', desc: 'ボム・ストップ・ハートを使える回数が +1', mark: '＋', max: 3, needs: ['s_heart', 's_bomb', 's_freeze'] }
+};
+const curRun = () => storySave[COOP_LV].run;
+const inRun = () => COOP && storyIdx !== EX_IDX && !!curRun();
+const runBoost = k => inRun() ? (curRun().boosts[k] || 0) : 0;
+function newRun() { storySave[COOP_LV].run = { stage: 0, deck: START_DECK.slice(), boosts: {}, pending: false, choices: null }; saveStory(); return curRun(); }
+// ランナーの強化をキャラに反映したコピー（元の絵・名前はそのまま）
+function runCharacter(base) {
+  if (!inRun()) return base;
+  const b = curRun().boosts, ch = Object.assign({}, base);
+  ch.maxHp = base.maxHp + 20 * (b.hp || 0);
+  ch.runSpeed = base.runSpeed + 0.25 * (b.spd || 0);
+  ch.jumpV = base.jumpV + 0.6 * (b.jump || 0);
+  return ch;
+}
+// ごほうびの候補を3つ（サポーターのカードがまだ残っていれば、少なくとも1枚は入れる）
+function rollRewards(run) {
+  const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const cards = shuffle(SUPPORT_DECK.filter(id => !run.deck.includes(id)).map(id => ({ type: 'card', id })));
+  const boosts = shuffle(Object.keys(BOOSTS).filter(k => (run.boosts[k] || 0) < BOOSTS[k].max && (!BOOSTS[k].needs || BOOSTS[k].needs.some(c => run.deck.includes(c)))).map(k => ({ type: 'boost', id: k })));
+  const out = [];
+  if (cards.length) out.push(cards.shift());
+  const rest = shuffle(cards.concat(boosts));
+  while (out.length < 3 && rest.length) out.push(rest.shift());
+  return shuffle(out);
+}
+function applyReward(run, r) {
+  if (r.type === 'card') { if (!run.deck.includes(r.id)) run.deck.push(r.id); run.deck.sort((a, b) => SUPPORT_DECK.indexOf(a) - SUPPORT_DECK.indexOf(b)); }
+  else run.boosts[r.id] = (run.boosts[r.id] || 0) + 1;
+}
+const rewardName = r => r.type === 'card' ? CARD[r.id].name : BOOSTS[r.id].name;
 // メダル：銀＝クリア / 金＝Sランク / 虹＝ノーダメージ。表示するのはいちばん良い色の1枚だけ
 const MEDAL_ORDER = ['silver', 'gold', 'rainbow'];
 const MEDAL_JP = { silver: ['銀', 'クリア'], gold: ['金', 'Sランク'], rainbow: ['虹', 'ノーダメージ'] };
 const bestMedal = m => !m ? null : m.rainbow ? 'rainbow' : m.gold ? 'gold' : m.silver ? 'silver' : null;
 const medalOne = (k, extra = '') => `<span class="medal-wrap ${k}${extra}"><span class="rib"></span><span class="medal ${k}" title="${MEDAL_JP[k][0]}メダル：${MEDAL_JP[k][1]}" aria-label="${MEDAL_JP[k][0]}メダル"></span>${k !== 'silver' ? '<span class="spk s1" aria-hidden="true">✦</span><span class="spk s2" aria-hidden="true">✦</span>' : ''}</span>`;
-const exOpen = lv => STORY.every((_, i) => { const k = bestMedal(storySave[lv].medals[i]); return k === 'gold' || k === 'rainbow'; });
+const exOpen = lv => !!storySave[lv].cleared;
 const exUnlocked = () => exOpen(COOP_LV) || DBG.on;
 const medalHtml = (m, extra = '') => { const k = bestMedal(m); return k ? medalOne(k, extra) : `<span class="medal off${extra}" aria-label="メダルなし"></span>`; };
 function saveStory() { try { localStorage.setItem(STORY_KEY, JSON.stringify(storySave)); } catch (_e) {} }

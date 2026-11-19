@@ -94,7 +94,7 @@ function netHostBegin() {
 function netOnHostScreen(id) {
   NET.live = false;
   if (NET.vsMode) return; // 対戦の準備中は、ゲストも自分の画面で準備している
-  const msg = { 'scr-draw': 'ホストがキャラを描いています…', 'scr-story': 'ホストがページを選んでいます…', 'scr-ending': 'エンディングです！ ホストの画面を見てね', 'scr-online': 'ホストが準備中です…' }[id];
+  const msg = { 'scr-draw': 'ホストがキャラを描いています…', 'scr-story': 'ホストが冒険の準備をしています…', 'scr-reward': 'ホストがごほうびをえらんでいます…', 'scr-ending': 'エンディングです！ ホストの画面を見てね', 'scr-online': 'ホストが準備中です…' }[id];
   if (msg) netSend({ t: 'wait', msg });
 }
 function netSendResult() {

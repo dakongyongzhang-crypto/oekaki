@@ -87,55 +87,110 @@ function updateRoleLabels() {
 }
 function startCoop() {
   SFX.init(); COOP = true; MATCH.on = false; updateScoreUI(); updateRoleLabels();
-  if (storyCH) { storySel = Math.min(storySave[COOP_LV].open - 1, STORY.length - 1); showStory(); }
+  if (storyCH) { storySel = 0; showStory(); }
   else { setSetupTexts(); show('scr-draw'); }
 }
+// 冒険の記録：15ステージの道のり（クリア済み・いまのステージ）と、つづきから／最初から。EXステージは別に1回ずつ遊ぶ
+// storySel：0 = 冒険 / EX_IDX = EXステージ
+const boostSummary = run => Object.keys(BOOSTS).filter(k => run.boosts[k]).map(k => `<span class="rw-chip ${BOOSTS[k].who}">${BOOSTS[k].mark} ${BOOSTS[k].name}${run.boosts[k] > 1 ? ' ×' + run.boosts[k] : ''}</span>`).join('') || '<span class="rw-none">まだなし</span>';
+function deckIconsHtml(deck) { return deck.map(id => `<span class="rw-card" data-id="${id}"><canvas width="96" height="64"></canvas><small>${CARD[id].name}</small></span>`).join(''); }
+function drawDeckIcons(root) { root.querySelectorAll('.rw-card').forEach(el => iconCanvas(el.querySelector('canvas'), el.dataset.id, 48, 32)); }
 function showStory() {
-  const sv = storySave[COOP_LV];
-  storySel = clamp(storySel, 0, EX_IDX);
+  const sv = storySave[COOP_LV], run = sv.run;
+  if (storySel !== EX_IDX) storySel = 0;
   $$('.lv-pick .btn').forEach(x => x.classList.toggle('on', x.dataset.lv === COOP_LV));
   const grid = $('#storyGrid'); grid.innerHTML = '';
+  const cur = run ? run.stage : -1;
   STORY.forEach((st, i) => {
-    const locked = i >= sv.open;
-    const b = document.createElement('button');
-    b.className = 'page-card' + (locked ? ' locked' : '') + (i === storySel ? ' sel' : '');
+    const b = document.createElement('div');
+    const done = run ? i < cur : false, now = i === cur;
+    b.className = 'page-card run-card' + (now ? ' sel' : '') + (!done && !now ? ' locked' : '');
     b.style.borderTop = `8px solid ${BGS[st.bg].sky[0]}`;
-    b.innerHTML = `<span class="pc-no">ページ${i + 1}</span><span class="pc-name hand">${st.name}</span><span class="pc-rank">${locked ? 'ロック中' : sv.ranks[i] ? 'ベスト ランク' + sv.ranks[i] : '未クリア'}</span>${locked ? '' : `<span class="pc-medal">${medalHtml(sv.medals && sv.medals[i])}</span>`}`;
-    b.addEventListener('click', () => { storySel = i; showStory(); });
+    b.innerHTML = `<span class="pc-no">ステージ${i + 1}${st.boss ? '　ボス' : ''}</span><span class="pc-name hand">${st.name}</span><span class="pc-rank">${now ? (run.pending ? 'ごほうびをえらぶ' : 'つぎはここ') : done ? 'クリア' : sv.ranks[i] ? 'ベスト ランク' + sv.ranks[i] : '　'}</span>${sv.medals && sv.medals[i] ? `<span class="pc-medal">${medalHtml(sv.medals[i])}</span>` : ''}`;
+    b.addEventListener('click', () => { storySel = 0; showStory(); });
     grid.appendChild(b);
   });
   {
     const ok = exUnlocked(), eb = document.createElement('button');
     eb.className = 'page-card ex' + (ok ? '' : ' locked') + (storySel === EX_IDX ? ' sel' : '');
-    const gold = STORY.filter((_, i) => ['gold', 'rainbow'].includes(bestMedal(sv.medals && sv.medals[i]))).length;
-    eb.innerHTML = `<span class="pc-no">EXステージ</span><span class="pc-name hand">${ok ? EX_PAGE.name : '？？？'}</span><span class="pc-rank">${ok ? (sv.ranks[EX_IDX] ? 'ベスト ランク' + sv.ranks[EX_IDX] : '未クリア') : `全ページで金メダル以上を取ると解放（いま ${gold} / ${STORY.length}）`}</span>${ok ? `<span class="pc-medal">${medalHtml(sv.medals && sv.medals[EX_IDX])}</span>` : ''}`;
-    eb.addEventListener('click', () => { storySel = EX_IDX; showStory(); });
+    eb.innerHTML = `<span class="pc-no">EXステージ</span><span class="pc-name hand">${ok ? EX_PAGE.name : '？？？'}</span><span class="pc-rank">${ok ? (sv.ranks[EX_IDX] ? 'ベスト ランク' + sv.ranks[EX_IDX] : '未クリア') : '15ステージの冒険を最後までクリアすると解放'}</span>${ok ? `<span class="pc-medal">${medalHtml(sv.medals && sv.medals[EX_IDX])}</span>` : ''}`;
+    eb.addEventListener('click', () => { storySel = storySel === EX_IDX ? 0 : EX_IDX; showStory(); });
     grid.appendChild(eb);
   }
-  const st = pageDef(storySel), locked = storySel === EX_IDX ? !exUnlocked() : storySel >= sv.open;
-  const counts = {}; st.kinds.forEach(k => { counts[k] = (counts[k] || 0) + 1; });
-  const meta = Object.entries(counts).map(([k, n]) => `${KIND_JP[k]}×${n}`).join('・') + (st.cave ? '・低い天井' : '') + (st.erase ? '・地面けし' : '') + (st.boss ? '・ボス戦' : '');
-  $('#storyIntro').innerHTML = `<div class="si-head"><span class="si-page">${pageLabel(storySel)}</span><h3 class="hand">${locked && st.ex ? '？？？' : st.name}</h3></div>
-    <div class="si-text">${locked ? (st.ex ? '<p>全8ページで金メダル以上を取ると解放されます。とても難しいページです。</p>' : '<p>前のページをクリアすると読めます。</p>') : st.story.map(t => `<p>${t}</p>`).join('')}</div>
-    <p class="si-meta">関門：${meta}　制限時間：${st.time}秒　大王の強さ：${CPU_LV[COOP_LV].name}</p>
-    ${locked ? '' : `<p class="si-hint">ヒント：${st.hint}</p><p class="si-medal">${medalHtml(sv.medals && sv.medals[storySel])}<small>${(k => k ? `いまは${MEDAL_JP[k][0]}メダル　` : '')(bestMedal(sv.medals && sv.medals[storySel]))}銀＝クリア　金＝Sランク　虹＝ノーダメージでクリア</small></p>`}
-    <button class="btn blue big" id="btnStoryGo"${locked ? ' disabled' : ''}>${locked ? 'ロック中' : 'このページをはじめる'}</button>`;
-  $('#btnStoryGo').addEventListener('click', () => { if (storySel === EX_IDX ? exUnlocked() : storySel < storySave[COOP_LV].open) startStoryPage(storySel); });
-  $('#storyProg').textContent = `クリア ${sv.ranks.slice(0, STORY.length).filter(Boolean).length} / ${STORY.length} ページ`;
+  const intro = $('#storyIntro');
+  if (storySel === EX_IDX) {
+    const st = EX_PAGE, locked = !exUnlocked();
+    intro.innerHTML = `<div class="si-head"><span class="si-page">EXステージ</span><h3 class="hand">${locked ? '？？？' : st.name}</h3></div>
+      <div class="si-text">${locked ? '<p>15ステージの冒険を最後までクリアすると解放されます。とても難しいステージです。</p>' : st.story.map(t => `<p>${t}</p>`).join('')}</div>
+      ${locked ? '' : `<p class="si-meta">制限時間：${st.time}秒　大王の強さ：${CPU_LV[COOP_LV].name}　サポーターはすべてのカードを使えます（冒険のごほうびは使いません）</p><p class="si-hint">ヒント：${st.hint}</p>`}
+      <div class="si-btns"><button class="btn blue big" id="btnStoryGo"${locked ? ' disabled' : ''}>${locked ? 'ロック中' : 'EXステージに挑戦'}</button><button class="btn" id="btnStoryBack">冒険にもどる</button></div>`;
+    $('#btnStoryGo').addEventListener('click', () => { if (exUnlocked()) startStoryPage(EX_IDX); });
+    $('#btnStoryBack').addEventListener('click', () => { storySel = 0; showStory(); });
+  } else {
+    const i = run ? run.stage : 0, st = STORY[i];
+    const counts = {}; st.kinds.forEach(k => { counts[k] = (counts[k] || 0) + 1; });
+    const meta = Object.entries(counts).map(([k, n]) => `${KIND_JP[k]}×${n}`).join('・') + (st.cave ? '・低い天井' : '') + (st.erase ? '・地面けし' : '') + (st.boss ? '・ボス戦' : '');
+    const deck = run ? run.deck : START_DECK;
+    intro.innerHTML = `<div class="si-head"><span class="si-page">${run ? `冒険のつづき：ステージ${i + 1} / ${STORY.length}` : '新しい冒険'}</span><h3 class="hand">${st.name}</h3></div>
+      <div class="si-text">${st.story.map(t => `<p>${t}</p>`).join('')}</div>
+      <p class="si-meta">関門：${meta}　制限時間：${st.time}秒　大王の強さ：${CPU_LV[COOP_LV].name}</p>
+      <p class="si-hint">ヒント：${st.hint}</p>
+      <div class="si-run"><div><b>サポーターのカード（${deck.length}枚）</b><div class="rw-deck">${deckIconsHtml(deck)}</div></div>
+        <div><b>強化</b><div class="rw-boosts">${run ? boostSummary(run) : '<span class="rw-none">ステージをクリアすると、ごほうびで強くなれます</span>'}</div></div></div>
+      <div class="si-btns">${run ? `<button class="btn blue big" id="btnRunGo">${run.pending ? 'ごほうびをえらんで、つづける' : `ステージ${i + 1}からつづける`}</button><button class="btn" id="btnRunNew">最初からやり直す</button>` : '<button class="btn blue big" id="btnRunNew">冒険をはじめる（ステージ1から）</button>'}</div>`;
+    drawDeckIcons(intro);
+    if (run) $('#btnRunGo').addEventListener('click', runContinue);
+    $('#btnRunNew').addEventListener('click', () => {
+      if (curRun() && !confirm('いまの冒険をやめて、ステージ1からやり直しますか？（集めたカードと強化はなくなります）')) return;
+      newRun(); startStoryPage(0);
+    });
+  }
+  $('#storyProg').textContent = run ? `いま ステージ${run.stage + 1} / ${STORY.length}` : sv.cleared ? '冒険クリア済み！' : `全${STORY.length}ステージ`;
   updateScoreUI();
   if (curScreen !== 'scr-story') show('scr-story');
 }
-function startStoryPage(i) { storyIdx = i; CH = storyCH; startCoopGame(); }
+function runContinue() { const run = curRun(); if (!run) { newRun(); startStoryPage(0); return; } if (run.pending) showReward(); else startStoryPage(run.stage); }
+// ごほうび：3枚の中から1枚えらぶと、次のステージへ
+function showReward() {
+  const run = curRun(); if (!run) { showStory(); return; }
+  if (!run.choices || !run.choices.length) { run.choices = rollRewards(run); saveStory(); }
+  $('#rewardTitle').textContent = `ステージ${run.stage} クリア！ ごほうびを1枚えらぼう`;
+  $('#rewardSub').textContent = `次はステージ${run.stage + 1}「${STORY[run.stage].name}」。えらんだごほうびは、この冒険のあいだずっと続きます。`;
+  const row = $('#rewardRow'); row.innerHTML = '';
+  if (!run.choices.length) { // もう選べるものがないとき
+    row.innerHTML = '<p class="rw-none">ごほうびは全部そろいました！</p><button class="btn blue big" id="rwSkip">次のステージへ</button>';
+    $('#rwSkip').addEventListener('click', () => { run.pending = false; run.choices = null; saveStory(); startStoryPage(run.stage); });
+  }
+  run.choices.forEach(r => {
+    const b = document.createElement('button');
+    const isCard = r.type === 'card', bo = !isCard && BOOSTS[r.id];
+    b.className = 'rw-pick ' + (isCard ? 'card' : bo.who);
+    b.innerHTML = `<span class="rw-kind">${isCard ? 'サポーターのカード' : bo.who === 'runner' ? 'ランナーの強化' : 'サポーターの強化'}</span>
+      ${isCard ? '<canvas width="208" height="128"></canvas>' : `<span class="rw-mark">${bo.mark}</span>`}
+      <span class="rw-name hand">${rewardName(r)}</span>
+      <span class="rw-desc">${isCard ? CARD[r.id].desc : bo.desc}${!isCard && run.boosts[r.id] ? `（いま ${run.boosts[r.id]} → ${run.boosts[r.id] + 1}）` : ''}</span>`;
+    if (isCard) iconCanvas(b.querySelector('canvas'), r.id, 104, 64);
+    b.addEventListener('click', () => {
+      applyReward(run, r); run.pending = false; run.choices = null; saveStory();
+      SFX.pick(); startStoryPage(run.stage);
+    });
+    row.appendChild(b);
+  });
+  $('#rewardHave').innerHTML = `<div><b>サポーターのカード（${run.deck.length}枚）</b><div class="rw-deck">${deckIconsHtml(run.deck)}</div></div><div><b>強化</b><div class="rw-boosts">${boostSummary(run)}</div></div>`;
+  drawDeckIcons($('#rewardHave'));
+  show('scr-reward');
+}
+function startStoryPage(i) { storyIdx = i; CH = runCharacter(storyCH); startCoopGame(); } // 冒険中はランナーの強化を反映したキャラで
 function showEnding() {
   const sv = storySave[COOP_LV];
   const spr = storyStrokes ? bigSprite(storyStrokes, 220, 180) : null;
   $('#endingChar').src = (spr || storyCH.spr).toDataURL();
-  $('#endingText').innerHTML = ENDING.map(t => `<p>${t}</p>`).join('') + `<p class="end-lv">大王の強さ「${CPU_LV[COOP_LV].name}」で全${STORY.length}ページをクリア！</p>`;
-  $('#endingRanks').innerHTML = STORY.map((st, i) => `<span class="hchip a"><b>ページ${i + 1}　ランク ${sv.ranks[i] || '—'}</b><small>${st.name}</small>${medalHtml(sv.medals && sv.medals[i])}</span>`).join('');
+  $('#endingText').innerHTML = ENDING.map(t => `<p>${t}</p>`).join('') + `<p class="end-lv">大王の強さ「${CPU_LV[COOP_LV].name}」で全${STORY.length}ステージをクリア！ EXステージが解放されました</p>`;
+  $('#endingRanks').innerHTML = STORY.map((st, i) => `<span class="hchip a"><b>ステージ${i + 1}　ランク ${sv.ranks[i] || '—'}</b><small>${st.name}</small>${medalHtml(sv.medals && sv.medals[i])}</span>`).join('');
   show('scr-ending'); SFX.win();
 }
 $('#btnStoryRedraw').addEventListener('click', () => { setSetupTexts(); show('scr-draw'); });
-$('#btnDbgUnlock').addEventListener('click', () => { storySave[COOP_LV].open = STORY.length; saveStory(); showStory(); });
+$('#btnDbgUnlock').addEventListener('click', () => { storySave[COOP_LV].cleared = true; saveStory(); showStory(); });
 $('#btnDbgMedal').addEventListener('click', () => { const sv = storySave[COOP_LV]; sv.open = STORY.length; STORY.forEach((_, i) => { sv.ranks[i] = 'S'; sv.medals[i] = { silver: true, gold: true, rainbow: true }; }); saveStory(); showStory(); });
 let dbgResetArm = 0;
 $('#btnDbgReset').addEventListener('click', e => {
@@ -146,15 +201,15 @@ $('#btnDbgReset').addEventListener('click', e => {
   storySave[COOP_LV] = newSave(); saveStory(); storySel = 0; showStory();
 });
 $('#btnStoryTitle').addEventListener('click', () => quitToTitle());
-$('#btnEndMap').addEventListener('click', () => { storySel = STORY.length - 1; showStory(); });
+$('#btnEndMap').addEventListener('click', () => { storySel = 0; showStory(); });
 $('#btnEndTitle').addEventListener('click', () => quitToTitle());
 $('#btnNextPage').addEventListener('click', () => {
   $('#result').classList.add('hidden');
-  if (storyIdx >= STORY.length - 1) showEnding(); else startStoryPage(storyIdx + 1);
+  if (storyIdx >= STORY.length - 1) showEnding(); else showReward();
 });
-$('#btnStoryMap').addEventListener('click', () => { $('#result').classList.add('hidden'); storySel = storyIdx; showStory(); });
+$('#btnStoryMap').addEventListener('click', () => { $('#result').classList.add('hidden'); storySel = storyIdx === EX_IDX ? EX_IDX : 0; showStory(); });
 function startCoopGame() {
-  DECK = SUPPORT_DECK.slice();
+  DECK = inRun() ? curRun().deck.slice() : SUPPORT_DECK.slice(); // 冒険中は集めたカードだけ（EXステージは全部）
   SFX.init(); updateRoleLabels();
   show('scr-game'); buildToolbar(); resizeGame(); resetRound();
   $('#btnPause').textContent = 'ポーズ';
@@ -167,7 +222,7 @@ function scoreHtml() {
   return `<span class="pa">プレイヤーA</span> <b>${a.wins}</b> − <b>${b.wins}</b> <span class="pb">プレイヤーB</span>　<small>${MATCH.target}本先取</small>`;
 }
 function updateScoreUI() {
-  $('#scoreBox').innerHTML = (COOP && NET.role) ? `オンライン協力（${CPU_LV[COOP_LV].name}）　あなたは<b>${NET.role === 'host' ? 'P1ランナー' : 'P2サポーター'}</b>` : COOP ? `協力ストーリー（${CPU_LV[COOP_LV].name}）　クリア <b>${storySave[COOP_LV].ranks.slice(0, STORY.length).filter(Boolean).length}</b> / ${STORY.length}ページ`
+  $('#scoreBox').innerHTML = (COOP && NET.role) ? `オンライン協力（${CPU_LV[COOP_LV].name}）　あなたは<b>${NET.role === 'host' ? 'P1ランナー' : 'P2サポーター'}</b>` : COOP ? `協力ストーリー（${CPU_LV[COOP_LV].name}）　${storySave[COOP_LV].run ? `いま ステージ<b>${storySave[COOP_LV].run.stage + 1}</b> / ${STORY.length}` : storySave[COOP_LV].cleared ? '冒険クリア済み' : `全${STORY.length}ステージ`}`
     : MATCH.on ? scoreHtml()
     : `通算 <span class="r">ランナー</span> <b>${SCORE.runner}</b> − <b>${SCORE.builder}</b> <span class="b">ビルダー</span>`;
 }
@@ -213,7 +268,7 @@ function deckBackTarget() {
 function updateSetupNav() {
   const d = drawBackTarget(), k = deckBackTarget();
   $('#btnDrawBack').hidden = !d; $('#btnDeckBack').hidden = !k;
-  $('#btnDrawBack').textContent = { story: '◀ ページ選択へ', swap: '◀ 戻る', deckA: '◀ プレイヤーAのカード選び' }[d] || '◀ 戻る';
+  $('#btnDrawBack').textContent = { story: '◀ 冒険の記録へ', swap: '◀ 戻る', deckA: '◀ プレイヤーAのカード選び' }[d] || '◀ 戻る';
   $('#btnDeckBack').textContent = k === 'swap' ? '◀ 戻る' : '◀ キャラを描く';
 }
 function setupToTitle() {

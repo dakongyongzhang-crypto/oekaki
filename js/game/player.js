@@ -8,6 +8,7 @@ function hurt(amount, srcX, word) {
   if (p.inv > 0 || state !== 'play' || dbg('inv')) return;
   if (p.shield > 0) { if (tick - (p.guardT || 0) > 20) { popup(p.x + p.w / 2, p.y - 8, 'ガード！', C.builder, 18); p.guardT = tick; } return; }
   if (!COOP) amount = Math.round(amount * VS_DMG_MUL); // 対戦：敵やワナのダメージが少し大きい
+  else if (runBoost('guard')) amount = Math.max(1, Math.round(amount * (1 - 0.15 * runBoost('guard')))); // 冒険の強化：ダメージ軽減
   p.hp -= amount; p.inv = 70; p.kb = 10;
   p.vx = (p.x + p.w / 2 < srcX ? -1 : 1) * 5.5; p.vy = -6;
   shake = 9; ST.dmg += amount; SFX.hurt();

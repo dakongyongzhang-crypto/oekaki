@@ -74,12 +74,17 @@ function showResult() {
       const order = 'CBAS';
       if (!sv.ranks[storyIdx] || order.indexOf(rank) > order.indexOf(sv.ranks[storyIdx])) sv.ranks[storyIdx] = rank;
       sv.open = Math.max(sv.open, Math.min(STORY.length, storyIdx + 2));
+      // 冒険：次のステージへ進めて、ごほうびをえらぶ状態にする。最後のステージなら冒険クリア（EX解放）
+      if (storyIdx !== EX_IDX && sv.run) {
+        if (storyIdx >= STORY.length - 1) { sv.run = null; sv.cleared = true; }
+        else { sv.run.stage = storyIdx + 1; sv.run.pending = true; sv.run.choices = null; }
+      }
       saveStory(); updateScoreUI();
     }
     title.textContent = win ? `${pageLabel(storyIdx)} クリア！ ランク ${rank}` : 'ざんねん…';
     title.className = 'hand ' + (win ? 'r' : 'b');
     $('#btnNextPage').hidden = !win || storyIdx === EX_IDX;
-    $('#btnNextPage').textContent = storyIdx >= STORY.length - 1 ? 'エンディングへ' : '次のページへ';
+    $('#btnNextPage').textContent = storyIdx >= STORY.length - 1 ? 'エンディングへ' : '次へ：ごほうびをえらぶ';
     $('#resCols').innerHTML = `
       <div><h4 style="color:var(--runner)">P1 ランナー：${escapeHtml(CH.name)}</h4>
         <p><span>到達度</span><b>${win ? 100 : Math.round(progress() * 100)}%</b></p>
@@ -91,7 +96,7 @@ function showResult() {
         <p><span>スコア</span><b>${win ? score : '—'}</b></p></div>`;
     const cm = $('#resMatch'); cm.hidden = false;
     cm.innerHTML = `${pageLabel(storyIdx)}「${pageDef(storyIdx).name}」（大王の強さ：${CPU_LV[COOP_LV].name}）　ベスト <b>${sv.ranks[storyIdx] || '—'}</b>
-      <div class="res-medals">${(() => { const k = bestMedal(got); if (!k) return ''; const nb = MEDAL_ORDER.indexOf(k) > MEDAL_ORDER.indexOf(bestMedal(prevM)); return `<span class="res-medal">${medalOne(k, ' big' + (nb ? ' new' : ''))}<small>${MEDAL_JP[k][0]}メダル（${MEDAL_JP[k][1]}）${nb ? ' <b class="newtag">NEW!</b>' : ''}</small></span>`; })()}</div>${!exBefore && exOpen(COOP_LV) ? '<p class="ex-unlock">全ページで金メダル以上！ EXステージが解放された！</p>' : ''}`;
+      <div class="res-medals">${(() => { const k = bestMedal(got); if (!k) return ''; const nb = MEDAL_ORDER.indexOf(k) > MEDAL_ORDER.indexOf(bestMedal(prevM)); return `<span class="res-medal">${medalOne(k, ' big' + (nb ? ' new' : ''))}<small>${MEDAL_JP[k][0]}メダル（${MEDAL_JP[k][1]}）${nb ? ' <b class="newtag">NEW!</b>' : ''}</small></span>`; })()}</div>${!exBefore && exOpen(COOP_LV) ? '<p class="ex-unlock">15ステージの冒険をクリア！ EXステージが解放された！</p>' : ''}`;
   }
   $('#result').classList.remove('hidden');
   if (NET.role === 'host') netSendResult();
@@ -104,7 +109,7 @@ function togglePause() {
   else {
     prevState = state; state = 'paused'; stopPaint(); $('#btnPause').textContent = '再開'; BGM.duck(true); for (const k in keys) keys[k] = false;
     $('#pauseNote').textContent = MATCH.on ? 'タイトルへ戻ると、このマッチは中断されます。Esc か P でも再開できます'
-      : COOP ? 'ページ選択やタイトルへ戻ると、このページは最初からになります。Esc か P でも再開できます'
+      : COOP ? '冒険の記録やタイトルへ戻ると、このステージは最初からになります（冒険はこのステージから続けられます）。Esc か P でも再開できます'
       : 'Esc か P でも再開できます';
     $('#btnPauseStory').hidden = !COOP;
     $('#pauseMenu').classList.remove('hidden');
@@ -112,7 +117,7 @@ function togglePause() {
 }
 $('#btnResume').addEventListener('click', e => { e.currentTarget.blur(); if (state === 'paused') togglePause(); gcv.focus({ preventScroll: true }); });
 $('#btnPauseTitle').addEventListener('click', () => { $('#pauseMenu').classList.add('hidden'); $('#btnPause').textContent = 'ポーズ'; BGM.duck(false); quitToTitle(); });
-$('#btnPauseStory').addEventListener('click', () => { $('#pauseMenu').classList.add('hidden'); $('#btnPause').textContent = 'ポーズ'; BGM.duck(false); storySel = storyIdx; showStory(); });
+$('#btnPauseStory').addEventListener('click', () => { $('#pauseMenu').classList.add('hidden'); $('#btnPause').textContent = 'ポーズ'; BGM.duck(false); storySel = storyIdx === EX_IDX ? EX_IDX : 0; showStory(); });
 $('#btnPause').addEventListener('click', e => {
   e.currentTarget.blur();
   if (NET.role === 'guest') { if (confirm('接続を切って、タイトルに戻りますか？')) quitToTitle(); return; }
