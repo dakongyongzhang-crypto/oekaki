@@ -20,13 +20,11 @@ const PENS = {
   glue: { kind: 5, cost: 1.2, life: 20, hp: 1, solid: false },
   crumble: { kind: 8, cost: 1, life: 30, hp: 1, solid: true },
   eraser: { kind: 6, cost: 3, life: 12, hp: 0, erase: true },
-  steel: { kind: 11, cost: 4, life: 8, hp: 6, solid: true, block: true },
   quick: { kind: 0, cost: 0.6, life: 6, hp: 1, solid: true },
   hot: { kind: 12, cost: 2, life: 20, hp: 1, solid: true },
-  clear: { kind: 13, cost: 3, life: 25, hp: 1, solid: true, block: true, size: 1 }, // size = ブロックの大きさ（マス。ないときは2×2）
-  repel: { kind: 14, cost: 2, life: 25, hp: 1, solid: true, block: true }
+  clear: { kind: 13, cost: 3, life: 25, hp: 1, solid: true, block: true, size: 1 } // size = ブロックの大きさ（マス。ないときは2×2）
 };
-// ペンの種類ごとの色（0:インク 1:かたい 2:トゲ 3:氷 4:バネ 5:ネバネバ 6:消しゴム 7:コンベア 8:くずれ 9:板 10:足場 11:てつ 12:アツアツ 13:すけすけ 14:ハネカエシ）
+// ペンの種類ごとの色（0:インク 1:かたい 2:トゲ 3:氷 4:バネ 5:ネバネバ 6:消しゴム 7:コンベア 8:くずれ 9:板 10:足場 11:（未使用） 12:アツアツ 13:すけすけ 14:（未使用））
 const KCOL = ['#2a5bd7', '#5a6072', '#e0313f', '#9fe0f4', '#33b06a', '#a0703f', '#f7a8c4', '#7a8091', '#8fa6d9', '#c99a68', '#8fd8a8', '#3d4250', '#ff7a3d', '#c7d3e6', '#ff5ca8'];
 const CARDS = [
   { id: 'pen', cat: 'pen', name: 'ペン', desc: 'なぞった線が壁になる。30秒で消える' },
@@ -68,9 +66,7 @@ const CARDS = [
   { id: 'spike', cat: 'trap', name: 'トゲトゲ', cost: 15, desc: '床に置くトゲ。安くて手軽' },
   { id: 'thorn', cat: 'trap', name: 'トゲブロック', cost: 20, desc: 'クリックで2×2のトゲブロックを置く。触れるとダメージ。1秒に1個まで、8秒で消える' },
   { id: 'hard', cat: 'trap', name: 'かたいブロック', cost: 12, desc: 'クリックで2×2の頑丈なブロックを置く。何度も斬らないと壊れない。1秒に1個まで' },
-  { id: 'steel', cat: 'trap', name: 'てつブロック', cost: 16, desc: 'クリックで2×2の鉄ブロックを置く。かたいブロックよりさらに頑丈。8秒で消える。1秒に1個まで' },
   { id: 'clear', cat: 'trap', name: 'すけすけブロック', cost: 3, desc: 'クリックで1マスのブロックを置く。ランナーの画面ではまったく見えない。1秒に1個まで' },
-  { id: 'repel', cat: 'trap', name: 'ハネカエシブロック', cost: 8, desc: 'クリックで2×2のブロックを置く。横からぶつかると大きく跳ね返される。1秒に1個まで' },
   { id: 'cannon', cat: 'trap', name: 'ポンポン砲', cost: 40, desc: 'ランナーを狙って弾を撃つ' },
   { id: 'triple', cat: 'trap', name: '3連砲', cost: 55, desc: '扇状に3発まとめて撃つ' },
   { id: 'bomb', cat: 'trap', name: '時限バクダン', cost: 30, desc: '3秒後に大爆発。ダメージ35で大きく吹き飛ばす。解除できない' },
@@ -101,7 +97,7 @@ const CARDS = [
 ];
 CARDS.forEach(c => { if (c.cat === 'pen') { c.cost = PENS[c.id].cost; c.per = true; } c.costLabel = c.per ? `${c.cost}/マス` : String(c.cost); });
 const CARD = Object.fromEntries(CARDS.map(c => [c.id, c]));
-// クリックで2×2のブロックを置くワナ（トゲブロック・かたいブロック・てつブロック・ハネカエシブロック）と、ドラッグで描くペン
+// クリックで2×2のブロックを置くワナ（トゲブロック・かたいブロック・すけすけブロック）と、ドラッグで描くペン
 const isBlockCard = id => id === 'thorn' || !!(PENS[id] && PENS[id].block);
 const isDrawPen = id => CARD[id].cat === 'pen' && !isBlockCard(id);
 const blockSize = id => (PENS[id] && PENS[id].size) || 2; // ブロックのワナの大きさ（1なら1×1、2なら2×2）

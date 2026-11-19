@@ -147,7 +147,7 @@ function updatePlayer() {
   if (p.dashT > 0) { p.vy = 0; p.vx = p.dashDir * (CH.dashSpd || 9); } // ダッシュ突進中は高さを保ってまっすぐ進む
   if (p.slam) p.vy = Math.max(p.vy, 12); // ドスン（空中）：急降下
   const vyPrev = p.vy, prevBottom = p.y + p.h, wasGround = p.onGround;
-  const baseVx = p.vx, moveDir = Math.sign(p.vx + p.wind);
+  const baseVx = p.vx;
   p.vx = baseVx + p.wind;
   const mr = moveEntity(p);
   if (COOP && SPLIT === 's' && p.x < camSlide.to + 2) { p.x = camSlide.to + 2; if (p.vx < 0) p.vx = 0; } // 画面に見えている範囲より左へは戻れない
@@ -157,14 +157,6 @@ function updatePlayer() {
   }
   p.vx = mr.hitX ? 0 : baseVx;
   p.wind = 0;
-  if (mr.hitX && moveDir) { // ハネカエシブロック：横からぶつかると跳ね返される
-    const c = moveDir > 0 ? Math.floor((p.x + p.w + 1) / T) : Math.floor((p.x - 1) / T);
-    for (let r = Math.floor(p.y / T); r <= Math.floor((p.y + p.h - 0.01) / T); r++) {
-      if (c < 0 || c >= LW || r < 0 || r >= ROWS || tiles[idx(c, r)] !== 3 || paintKind[idx(c, r)] !== 14) continue;
-      p.vx = -moveDir * 8; p.vy = Math.min(p.vy, -4.5); p.kb = 14; p.onGround = false; p.dashT = 0;
-      SFX.boing(); burst(c * T + T / 2, r * T + T / 2, KCOL[14], 6, 2.5); break;
-    }
-  }
   if (p.dashT > 0) { // ダッシュ突進：ぶつかった敵にダメージ、壁にぶつかったらペンのブロックを壊して止まる
     p.dashT--;
     const hb = { x: p.x - 6, y: p.y - 4, w: p.w + 12, h: p.h + 8 };

@@ -229,7 +229,7 @@ function useSupport(id, wx, wy, pl) {
 
 // 対戦：いま残っているペン系のマス（ペン・ネバネバ・消しゴム跡。ワナのブロックは数えない）
 const penCapOn = () => !COOP && !dbg('noLimit');
-const BLOCK_KINDS = new Set([2, 1, 11, 14, 13]); // ワナのブロック（トゲ・かたい・てつ・ハネカエシ・すけすけ）。ペンの上限には数えない
+const BLOCK_KINDS = new Set([2, 1, 13]); // ワナのブロック（トゲ・かたい・すけすけ）。ペンの上限には数えない
 function countPenCells() {
   let n = 0;
   for (let i = 0; i < tiles.length; i++) { const t = tiles[i]; if ((t === 3 && !BLOCK_KINDS.has(paintKind[i])) || t === 5 || t === 6) n++; }

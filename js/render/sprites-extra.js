@@ -289,13 +289,6 @@ function drawExtraBullet(b) {
 }
 // 追加の塗りマス（ペン）。描いたら true
 function drawExtraPaintCell(ctx, kind, cx, cy, rad, hp) {
-  if (kind === 11) {
-    const s = rad * 0.9; rrect(ctx, cx - s, cy - s, s * 2, s * 2, 2);
-    ctx.fillStyle = '#3d4250'; ctx.fill(); ctx.strokeStyle = '#1d2028'; ctx.lineWidth = 1.6; ctx.stroke();
-    ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(cx - s * 0.6, cy - s * 0.6); ctx.lineTo(cx + s * 0.6, cy - s * 0.6); ctx.stroke();
-    if (hp < 6) { ctx.strokeStyle = '#eef0f5'; ctx.lineWidth = 1.1; ctx.beginPath(); ctx.moveTo(cx - s * 0.5, cy); ctx.lineTo(cx, cy + s * 0.2); ctx.lineTo(cx + s * 0.4, cy - s * 0.3); if (hp < 3) { ctx.moveTo(cx, cy + s * 0.2); ctx.lineTo(cx + s * 0.2, cy + s * 0.65); } ctx.stroke(); }
-    return true;
-  }
   if (kind === 12) {
     ctx.fillStyle = '#ff7a3d'; ctx.beginPath(); ctx.arc(cx, cy, rad, 0, TAU); ctx.fill();
     ctx.fillStyle = '#ffd166'; ctx.beginPath(); ctx.arc(cx, cy + rad * 0.15, rad * 0.5, 0, TAU); ctx.fill();
@@ -306,13 +299,6 @@ function drawExtraPaintCell(ctx, kind, cx, cy, rad, hp) {
   if (kind === 13) {
     const s = rad * 0.86; rrect(ctx, cx - s, cy - s, s * 2, s * 2, 4);
     ctx.fillStyle = 'rgba(199,211,230,0.7)'; ctx.fill(); ctx.strokeStyle = 'rgba(90,96,114,0.7)'; ctx.lineWidth = 1.3; ctx.setLineDash([2, 2]); ctx.stroke(); ctx.setLineDash([]);
-    return true;
-  }
-  if (kind === 14) {
-    ctx.fillStyle = '#ff5ca8'; ctx.beginPath(); ctx.arc(cx, cy, rad, 0, TAU); ctx.fill();
-    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.6; ctx.beginPath();
-    ctx.moveTo(cx - rad * 0.5, cy - rad * 0.3); ctx.lineTo(cx - rad * 0.15, cy); ctx.lineTo(cx - rad * 0.5, cy + rad * 0.3);
-    ctx.moveTo(cx + rad * 0.5, cy - rad * 0.3); ctx.lineTo(cx + rad * 0.15, cy); ctx.lineTo(cx + rad * 0.5, cy + rad * 0.3); ctx.stroke();
     return true;
   }
   return false;
