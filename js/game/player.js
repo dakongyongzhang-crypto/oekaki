@@ -3,14 +3,14 @@
 /* =====================================================
    ランナーの更新（ダメージ・攻撃・移動）
    ===================================================== */
-const stageDmgMul = () => 1 + 0.04 * storyIdx; // ステージ1：×1.0 … ステージ15：×1.56
+const stageDmgMul = () => isEX() ? EX_PAGE.dmg : 1 + 0.04 * storyIdx; // ステージ1：×1.0 … ステージ15：×1.56、EX：×1.75
 function hurt(amount, srcX, word) {
   const p = P;
   if (p.inv > 0 || state !== 'play' || dbg('inv')) return;
   if (p.shield > 0) { if (tick - (p.guardT || 0) > 20) { popup(p.x + p.w / 2, p.y - 8, 'ガード！', C.builder, 18); p.guardT = tick; } return; }
   if (!COOP) amount = Math.round(amount * VS_DMG_MUL); // 対戦：敵やワナのダメージが少し大きい
   else {
-    if (!isEX()) amount = Math.round(amount * stageDmgMul()); // 後のステージほど敵やワナのダメージが大きい
+    amount = Math.round(amount * stageDmgMul()); // 後のステージほど敵やワナのダメージが大きい
     if (runBoost('guard')) amount = Math.max(1, Math.round(amount * (1 - 0.15 * runBoost('guard')))); // 冒険の強化：ダメージ軽減
   }
   p.hp -= amount; p.inv = 70 + 25 * runBoost('inv'); p.kb = 10; // 冒険の強化：むてき時間アップ

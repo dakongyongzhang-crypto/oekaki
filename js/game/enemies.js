@@ -263,10 +263,10 @@ function updateEnemy(e) {
       e.timer--;
       const exB = isEX(), toward = pcx < ecx ? -1 : 1, angry = exB || e.t > 1200;
       if (angry && !e.angryShown) { e.angryShown = true; banner = { text: '大王がおこった！', life: 80, color: C.bad }; SFX.tone(140, 60, 0.7, 'sawtooth', 0.06); }
-      const shot = (a, sp) => bullets.push({ kind: 'shot', x: ecx, y: ecy, vx: Math.cos(a) * sp * (exB ? 1.2 : 1), vy: Math.sin(a) * sp * (exB ? 1.2 : 1), r: 8, life: 320, dmg: 10, word: 'ペチッ!', dead: false });
+      const shot = (a, sp) => bullets.push({ kind: 'shot', x: ecx, y: ecy, vx: Math.cos(a) * sp * (exB ? 1.32 : 1), vy: Math.sin(a) * sp * (exB ? 1.32 : 1), r: 8, life: 320, dmg: 10, word: 'ペチッ!', dead: false });
       if (e.mode === 'walk') {
         if (Math.abs(pcx - ecx) > 140) e.dir = toward;
-        e.vx = e.dir * (angry ? 2.3 : 1.9);
+        e.vx = e.dir * (exB ? 2.7 : angry ? 2.3 : 1.9); // EX：真・大王はもっと速い
         if (e.timer <= 0) {
           const k = Math.random(); e.dir = toward; e.wave = 0;
           if (k < 0.16) { if (exB) { e.mode = 'aim'; e.timer = 70; popup(ecx, e.y - 30, 'ねらい撃ち！', C.bad, 20); } else { e.mode = 'throw'; e.timer = 56; } }

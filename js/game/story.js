@@ -57,9 +57,9 @@ const KIND_JP = { pit: '大穴', wall: '絶壁', gate: 'スイッチ扉', spikes
 // ---- EXステージ：15ステージの冒険を最後までクリアすると解放される、とても難しいステージ（冒険とは別に1回ずつ遊ぶ） ----
 const EX_IDX = STORY.length;
 const EX_PAGE = { name: '真っ白なページ', bg: 'ex', terr: '#e6e1f0', ex: true,
-  kinds: ['darkpit', 'lift', 'spikes', 'key', 'gate', 'darkpit', 'wall', 'lift', 'spikes', 'gate', 'key', 'darkpit'],
-  time: 225, cpu: 1.6, pool: 1, erase: true, boss: true, regen: 0.13, limit: 2,
-  hint: '暗闇の中の大穴、長いトゲ、強い妨害、少ないエネルギー。ボム・ストップ・ハートは2回まで',
+  kinds: ['darkpit', 'lift', 'spikes', 'key', 'gate', 'darkpit', 'wall', 'dark', 'lift', 'spikes', 'gate', 'darkpit', 'key', 'spikes', 'darkpit'],
+  time: 215, cpu: 2.1, pool: 1, erase: true, boss: true, regen: 0.115, limit: 2, dmg: 1.75, heart: 0.08,
+  hint: '暗闇の中の大穴、長いトゲ、とても強い妨害、少ないエネルギー、痛いダメージ。ボム・ストップ・ハートは2回まで',
   story: ['15のステージをすべてクリアすると、ノートの最後に、まっしろなページが現れた。', '真・消しゴム大王「ここは、すべてを消し去るためのページ…生きて帰れると思うな！」', '2人「最後の最後まで、いっしょに描き続けるんだ！」'] };
 const pageDef = i => i === EX_IDX ? EX_PAGE : STORY[i];
 const pageLabel = i => i === EX_IDX ? 'EXステージ' : `ステージ${i + 1}`;
