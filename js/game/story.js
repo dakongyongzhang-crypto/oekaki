@@ -90,6 +90,13 @@ const BOOSTS = {
   spd: { who: 'runner', name: '速さアップ', desc: 'ランナーの走る速さが少し上がる', mark: '»', max: 4 },
   jump: { who: 'runner', name: 'ジャンプ力アップ', desc: 'ランナーのジャンプが少し高くなる', mark: '↑', max: 4 },
   guard: { who: 'runner', name: 'ダメージ軽減', desc: 'ランナーが受けるダメージが 15% へる', mark: '◆', max: 4 },
+  djump: { who: 'runner', name: '二段ジャンプ', desc: '空中でもう1回ジャンプできる', mark: '⇈', max: 1 },
+  inv: { who: 'runner', name: 'むてき時間アップ', desc: 'ダメージを受けたあと、無敵でいられる時間が長くなる', mark: '✧', max: 3 },
+  fall: { who: 'runner', name: '落下ダメージ軽減', desc: '穴に落ちたときのダメージが 10 へる', mark: '☂', max: 2 },
+  autoheal: { who: 'runner', name: '自動回復', desc: '3秒ごとにHPが 2 ずつ回復する', mark: '✚', max: 3 },
+  heart: { who: 'runner', name: 'ハート回復アップ', desc: 'ステージに落ちているハートの回復量が +15', mark: '♡', max: 3 },
+  guts: { who: 'runner', name: 'ふんばり', desc: '1ステージに1回、やられそうになってもHP1で耐える', mark: '!', max: 1 },
+  stomp: { who: 'runner', name: 'ふみつけ強化', desc: '敵を踏んだときのダメージが +1', mark: '▼', max: 3 },
   regen: { who: 'support', name: 'エネルギー回復アップ', desc: 'サポーターのエネルギーがたまる速さ +15%', mark: '⚡', max: 5 },
   energy: { who: 'support', name: 'スタートエネルギー', desc: 'ステージ開始時のエネルギーが +20', mark: '★', max: 2 },
   uses: { who: 'support', name: '使用回数アップ', desc: 'ボム・ストップ・ハートを使える回数が +1', mark: '＋', max: 3, needs: ['s_heart', 's_bomb', 's_freeze'] }
@@ -136,10 +143,12 @@ function rollRewards(run) {
   const cards = shuffle(SUPPORT_DECK.filter(id => !run.deck.includes(id)).map(id => ({ type: 'card', id })));
   const boosts = shuffle(Object.keys(BOOSTS).filter(k => (run.boosts[k] || 0) < BOOSTS[k].max && (!BOOSTS[k].needs || BOOSTS[k].needs.some(c => run.deck.includes(c)))).map(k => ({ type: 'boost', id: k })));
   const ups = shuffle(run.deck.filter(id => CARD_UP[id] && ((run.ups || {})[id] || 0) < UP_MAX).map(id => ({ type: 'up', id, lv: ((run.ups || {})[id] || 0) + 1 })));
+  // 1枚目：サポーター側（カード・アップグレード・強化）／2枚目：ランナーの強化／3枚目：なんでも。種類ごとに同じくらいの確率で
+  const pools = { card: cards, up: ups, sup: boosts.filter(r => BOOSTS[r.id].who !== 'runner'), run: boosts.filter(r => BOOSTS[r.id].who === 'runner') };
+  const pickFrom = keys => { const ks = keys.filter(k => pools[k].length); return ks.length ? pools[ks[Math.floor(Math.random() * ks.length)]].shift() : null; };
   const out = [];
-  if (cards.length) out.push(cards.shift());
-  if (ups.length && Math.random() < 0.7) out.push(ups.shift()); // アップグレードもよく出るように
-  const rest = shuffle(cards.concat(boosts, ups));
+  for (const keys of [['card', 'up', 'sup'], ['run'], ['card', 'up', 'sup', 'run']]) { const r = pickFrom(keys); if (r) out.push(r); }
+  const rest = shuffle([].concat(pools.card, pools.up, pools.sup, pools.run));
   while (out.length < 3 && rest.length) out.push(rest.shift());
   return shuffle(out);
 }

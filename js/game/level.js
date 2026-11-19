@@ -254,7 +254,7 @@ function resetRound() {
   P = {
     x: sx, y: sy0, w: CH.w, h: CH.h, vx: 0, vy: 0, onGround: false, facing: 1,
     hp: CH.maxHp, maxHp: CH.maxHp, inv: 0, kb: 0, atkT: 0, atkCd: 0, coyote: 0, jumpBuf: 0, noCut: 0,
-    safeX: sx, safeY: sy0, squash: 1, walk: 0, wind: 0, onIce: false, glued: false
+    safeX: sx, safeY: sy0, squash: 1, walk: 0, wind: 0, onIce: false, glued: false, airJ: 0, guts: runBoost('guts')
   };
   enemies = []; bullets = []; particles = []; popups = [];
   energy = COOP ? Math.min(EMAX, 60 + 20 * runBoost('energy')) : EMAX; timeLeft = roundLen(); tick = 0; state = 'countdown'; countT = COOP ? 300 : 180; camX = 0; shake = 0; hitStop = 0; banner = null; // 対戦：ビルダーはエネルギー満タンで始まる

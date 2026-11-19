@@ -9,12 +9,20 @@ function hurt(amount, srcX, word) {
   if (p.shield > 0) { if (tick - (p.guardT || 0) > 20) { popup(p.x + p.w / 2, p.y - 8, 'ガード！', C.builder, 18); p.guardT = tick; } return; }
   if (!COOP) amount = Math.round(amount * VS_DMG_MUL); // 対戦：敵やワナのダメージが少し大きい
   else if (runBoost('guard')) amount = Math.max(1, Math.round(amount * (1 - 0.15 * runBoost('guard')))); // 冒険の強化：ダメージ軽減
-  p.hp -= amount; p.inv = 70; p.kb = 10;
+  p.hp -= amount; p.inv = 70 + 25 * runBoost('inv'); p.kb = 10; // 冒険の強化：むてき時間アップ
   p.vx = (p.x + p.w / 2 < srcX ? -1 : 1) * 5.5; p.vy = -6;
   shake = 9; ST.dmg += amount; SFX.hurt();
   popup(p.x + p.w / 2, p.y - 8, word ? `${word} -${amount}` : ('-' + amount), C.bad, 22);
   burst(p.x + p.w / 2, p.y + p.h / 2, CH.color, 10, 3);
+  if (p.hp <= 0 && useGuts()) return;
   if (p.hp <= 0) { p.hp = 0; endRound('builder', 'ランナーの体力が0になった'); }
+}
+// 冒険の強化「ふんばり」：1ステージに1回だけ、HP1で耐える
+function useGuts() {
+  const p = P; if (!(p.guts > 0)) return false;
+  p.guts--; p.hp = 1; p.inv = Math.max(p.inv, 120);
+  popup(p.x + p.w / 2, p.y - 30, 'ふんばった！', C.runner, 24); burst(p.x + p.w / 2, p.y + p.h / 2, '#ffd23f', 16, 3);
+  return true;
 }
 function damageEnemy(e, dmg, dir) {
   const d = ETYPES[e.type];
@@ -98,7 +106,9 @@ function doQuake(pow) { // ドスン：地面をゆらして両側を攻撃
 }
 function fallOut() {
   const p = P;
-  if (!dbg('inv')) { p.hp -= 25; ST.dmg += 25; } shake = 10; SFX.hurt();
+  const fd = Math.max(5, 25 - 10 * runBoost('fall')); // 冒険の強化：落下ダメージ軽減
+  if (!dbg('inv')) { p.hp -= fd; ST.dmg += fd; } shake = 10; SFX.hurt();
+  if (p.hp <= 0 && useGuts()) p.hp = 1;
   if (p.hp <= 0) { p.hp = 0; p.y = WH + 200; endRound('builder', '穴に落ちて力尽きた'); return; }
   p.x = p.safeX; p.y = p.safeY; p.vx = p.vy = 0; p.inv = 110; p.kb = 0;
   if (COOP && SPLIT === 's' && p.x < camSlide.to + 2) {
@@ -117,7 +127,7 @@ function fallOut() {
   }
   const zone = { x: p.x - 60, y: p.y - 60, w: p.w + 120, h: p.h + 120 };
   for (const e of enemies) if (!e.dead && e.type !== 'boss' && overlap(zone, e)) { e.dead = true; burst(e.x + e.w / 2, e.y + e.h / 2, ETYPES[e.type].color, 8, 2); }
-  popup(p.x + p.w / 2, p.y - 10, 'おちた! -25', C.bad, 20);
+  popup(p.x + p.w / 2, p.y - 10, `おちた! -${fd}`, C.bad, 20);
 }
 function updatePlayer() {
   const p = P, ch = CH;
@@ -141,7 +151,11 @@ function updatePlayer() {
   if (p.jumpBuf > 0 && p.coyote > 0 && !(p.stuck > 0)) {
     p.vy = -ch.jumpV * (p.glued ? 0.65 : 1) * (heavy ? 0.68 : 1) * (chill ? 0.85 : 1) * (effects.boost > 0 ? 1.1 : 1); p.coyote = 0; p.jumpBuf = 0; p.onGround = false; p.squash = 0.78;
     SFX.jump(); dust(p.x + p.w / 2, p.y + p.h, 4);
+  } else if (p.jumpBuf >= 7 && !p.onGround && p.coyote <= 0 && (p.airJ || 0) < runBoost('djump') && !(p.stuck > 0)) { // 冒険の強化：二段ジャンプ（押した瞬間だけ）
+    p.vy = -ch.jumpV * 0.88 * (heavy ? 0.68 : 1) * (effects.boost > 0 ? 1.1 : 1); p.airJ = (p.airJ || 0) + 1; p.jumpBuf = 0; p.squash = 0.8;
+    SFX.jump(); burst(p.x + p.w / 2, p.y + p.h, '#ffffff', 8, 2);
   }
+  if (p.onGround) p.airJ = 0;
   if (!J && p.vy < -4.5 && p.noCut <= 0) p.vy = -4.5;
   if (dbg('fly')) p.vy = held(K_JUMP) ? -6 : (keys.KeyS || keys.ArrowDown) ? 6 : 0; // デバッグ：ふわふわ移動
   else { const fl = effects.float > 0; p.vy = Math.min(p.vy + GRAV * (p.glued ? 0.7 : 1) * (fl ? 0.32 : 1), p.glued ? 5 : fl ? 4 : 13); } // ふわふわ：重力が弱い
@@ -174,6 +188,7 @@ function updatePlayer() {
   p.squash = lerp(p.squash, 1, 0.2);
   if (p.onGround && Math.abs(p.vx) > 0.3) p.walk += Math.abs(p.vx) * 0.22;
   if (p.inv > 0) p.inv--;
+  if (state === 'play' && tick % 180 === 0 && runBoost('autoheal') && p.hp > 0 && p.hp < p.maxHp) { const h = Math.min(2 * runBoost('autoheal'), p.maxHp - p.hp); p.hp += h; popup(p.x + p.w / 2, p.y - 12, `+${h}`, C.grass, 14); } // 冒険の強化：自動回復
   if (p.shield > 0) p.shield--;
 
   // surfaces: ice / bounce / glue / thorn
@@ -225,7 +240,7 @@ function updatePlayer() {
     const box = e.type === 'spike' ? { x: e.x + 3, y: e.y + 5, w: e.w - 6, h: e.h - 5 } : e;
     if (!overlap(p, box)) continue;
     if (d.stomp && !e.noStomp && vyPrev > 0.5 && prevBottom <= e.y + 10) {
-      damageEnemy(e, CH.dmg, 0); // ストーリーでも踏めばダメージ（大王は踏んでも効かない）
+      damageEnemy(e, CH.dmg + runBoost('stomp'), 0); // ストーリーでも踏めばダメージ（大王は踏んでも効かない）。冒険の強化：ふみつけ強化
       p.vy = held(K_JUMP) ? -11 : -8; p.y = e.y - p.h; p.onGround = false;
       popup(e.x + e.w / 2, e.y - 4, e.type === 'boss' ? 'ポヨン' : 'ムギュッ', C.ink, 18);
       continue;
@@ -237,7 +252,7 @@ function updatePlayer() {
     if (circleRect(it.x, it.y, 12, p)) {
       it.taken = true;
       if (it.type === 'key') { popup(it.x, it.y - 10, 'カギをゲット！', '#b8860b', 20); burst(it.x, it.y, '#ffd23f', 14, 3); openLock(it.lock); continue; }
-      const heal = Math.min(30, p.maxHp - p.hp); p.hp += heal;
+      const heal = Math.min(30 + 15 * runBoost('heart'), p.maxHp - p.hp); p.hp += heal; // 冒険の強化：ハート回復アップ
       SFX.pick(); popup(it.x, it.y - 10, '+' + Math.round(heal) + ' HP', C.grass, 18); burst(it.x, it.y, '#f27eb1', 10, 2.5);
     }
   }
