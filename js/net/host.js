@@ -94,14 +94,14 @@ function netHostBegin() {
   NET.seq = 0; NET.fx.length = 0; NET.idc = 0; NET.mP = new Map(); NET.mE = new Map(); NET.mB = new Map(); NET.small = {}; NET.sE = ''; NET.sB = '';
   NET.shadow = netMakeShadow(); NET.live = true;
   netApplyRoleClasses(); resizeGame(); // カード欄の表示が変わるので、画面の大きさを合わせ直す
-  netSend({ t: 'start', seed: NET.seed, idx: storyIdx, lv: COOP_LV, ck: sumArr(tiles), vs: COOP ? 0 : 1, rs: NET.runnerSide, deck: DECK.slice(), up: COOP ? runUps() : 0,
+  netSend({ t: 'start', seed: NET.seed, idx: storyIdx, lv: COOP_LV, ck: sumArr(tiles), vs: COOP ? 0 : 1, rs: NET.runnerSide, deck: DECK.slice(), up: COOP ? runUps() : 0, np: COOP && nodePage && nodePage.f === storyIdx ? nodePage.nd : 0,
     match: MATCH.on ? { target: MATCH.target, round: MATCH.round, runner: MATCH.runner, wins: MATCH.players.map(p => p.wins), history: MATCH.history } : 0,
     ch: serializeCH(CH) });
 }
 function netOnHostScreen(id) {
   NET.live = false;
   if (NET.vsMode) return; // 対戦の準備中は、ゲストも自分の画面で準備している
-  const msg = { 'scr-draw': 'ホストがキャラを描いています…', 'scr-story': 'ホストが冒険の準備をしています…', 'scr-ending': 'エンディングです！ ホストの画面を見てね', 'scr-online': 'ホストが準備中です…' }[id];
+  const msg = { 'scr-draw': 'ホストがキャラを描いています…', 'scr-story': 'ホストがマップで次の道をえらんでいます…', 'scr-ending': 'エンディングです！ ホストの画面を見てね', 'scr-online': 'ホストが準備中です…' }[id];
   if (msg) netSend({ t: 'wait', msg });
 }
 function netSendResult() {

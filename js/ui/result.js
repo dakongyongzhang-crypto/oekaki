@@ -75,16 +75,13 @@ function showResult() {
       if (!sv.ranks[storyIdx] || order.indexOf(rank) > order.indexOf(sv.ranks[storyIdx])) sv.ranks[storyIdx] = rank;
       sv.open = Math.max(sv.open, Math.min(STORY.length, storyIdx + 2));
       // 冒険：次のステージへ進めて、ごほうびをえらぶ状態にする。最後のステージなら冒険クリア（EX解放）
-      if (storyIdx !== EX_IDX && sv.run) {
-        if (storyIdx >= STORY.length - 1) { sv.run = null; sv.cleared = true; }
-        else { sv.run.stage = storyIdx + 1; sv.run.pending = true; sv.run.choices = null; }
-      }
+      if (storyIdx !== EX_IDX && sv.run) runStageCleared(sv); // マップの次の階へ。ごほうびをえらぶ状態に
       saveStory(); updateScoreUI();
     }
     title.textContent = win ? `${pageLabel(storyIdx)} クリア！ ランク ${rank}` : 'ざんねん…';
     title.className = 'hand ' + (win ? 'r' : 'b');
     $('#btnNextPage').hidden = !win || storyIdx === EX_IDX;
-    $('#btnNextPage').textContent = storyIdx >= STORY.length - 1 ? 'エンディングへ' : '次へ：ごほうびをえらぶ';
+    $('#btnNextPage').textContent = storyIdx >= STORY.length - 1 ? 'エンディングへ' : pageDef(storyIdx).elite ? '次へ：ごほうびを2枚えらぶ' : '次へ：ごほうびをえらぶ';
     $('#resCols').innerHTML = `
       <div><h4 style="color:var(--runner)">P1 ランナー：${escapeHtml(CH.name)}</h4>
         <p><span>到達度</span><b>${win ? 100 : Math.round(progress() * 100)}%</b></p>
@@ -96,7 +93,7 @@ function showResult() {
         <p><span>スコア</span><b>${win ? score : '—'}</b></p></div>`;
     const cm = $('#resMatch'); cm.hidden = false;
     cm.innerHTML = `${pageLabel(storyIdx)}「${pageDef(storyIdx).name}」（大王の強さ：${CPU_LV[COOP_LV].name}）　ベスト <b>${sv.ranks[storyIdx] || '—'}</b>
-      <div class="res-medals">${(() => { const k = bestMedal(got); if (!k) return ''; const nb = MEDAL_ORDER.indexOf(k) > MEDAL_ORDER.indexOf(bestMedal(prevM)); return `<span class="res-medal">${medalOne(k, ' big' + (nb ? ' new' : ''))}<small>${MEDAL_JP[k][0]}メダル（${MEDAL_JP[k][1]}）${nb ? ' <b class="newtag">NEW!</b>' : ''}</small></span>`; })()}</div>${!exBefore && exOpen(COOP_LV) ? '<p class="ex-unlock">15ステージの冒険をクリア！ EXステージが解放された！</p>' : ''}`;
+      <div class="res-medals">${(() => { const k = bestMedal(got); if (!k) return ''; const nb = MEDAL_ORDER.indexOf(k) > MEDAL_ORDER.indexOf(bestMedal(prevM)); return `<span class="res-medal">${medalOne(k, ' big' + (nb ? ' new' : ''))}<small>${MEDAL_JP[k][0]}メダル（${MEDAL_JP[k][1]}）${nb ? ' <b class="newtag">NEW!</b>' : ''}</small></span>`; })()}</div>${!exBefore && exOpen(COOP_LV) ? '<p class="ex-unlock">15階の冒険をクリア！ EXステージが解放された！</p>' : ''}`;
   }
   $('#result').classList.remove('hidden');
   if (NET.role === 'host') netSendResult();
@@ -109,7 +106,7 @@ function togglePause() {
   else {
     prevState = state; state = 'paused'; stopPaint(); $('#btnPause').textContent = '再開'; BGM.duck(true); for (const k in keys) keys[k] = false;
     $('#pauseNote').textContent = MATCH.on ? 'タイトルへ戻ると、このマッチは中断されます。Esc か P でも再開できます'
-      : COOP ? '冒険の記録やタイトルへ戻ると、このステージは最初からになります（冒険はこのステージから続けられます）。Esc か P でも再開できます'
+      : COOP ? 'マップやタイトルへ戻ると、このステージは最初からになります（マップからこのマスに再挑戦できます）。Esc か P でも再開できます'
       : 'Esc か P でも再開できます';
     $('#btnPauseStory').hidden = !COOP;
     $('#pauseMenu').classList.remove('hidden');

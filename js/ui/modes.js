@@ -90,30 +90,56 @@ function startCoop() {
   if (storyCH) { storySel = 0; showStory(); }
   else { setSetupTexts(); show('scr-draw'); }
 }
-// 冒険の記録：15ステージの道のり（クリア済み・いまのステージ）と、つづきから／最初から。EXステージは別に1回ずつ遊ぶ
-// storySel：0 = 冒険 / EX_IDX = EXステージ
+// 冒険のマップ：分かれ道を自分でえらんで、15階のボスをめざす。EXステージは別に1回ずつ遊ぶ
+// storySel：0 = 冒険 / EX_IDX = EXステージ。mapSel = マップでえらんでいるマス
+let mapSel = null;
 const boostSummary = run => Object.keys(BOOSTS).filter(k => run.boosts[k]).map(k => `<span class="rw-chip ${BOOSTS[k].who}">${BOOSTS[k].mark} ${BOOSTS[k].name}${BOOSTS[k].who === 'runner' ? (run.boosts[k] > 1 ? ` <b class="tlv">${stars(Math.min(3, run.boosts[k]) - 1)}</b>` : '') : run.boosts[k] > 1 ? ' ×' + run.boosts[k] : ''}</span>`).join('') || '<span class="rw-none">まだなし</span>';
 function deckIconsHtml(deck, ups = {}) { return deck.map(id => `<span class="rw-card" data-id="${id}"><canvas width="96" height="64"></canvas><small>${CARD[id].name}${ups[id] ? `<b class="tlv">${stars(ups[id])}</b>` : ''}</small></span>`).join(''); }
 function drawDeckIcons(root) { root.querySelectorAll('.rw-card').forEach(el => iconCanvas(el.querySelector('canvas'), el.dataset.id, 48, 32)); }
+// マップ（左から右へ1〜15階。線でつながったマスにだけ進める）
+function mapHtml(run) {
+  const reach = mapReachable(run), path = run.path || [], W = STORY.length * 100, H = MAP_ROWS * 100;
+  const edges = new Set(); for (let k = 0; k + 1 < path.length; k++) edges.add(path[k] + '-' + path[k + 1]);
+  const pt = n => [n.f * 100 + 50, n.y * 100 + 50];
+  let lines = '';
+  for (const n of mapNodes(run)) for (const id of n.next) {
+    const m = mapNode(run, id), [x1, y1] = pt(n), [x2, y2] = pt(m);
+    const cls = edges.has(n.id + '-' + m.id) ? 'on' : (run.pos === n.id && reach.includes(m.id)) ? 'can' : n.f < run.stage - 1 ? 'past' : '';
+    lines += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="${cls}"/>`;
+  }
+  const nodes = mapNodes(run).map(n => {
+    const t = NODE_T[n.type], cls = ['mnode', n.type, path.includes(n.id) ? 'done' : '', reach.includes(n.id) ? 'reach' : '', n.id === mapSel ? 'sel' : '', n.id === run.cur ? 'cur' : '', n.f < run.stage && !path.includes(n.id) ? 'past' : ''].join(' ');
+    return `<button class="${cls}" data-id="${n.id}" style="left:${(n.f + 0.5) / STORY.length * 100}%;top:${(n.y + 0.5) / MAP_ROWS * 100}%" title="${n.f + 1}階：${t.name}">${t.mark}</button>`;
+  }).join('');
+  const labels = STORY.map((_, f) => `<span class="mfl${f === run.stage ? ' now' : ''}" style="left:${(f + 0.5) / STORY.length * 100}%">${f + 1}</span>`).join('');
+  return `<div class="run-map"><div class="rm-in"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${lines}</svg>${nodes}${labels}</div>
+    <div class="rm-legend">${Object.keys(NODE_T).map(k => `<span><i class="mnode ${k}">${NODE_T[k].mark}</i>${NODE_T[k].name}</span>`).join('')}</div></div>`;
+}
+// マスの説明（ステージのマスは、関門・時間・ヒントも）
+function nodeInfoHtml(nd) {
+  const t = NODE_T[nd.type];
+  if (nd.type !== 'stage' && nd.type !== 'elite' && nd.type !== 'boss') return `<div class="si-text"><p>${t.desc}</p></div>`;
+  const st = makeNodePage(nd), counts = {}; st.kinds.forEach(k => { counts[k] = (counts[k] || 0) + 1; });
+  const meta = Object.entries(counts).map(([k, n]) => `${KIND_JP[k]}×${n}`).join('・') + (st.cave ? '・低い天井' : '') + (st.erase ? '・地面けし' : '') + (st.boss ? '・ボス戦' : '');
+  return `<div class="si-text">${nd.type === 'elite' ? `<p class="si-elite">${t.desc}</p>` : ''}${st.story.map(x => `<p>${x}</p>`).join('')}</div>
+    <p class="si-meta">関門：${meta}　制限時間：${st.time}秒　大王の強さ：${CPU_LV[COOP_LV].name}${nd.type === 'elite' ? '（強敵）' : ''}</p><p class="si-hint">ヒント：${st.hint}</p>`;
+}
 function showStory() {
-  const sv = storySave[COOP_LV], run = sv.run;
+  const sv = storySave[COOP_LV], run = ensureRunMap(sv.run);
   if (storySel !== EX_IDX) storySel = 0;
   $$('.lv-pick .btn').forEach(x => x.classList.toggle('on', x.dataset.lv === COOP_LV));
   const grid = $('#storyGrid'); grid.innerHTML = '';
-  const cur = run ? run.stage : -1;
-  STORY.forEach((st, i) => {
-    const b = document.createElement('div');
-    const done = run ? i < cur : false, now = i === cur;
-    b.className = 'page-card run-card' + (now ? ' sel' : '') + (!done && !now ? ' locked' : '');
-    b.style.borderTop = `8px solid ${BGS[st.bg].sky[0]}`;
-    b.innerHTML = `<span class="pc-no">ステージ${i + 1}${st.boss ? '　ボス' : ''}</span><span class="pc-name hand">${st.name}</span><span class="pc-rank">${now ? (run.pending ? 'ごほうびをえらぶ' : 'つぎはここ') : done ? 'クリア' : sv.ranks[i] ? 'ベスト ランク' + sv.ranks[i] : '　'}</span>${sv.medals && sv.medals[i] ? `<span class="pc-medal">${medalHtml(sv.medals[i])}</span>` : ''}`;
-    b.addEventListener('click', () => { storySel = 0; showStory(); });
-    grid.appendChild(b);
-  });
+  const reach = run ? mapReachable(run) : [];
+  if (run) {
+    const cur = mapNode(run, mapSel);
+    if (!cur || (cur.f < run.stage && !reach.includes(cur.id))) mapSel = reach.length ? reach[0] : null;
+    grid.insertAdjacentHTML('beforeend', mapHtml(run));
+    grid.querySelectorAll('.run-map .rm-in .mnode').forEach(b => b.addEventListener('click', () => { mapSel = +b.dataset.id; storySel = 0; showStory(); }));
+  }
   {
     const ok = exUnlocked(), eb = document.createElement('button');
     eb.className = 'page-card ex' + (ok ? '' : ' locked') + (storySel === EX_IDX ? ' sel' : '');
-    eb.innerHTML = `<span class="pc-no">EXステージ</span><span class="pc-name hand">${ok ? EX_PAGE.name : '？？？'}</span><span class="pc-rank">${ok ? (sv.ranks[EX_IDX] ? 'ベスト ランク' + sv.ranks[EX_IDX] : '未クリア') : '15ステージの冒険を最後までクリアすると解放'}</span>${ok ? `<span class="pc-medal">${medalHtml(sv.medals && sv.medals[EX_IDX])}</span>` : ''}`;
+    eb.innerHTML = `<span class="pc-no">EXステージ</span><span class="pc-name hand">${ok ? EX_PAGE.name : '？？？'}</span><span class="pc-rank">${ok ? (sv.ranks[EX_IDX] ? 'ベスト ランク' + sv.ranks[EX_IDX] : '未クリア') : '15階の冒険を最後までクリアすると解放'}</span>${ok ? `<span class="pc-medal">${medalHtml(sv.medals && sv.medals[EX_IDX])}</span>` : ''}`;
     eb.addEventListener('click', () => { storySel = storySel === EX_IDX ? 0 : EX_IDX; showStory(); });
     grid.appendChild(eb);
   }
@@ -121,50 +147,74 @@ function showStory() {
   if (storySel === EX_IDX) {
     const st = EX_PAGE, locked = !exUnlocked();
     intro.innerHTML = `<div class="si-head"><span class="si-page">EXステージ</span><h3 class="hand">${locked ? '？？？' : st.name}</h3></div>
-      <div class="si-text">${locked ? '<p>15ステージの冒険を最後までクリアすると解放されます。とても難しいステージです。</p>' : st.story.map(t => `<p>${t}</p>`).join('')}</div>
+      <div class="si-text">${locked ? '<p>15階の冒険を最後までクリアすると解放されます。とても難しいステージです。</p>' : st.story.map(t => `<p>${t}</p>`).join('')}</div>
       ${locked ? '' : `<p class="si-meta">制限時間：${st.time}秒　大王の強さ：${CPU_LV[COOP_LV].name}　サポーターは基本の8枚のカードを使います（冒険のごほうびは使いません）</p><p class="si-hint">ヒント：${st.hint}</p>`}
       <div class="si-btns"><button class="btn blue big" id="btnStoryGo"${locked ? ' disabled' : ''}>${locked ? 'ロック中' : 'EXステージに挑戦'}</button><button class="btn" id="btnStoryBack">冒険にもどる</button></div>`;
     $('#btnStoryGo').addEventListener('click', () => { if (exUnlocked()) startStoryPage(EX_IDX); });
     $('#btnStoryBack').addEventListener('click', () => { storySel = 0; showStory(); });
-  } else {
-    const i = run ? run.stage : 0, st = STORY[i];
-    const counts = {}; st.kinds.forEach(k => { counts[k] = (counts[k] || 0) + 1; });
-    const meta = Object.entries(counts).map(([k, n]) => `${KIND_JP[k]}×${n}`).join('・') + (st.cave ? '・低い天井' : '') + (st.erase ? '・地面けし' : '') + (st.boss ? '・ボス戦' : '');
-    const deck = run ? run.deck : START_DECK;
-    intro.innerHTML = `<div class="si-head"><span class="si-page">${run ? `冒険のつづき：ステージ${i + 1} / ${STORY.length}` : '新しい冒険'}</span><h3 class="hand">${st.name}</h3></div>
-      <div class="si-text">${st.story.map(t => `<p>${t}</p>`).join('')}</div>
-      <p class="si-meta">関門：${meta}　制限時間：${st.time}秒　大王の強さ：${CPU_LV[COOP_LV].name}</p>
-      <p class="si-hint">ヒント：${st.hint}</p>
-      <div class="si-run"><div><b>サポーターのカード（${deck.length}枚）</b><div class="rw-deck">${deckIconsHtml(deck, run ? run.ups : {})}</div></div>
-        <div><b>強化</b><div class="rw-boosts">${run ? boostSummary(run) : '<span class="rw-none">ステージをクリアすると、ごほうびで強くなれます</span>'}</div></div></div>
-      <div class="si-btns">${run ? `<button class="btn blue big" id="btnRunGo">${run.pending ? 'ごほうびをえらんで、つづける' : `ステージ${i + 1}からつづける`}</button><button class="btn" id="btnRunNew">最初からやり直す</button>` : '<button class="btn blue big" id="btnRunNew">冒険をはじめる（ステージ1から）</button>'}</div>`;
+  } else if (!run) {
+    intro.innerHTML = `<div class="si-head"><span class="si-page">新しい冒険</span><h3 class="hand">消しゴム大王をとめろ！</h3></div>
+      <div class="si-text"><p>ノートの中の分かれ道を、2人で進む冒険。どの道を通るかは自分たちで決めよう。</p>
+        <p>ふつうのステージ・強敵・休けい・たからばこ・ふしぎなマス…。8階と15階には消しゴム大王が待っている。</p></div>
+      <div class="si-run"><div><b>サポーターのカード（${START_DECK.length}枚）</b><div class="rw-deck">${deckIconsHtml(START_DECK)}</div></div>
+        <div><b>強化</b><div class="rw-boosts"><span class="rw-none">ステージをクリアすると、ごほうびで強くなれます</span></div></div></div>
+      <div class="si-btns"><button class="btn blue big" id="btnRunNew">冒険をはじめる（マップを作る）</button></div>`;
     drawDeckIcons(intro);
-    if (run) $('#btnRunGo').addEventListener('click', runContinue);
+    $('#btnRunNew').addEventListener('click', () => { newRun(); mapSel = null; SFX.pick(); showStory(); });
+  } else {
+    const nd = mapNode(run, mapSel), t = nd && NODE_T[nd.type], canGo = nd && reach.includes(nd.id) && !run.pending;
+    const name = !nd ? '' : (nd.type === 'stage' || nd.type === 'elite' || nd.type === 'boss') ? makeNodePage(nd).name : t.name;
+    const go = run.pending ? '<button class="btn blue big" id="btnRunGo">ごほうびをえらぶ</button>'
+      : canGo ? `<button class="btn blue big" id="btnRunGo">${run.cur === nd.id ? 'もう一度挑戦する' : `${nd.f + 1}階「${name}」へ進む`}</button>`
+      : `<button class="btn big" disabled>${nd && nd.f < run.stage ? 'もう通りすぎたマス' : 'ここへはまだ進めない'}</button>`;
+    intro.innerHTML = `<div class="si-head"><span class="si-page">${nd ? `${nd.f + 1}階 / ${STORY.length}　${t.name}` : ''}</span><h3 class="hand">${name}</h3></div>
+      <div class="si-btns">${go}<button class="btn" id="btnRunNew">最初からやり直す</button></div>
+      ${nd ? nodeInfoHtml(nd) : ''}
+      <p class="si-note">${run.pending ? 'ごほうびをえらんでから、次のマスへ進もう。' : run.cur != null ? 'さっき負けたマスに、もう一度挑戦しよう。' : '光っているマスが、次に進めるマスです。マスをタップすると説明が見られます。'}</p>
+      <div class="si-run"><div><b>サポーターのカード（${run.deck.length}枚）</b><div class="rw-deck">${deckIconsHtml(run.deck, run.ups)}</div></div>
+        <div><b>強化</b><div class="rw-boosts">${boostSummary(run)}</div></div></div>`;
+    drawDeckIcons(intro);
+    const bg = $('#btnRunGo'); if (bg) bg.addEventListener('click', () => { if (run.pending) showReward(); else enterNode(nd); });
     $('#btnRunNew').addEventListener('click', () => {
-      if (curRun() && !confirm('いまの冒険をやめて、ステージ1からやり直しますか？（集めたカードと強化はなくなります）')) return;
-      newRun(); startStoryPage(0);
+      if (!confirm('いまの冒険をやめて、最初からやり直しますか？（マップ・集めたカード・強化はなくなります）')) return;
+      sv.run = null; saveStory(); mapSel = null; showStory();
     });
   }
-  $('#storyProg').textContent = run ? `いま ステージ${run.stage + 1} / ${STORY.length}` : sv.cleared ? '冒険クリア済み！' : `全${STORY.length}ステージ`;
+  $('#storyProg').textContent = run ? `いま ${Math.min(STORY.length, run.stage + 1)}階 / ${STORY.length}` : sv.cleared ? '冒険クリア済み！' : `全${STORY.length}階`;
   updateScoreUI();
   if (curScreen !== 'scr-story') show('scr-story');
 }
-function runContinue() { const run = curRun(); if (!run) { newRun(); startStoryPage(0); return; } if (run.pending) showReward(); else startStoryPage(run.stage); }
+// マスに入る：ステージなら始める。ほかのマスは、その場でごほうび・休けい・ふしぎ
+function enterNode(nd) {
+  const run = curRun(); if (!run || !nd || !mapReachable(run).includes(nd.id)) return;
+  SFX.pick();
+  if (nd.type === 'stage' || nd.type === 'elite' || nd.type === 'boss') { run.cur = nd.id; saveStory(); setNodePage(nd); startStoryPage(nd.f); return; }
+  completeNode(run, nd); run.pending = true; run.choices = null; run.extra = 0; run.evt = null;
+  if (nd.type === 'rest') { run.choices = rollUpgrades(run); run.rwKind = run.choices.length ? 'rest' : 'treasure'; if (!run.choices.length) run.choices = null; }
+  else if (nd.type === 'treasure') run.rwKind = 'treasure';
+  else { const ev = runEvent(run); run.evt = ev; if (ev.treasure) { run.rwKind = 'treasure'; run.extra = ev.treasure - 1; } else run.rwKind = 'event'; }
+  saveStory(); showReward();
+}
+function runContinue() { const run = curRun(); if (run && run.pending) showReward(); else showStory(); }
 // ごほうび：3枚の中から1枚えらぶと、次のステージへ
 // オンライン：ホストがえらんでいる様子を、ゲスト（サポーター）の画面にも同じように見せる
 const rewardOnline = () => (NET.role === 'host' && NET.open && !NET.vsMode) || NET.role === 'guest';
 function showReward() {
   const run = curRun(), guest = NET.role === 'guest'; if (!run) { if (!guest) showStory(); return; }
   if (!guest) { NET.rwHov = null; NET.rwPick = null; NET.rwSug = null; }
-  if (!guest && (!run.choices || !run.choices.length)) { run.choices = rollRewards(run); saveStory(); }
-  run.choices = run.choices || [];
+  const kind = run.rwKind || 'stage', evt = run.evt, left = (run.extra || 0) + 1;
+  if (!guest && kind !== 'event' && (!run.choices || !run.choices.length)) { run.choices = kind === 'rest' ? rollUpgrades(run) : rollRewards(run); saveStory(); }
+  run.choices = kind === 'event' ? [] : run.choices || [];
   const online = rewardOnline();
-  $('#rewardTitle').textContent = `ステージ${run.stage} クリア！ ごほうびを1枚えらぼう`;
-  $('#rewardSub').textContent = `次はステージ${run.stage + 1}「${STORY[run.stage].name}」。えらんだごほうびは、この冒険のあいだずっと続きます。` + (guest ? '　カードをタップすると、ホストに「これがいい！」と提案できます（決めるのはホスト）' : online ? '　サポーターの提案には「P2のおすすめ」がつきます。えらんでいるカードは相手の画面にも見えます' : '');
+  $('#rewardTitle').textContent = evt ? `ふしぎ：${evt.title}` : kind === 'rest' ? '休けい：アップグレードを1つえらぼう' : kind === 'treasure' ? `たからばこ！ ごほうびをえらぼう${left > 1 ? `（あと${left}枚）` : ''}`
+    : kind === 'elite' ? `強敵をたおした！ ごほうびをえらぼう（あと${left}枚）` : `${run.stage}階 クリア！ ごほうびを1枚えらぼう`;
+  $('#rewardSub').textContent = (evt ? evt.text + '　' : '') + (kind === 'event' ? '' : 'えらんだら、マップで次の道をえらぼう。') + (kind === 'event' ? '' : guest ? '　カードをタップすると、ホストに「これがいい！」と提案できます（決めるのはホスト）' : online ? '　サポーターの提案には「P2のおすすめ」がつきます。えらんでいるカードは相手の画面にも見えます' : '');
   const row = $('#rewardRow'); row.innerHTML = ''; row.classList.toggle('watch', guest);
-  if (!run.choices.length) { // もう選べるものがないとき
-    row.innerHTML = '<p class="rw-none">ごほうびは全部そろいました！</p>' + (guest ? '' : '<button class="btn blue big" id="rwSkip">次のステージへ</button>');
-    if (!guest) $('#rwSkip').addEventListener('click', () => { run.pending = false; run.choices = null; saveStory(); startStoryPage(run.stage); });
+  if (!run.choices.length) { // ふしぎのマスの結果・もう選べるものがないとき
+    row.innerHTML = (kind === 'event' && evt ? `<div class="rw-event">${evt.card ? '<canvas width="208" height="128"></canvas>' : `<span class="rw-mark">${evt.mark || '？'}</span>`}<p>${evt.text}</p></div>` : '<p class="rw-none">ごほうびは全部そろいました！</p>')
+      + (guest ? '' : '<button class="btn blue big" id="rwSkip">マップへ</button>');
+    if (kind === 'event' && evt && evt.card) iconCanvas(row.querySelector('canvas'), evt.card, 104, 64);
+    if (!guest) $('#rwSkip').addEventListener('click', () => { run.pending = false; run.choices = null; run.evt = null; run.extra = 0; saveStory(); mapSel = null; showStory(); });
   }
   run.choices.forEach((r, ci) => {
     const b = document.createElement('button');
@@ -211,22 +261,27 @@ function rewardHover(i) {
   NET.rwHov = i; markReward();
   if (rewardOnline()) netSend({ t: 'rwhov', i });
 }
-// ごほうびを決める。オンラインでは決めたカードを両方の画面で少し見せてから次のステージへ
+// ごほうびを決める。オンラインでは決めたカードを両方の画面で少し見せてから、マップへ
 function rewardPick(i) {
   const run = curRun(); if (!run || !run.choices || !run.choices[i] || NET.rwPick != null) return;
-  const go = () => { applyReward(run, run.choices[i]); run.pending = false; run.choices = null; saveStory(); NET.rwPick = null; NET.rwHov = null; startStoryPage(run.stage); };
+  const go = () => {
+    applyReward(run, run.choices[i]); NET.rwPick = null; NET.rwHov = null; NET.rwSug = null;
+    if (run.extra > 0) { run.extra--; run.choices = null; saveStory(); showReward(); return; } // 強敵・たからばこ：もう1枚
+    run.pending = false; run.choices = null; run.evt = null; saveStory(); mapSel = null; showStory(); // マップで次の道をえらぶ
+  };
   SFX.pick();
   if (!rewardOnline()) { go(); return; }
   NET.rwPick = i; markReward(); netSend({ t: 'rwhov', i, pick: 1 });
   setTimeout(go, 900);
 }
-function startStoryPage(i) { storyIdx = i; CH = runCharacter(storyCH); startCoopGame(); } // 冒険中はランナーの強化を反映したキャラで
+function startStoryPage(i) { if (i === EX_IDX) setNodePage(null); storyIdx = i; CH = runCharacter(storyCH); startCoopGame(); } // 冒険中はランナーの強化を反映したキャラで
 function showEnding() {
   const sv = storySave[COOP_LV];
   const spr = storyStrokes ? bigSprite(storyStrokes, 220, 180) : null;
   $('#endingChar').src = (spr || storyCH.spr).toDataURL();
-  $('#endingText').innerHTML = ENDING.map(t => `<p>${t}</p>`).join('') + `<p class="end-lv">大王の強さ「${CPU_LV[COOP_LV].name}」で全${STORY.length}ステージをクリア！ EXステージが解放されました</p>`;
-  $('#endingRanks').innerHTML = STORY.map((st, i) => `<span class="hchip a"><b>ステージ${i + 1}　ランク ${sv.ranks[i] || '—'}</b><small>${st.name}</small>${medalHtml(sv.medals && sv.medals[i])}</span>`).join('');
+  $('#endingText').innerHTML = ENDING.map(t => `<p>${t}</p>`).join('') + `<p class="end-lv">大王の強さ「${CPU_LV[COOP_LV].name}」で全${STORY.length}階の冒険をクリア！ EXステージが解放されました</p>`;
+  const names = sv.lastPath || [];
+  $('#endingRanks').innerHTML = names.map((nm, i) => `<span class="hchip a"><b>${i + 1}階</b><small>${nm}</small></span>`).join('');
   show('scr-ending'); SFX.win();
 }
 $('#btnStoryRedraw').addEventListener('click', () => { setSetupTexts(); show('scr-draw'); });
@@ -241,7 +296,7 @@ $('#btnDbgReset').addEventListener('click', e => {
   storySave[COOP_LV] = newSave(); saveStory(); storySel = 0; showStory();
 });
 $('#btnStoryTitle').addEventListener('click', () => quitToTitle());
-$('#btnEndMap').addEventListener('click', () => { storySel = 0; showStory(); });
+$('#btnEndMap').addEventListener('click', () => { storySel = 0; mapSel = null; showStory(); });
 $('#btnEndTitle').addEventListener('click', () => quitToTitle());
 $('#btnNextPage').addEventListener('click', () => {
   $('#result').classList.add('hidden');
@@ -263,7 +318,7 @@ function scoreHtml() {
   return `<span class="pa">プレイヤーA</span> <b>${a.wins}</b> − <b>${b.wins}</b> <span class="pb">プレイヤーB</span>　<small>${MATCH.target}本先取</small>`;
 }
 function updateScoreUI() {
-  $('#scoreBox').innerHTML = (COOP && NET.role) ? `オンライン協力（${CPU_LV[COOP_LV].name}）　あなたは<b>${NET.role === 'host' ? 'P1ランナー' : 'P2サポーター'}</b>` : COOP ? `協力ストーリー（${CPU_LV[COOP_LV].name}）　${storySave[COOP_LV].run ? `いま ステージ<b>${storySave[COOP_LV].run.stage + 1}</b> / ${STORY.length}` : storySave[COOP_LV].cleared ? '冒険クリア済み' : `全${STORY.length}ステージ`}`
+  $('#scoreBox').innerHTML = (COOP && NET.role) ? `オンライン協力（${CPU_LV[COOP_LV].name}）　あなたは<b>${NET.role === 'host' ? 'P1ランナー' : 'P2サポーター'}</b>` : COOP ? `協力ストーリー（${CPU_LV[COOP_LV].name}）　${storySave[COOP_LV].run ? `いま <b>${Math.min(STORY.length, storySave[COOP_LV].run.stage + 1)}</b>階 / ${STORY.length}` : storySave[COOP_LV].cleared ? '冒険クリア済み' : `全${STORY.length}階`}`
     : MATCH.on ? scoreHtml()
     : `通算 <span class="r">ランナー</span> <b>${SCORE.runner}</b> − <b>${SCORE.builder}</b> <span class="b">ビルダー</span>`;
 }
@@ -309,7 +364,7 @@ function deckBackTarget() {
 function updateSetupNav() {
   const d = drawBackTarget(), k = deckBackTarget();
   $('#btnDrawBack').hidden = !d; $('#btnDeckBack').hidden = !k;
-  $('#btnDrawBack').textContent = { story: '◀ 冒険の記録へ', swap: '◀ 戻る', deckA: '◀ プレイヤーAのカード選び' }[d] || '◀ 戻る';
+  $('#btnDrawBack').textContent = { story: '◀ 冒険のマップへ', swap: '◀ 戻る', deckA: '◀ プレイヤーAのカード選び' }[d] || '◀ 戻る';
   $('#btnDeckBack').textContent = k === 'swap' ? '◀ 戻る' : '◀ キャラを描く';
 }
 function setupToTitle() {

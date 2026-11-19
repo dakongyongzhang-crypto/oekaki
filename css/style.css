@@ -777,3 +777,55 @@ body.mobile.land #scr-story .si-hint{font-size:12px;margin:2px 0 4px}
 .rw-pick.sug.chosen{box-shadow:0 0 0 3px #fff,0 0 24px rgba(255,210,63,.9),0 0 0 7px var(--builder)}
 body.mobile.land .rw-badges i{font-size:10px;padding:0 6px}
 .rw-pick{position:relative}
+/* ---------- 冒険のマップ（左から右へ1〜15階。線でつながったマスに進む） ---------- */
+.story-grid .run-map{grid-column:1/-1}
+.run-map{background:var(--surface);border:2px solid var(--ink);border-radius:14px;box-shadow:3px 3px 0 var(--shade);padding:26px 12px 8px}
+.rm-in{position:relative;height:250px;margin:0 6px}
+.rm-in svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.rm-in line{stroke:#b9c0cf;stroke-width:3;stroke-dasharray:6 6;vector-effect:non-scaling-stroke}
+.rm-in line.on{stroke:var(--ink);stroke-dasharray:none;stroke-width:4}
+.rm-in line.can{stroke:var(--builder);stroke-dasharray:none;stroke-width:3.5}
+.rm-in line.past{opacity:.35}
+.mnode{position:absolute;transform:translate(-50%,-50%);width:40px;height:40px;border-radius:50%;border:2px solid var(--ink);background:#fff;font:inherit;font-weight:900;font-size:17px;line-height:1;display:grid;place-items:center;cursor:pointer;padding:0;color:var(--ink);box-shadow:2px 2px 0 var(--shade)}
+.mnode.stage{background:#e3ecff}
+.mnode.elite{background:#ffd3d3;color:#b3202f}
+.mnode.rest{background:#d9f2df;color:#1f7a3e}
+.mnode.treasure{background:#fff0b0;color:#9a6a00}
+.mnode.event{background:#ece0ff;color:#5b3a9a}
+.mnode.boss{background:#3b2f55;color:#ffd23f;width:52px;height:52px;font-size:22px}
+.mnode.past{opacity:.3}
+.mnode.done{background:#c9ced9;color:#5d6170}
+.mnode.done::after{content:'✓';position:absolute;right:-6px;bottom:-6px;width:16px;height:16px;border-radius:50%;background:var(--ink);color:#fff;font-size:10px;display:grid;place-items:center}
+.mnode.reach{box-shadow:0 0 0 4px var(--hilite),2px 2px 0 var(--shade);animation:mpulse 1.2s ease-in-out infinite}
+.mnode.cur{box-shadow:0 0 0 4px var(--runner),2px 2px 0 var(--shade)}
+.mnode.sel{outline:3px solid var(--builder);outline-offset:4px;z-index:2}
+@keyframes mpulse{50%{transform:translate(-50%,-50%) scale(1.13)}}
+.mfl{position:absolute;top:-22px;transform:translateX(-50%);font-size:11px;font-weight:900;color:var(--ink-soft)}
+.mfl.now{color:var(--runner);font-size:13px}
+.rm-legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;margin-top:10px;color:var(--ink-soft)}
+.rm-legend span{display:inline-flex;align-items:center;gap:4px}
+.rm-legend .mnode{position:static;transform:none;width:22px;height:22px;font-size:11px;box-shadow:none;cursor:default;animation:none}
+.si-note{font-size:13px;color:var(--ink-soft);margin:6px 0}
+.si-elite{color:#b3202f;font-weight:900}
+.rw-event{grid-column:1/-1;display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px;background:var(--surface);border:2px solid var(--ink);border-radius:14px;box-shadow:4px 4px 0 var(--shade);width:min(520px,100%);justify-self:center;text-align:center}
+.rw-event canvas{width:104px;height:64px;background:var(--paper);border-radius:8px;border:1.5px solid var(--ink)}
+.rw-event p{margin:0;font-weight:700}
+.reward-row #rwSkip{grid-column:1/-1;justify-self:center}
+.reward-row .rw-none{grid-column:1/-1;text-align:center}
+/* スマホ横画面：マップを先に、小さめに */
+body.mobile.land #scr-story .story-grid{order:1}
+body.mobile.land #scr-story .story-intro{order:2;margin:8px 0 0}
+body.mobile.land .run-map{padding:18px 6px 4px}
+body.mobile.land .rm-in{height:108px;margin:0 2px}
+body.mobile.land .rm-legend{display:none}
+body.mobile.land .mnode{width:26px;height:26px;font-size:12px;border-width:1.5px}
+body.mobile.land .mnode.boss{width:32px;height:32px;font-size:15px}
+body.mobile.land .mnode.done::after{width:11px;height:11px;font-size:7px;right:-4px;bottom:-4px}
+body.mobile.land .mnode.reach{box-shadow:0 0 0 3px var(--hilite)}
+body.mobile.land .mfl{top:-16px;font-size:9px}
+body.mobile.land .mfl.now{font-size:11px}
+body.mobile.land .si-note{font-size:11px;margin:2px 0}
+body.mobile.land #scr-story .story-grid{display:contents}
+body.mobile.land #scr-story .run-map{order:1}
+body.mobile.land #scr-story .story-intro{order:2}
+body.mobile.land #scr-story .page-card.ex{order:3;margin-top:8px}

@@ -61,7 +61,7 @@ const EX_PAGE = { name: '真っ白なページ', bg: 'ex', terr: '#e6e1f0', ex: 
   time: 215, cpu: 2.1, pool: 1, erase: true, boss: true, regen: 0.115, limit: 2, dmg: 1.75, heart: 0.08,
   hint: '暗闇の中の大穴、長いトゲ、とても強い妨害、少ないエネルギー、痛いダメージ。ボム・ストップ・ハートは2回まで',
   story: ['15のステージをすべてクリアすると、ノートの最後に、まっしろなページが現れた。', '真・消しゴム大王「ここは、すべてを消し去るためのページ…生きて帰れると思うな！」', '2人「最後の最後まで、いっしょに描き続けるんだ！」'] };
-const pageDef = i => i === EX_IDX ? EX_PAGE : STORY[i];
+const pageDef = i => i === EX_IDX ? EX_PAGE : nodePage && nodePage.f === i ? nodePage.page : STORY[i]; // 冒険ではマップでえらんだマスのステージ
 const pageLabel = i => i === EX_IDX ? 'EXステージ' : `ステージ${i + 1}`;
 const isEX = () => COOP && storyIdx === EX_IDX;
 let storyIdx = 0, storySel = 0, storyCH = null, storyStrokes = null;
@@ -165,11 +165,11 @@ const runLv = k => Math.min(3, runBoost(k));
 const runVal = k => RUN_UP[k].v[runLv(k)];
 // オンラインのゲストは、ホストから届いた冒険（NET.mrun）を使う
 const curRun = () => NET.role === 'guest' && NET.mrun !== undefined ? NET.mrun : storySave[COOP_LV].run;
-const runShare = run => run ? { stage: run.stage, deck: run.deck, ups: run.ups || {}, boosts: run.boosts, pending: run.pending, choices: run.choices } : null;
+const runShare = run => run ? { stage: run.stage, deck: run.deck, ups: run.ups || {}, boosts: run.boosts, pending: run.pending, choices: run.choices, rwKind: run.rwKind, extra: run.extra || 0, evt: run.evt || null } : null;
 const inRun = () => COOP && storyIdx !== EX_IDX && !!curRun();
 const runBoost = k => inRun() ? (curRun().boosts[k] || 0) : 0;
 const runUps = () => inRun() ? (curRun().ups || {}) : {};
-function newRun() { storySave[COOP_LV].run = { stage: 0, deck: START_DECK.slice(), boosts: {}, ups: {}, pending: false, choices: null }; saveStory(); return curRun(); }
+function newRun() { storySave[COOP_LV].run = { stage: 0, deck: START_DECK.slice(), boosts: {}, ups: {}, pending: false, choices: null, map: genRunMap(), pos: null, cur: null, path: [], extra: 0, rwKind: 'stage' }; saveStory(); return curRun(); }
 // ランナーの強化をキャラに反映したコピー（元の絵・名前はそのまま）
 function runCharacter(base) {
   if (!inRun()) return base;

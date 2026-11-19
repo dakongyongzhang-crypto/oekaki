@@ -78,7 +78,7 @@
         </div>
         <div class="mode-card pc-only">
           <h3 class="hand">協力ストーリー</h3>
-          <p>2人で全15ステージのノートを旅する協力モード。クリアするたびにカードや強化をえらんで、だんだん強くなっていく。ランナーは攻撃ボタンが使えないけど、敵は踏んで倒せる。サポーターのブロックと道具で、消しゴム大王のいじわるを突破しよう。</p>
+          <p>2人で分かれ道のマップを進み、15階の消しゴム大王をめざす協力モード。どの道を通るかを自分でえらび、カードや強化を集めてだんだん強くなっていく。ランナーは攻撃ボタンが使えないけど、敵は踏んで倒せる。サポーターのブロックと道具で、消しゴム大王のいじわるを突破しよう。</p>
           <div class="lv-pick" role="group" aria-label="CPUの強さ">
             <button class="btn sm" data-lv="easy">やさしい</button><button class="btn sm on" data-lv="normal">ふつう</button><button class="btn sm" data-lv="hard">むずかしい</button>
           </div>
@@ -291,11 +291,11 @@
     </div>
   </section>
 
-  <!-- ============ STORY（協力ストーリー：冒険の記録） ============ -->
+  <!-- ============ STORY（協力ストーリー：冒険のマップ） ============ -->
   <section id="scr-story" class="screen">
     <div class="screen-head">
       <h2 class="hand">協力ストーリー：消しゴム大王をとめろ！</h2>
-      <p>15のステージを1から順に2人で旅する冒険。クリアするたびに、3枚の中からごほうびを1枚えらべます。</p>
+      <p>分かれ道のマップを2人で進む冒険。進むマスを自分でえらび、15階のボスをめざそう。</p>
     </div>
     <div class="story-top">
       <div class="lv-pick" role="group" aria-label="CPUの強さ">
@@ -325,7 +325,7 @@
       <div class="ending-stage"><img id="endingChar" alt="ランナーのキャラ"></div>
       <div class="ending-text" id="endingText"></div>
       <div class="ending-ranks" id="endingRanks"></div>
-      <div class="vic-btns"><button class="btn primary big" id="btnEndMap">冒険の記録へ</button><button class="btn big" id="btnEndTitle">タイトルへ</button></div>
+      <div class="vic-btns"><button class="btn primary big" id="btnEndMap">冒険のマップへ</button><button class="btn big" id="btnEndTitle">タイトルへ</button></div>
     </div>
   </section>
 
@@ -362,7 +362,7 @@
           <p class="result-reason" id="pauseNote">Esc か P でも再開できます</p>
           <div class="result-btns">
             <button class="btn primary" id="btnResume">再開</button>
-            <button class="btn" id="btnPauseStory" hidden>冒険の記録へ</button>
+            <button class="btn" id="btnPauseStory" hidden>マップへ</button>
             <button class="btn" id="btnPauseTitle">タイトルへ戻る</button>
           </div>
         </div>
@@ -379,7 +379,7 @@
             <button class="btn primary" id="btnRematch" hidden>もう一度マッチ</button>
             <button class="btn primary" id="btnNextPage" hidden>次へ：ごほうびをえらぶ</button>
             <button class="btn primary" id="btnRetry">同じ設定で再戦</button>
-            <button class="btn" id="btnStoryMap" hidden>冒険の記録へ</button>
+            <button class="btn" id="btnStoryMap" hidden>マップへ</button>
             <button class="btn" id="btnRedeck">カードを選び直す</button>
             <button class="btn" id="btnRedraw">キャラを描き直す</button>
             <button class="btn" id="btnTitle">タイトルへ</button>
@@ -441,6 +441,7 @@
 <script src="js/game/config.js"></script>
 <script src="js/game/cards.js"></script>
 <script src="js/game/story.js"></script>
+<script src="js/game/runmap.js"></script>
 <script src="js/game/enemy-types.js"></script>
 <script src="js/game/viewport.js"></script>
 <script src="js/game/state.js"></script>

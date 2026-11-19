@@ -21,6 +21,7 @@ async function netStartMirror(m) {
   NET.guestReady = false; NET.queue = []; NET.busy = [false, false]; NET.redo = null;
   try { CH = await deserializeCH(m.ch); } catch (_e) { netToast('キャラ画像を受け取れませんでした', 6000); return; }
   COOP = !m.vs; COOP_LV = m.lv; storyIdx = m.idx; NET.runnerSide = m.rs || 'host'; NET.seed = m.seed;
+  setNodePage(COOP && m.np ? m.np : null); // 冒険のマップでえらんだマスのステージ（ホストと同じステージを作る）
   if (m.vs) {
     DECK = (m.deck || []).slice();
     if (m.match) {

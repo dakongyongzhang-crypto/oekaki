@@ -3,7 +3,7 @@
 /* =====================================================
    ランナーの更新（ダメージ・攻撃・移動）
    ===================================================== */
-const stageDmgMul = () => isEX() ? EX_PAGE.dmg : 1 + 0.04 * storyIdx; // ステージ1：×1.0 … ステージ15：×1.56、EX：×1.75
+const stageDmgMul = () => isEX() ? EX_PAGE.dmg : 1 + 0.04 * storyIdx + (pageDef(storyIdx).elite ? 0.15 : 0); // ステージ1：×1.0 … ステージ15：×1.56、EX：×1.75
 function hurt(amount, srcX, word) {
   const p = P;
   if (p.inv > 0 || state !== 'play' || dbg('inv')) return;
