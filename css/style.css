@@ -755,3 +755,7 @@ body.mobile.land #scr-story .si-btns .btn.big{font-size:16px;padding:6px 16px}
 body.mobile.land #scr-story .si-text p{margin:2px 0;font-size:12.5px}
 body.mobile.land #scr-story .si-meta{font-size:11px;margin:4px 0 2px}
 body.mobile.land #scr-story .si-hint{font-size:12px;margin:2px 0 4px}
+/* カードのアップグレード */
+.rw-pick.up{background:#fff4c9}
+.rw-pick.up .rw-desc b{color:#c0392b}
+.tlv{color:#e0a100;margin-left:2px;font-size:.9em;letter-spacing:-1px;text-shadow:0 0 1px #8a6200}

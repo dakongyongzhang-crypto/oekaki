@@ -93,7 +93,7 @@ function startCoop() {
 // 冒険の記録：15ステージの道のり（クリア済み・いまのステージ）と、つづきから／最初から。EXステージは別に1回ずつ遊ぶ
 // storySel：0 = 冒険 / EX_IDX = EXステージ
 const boostSummary = run => Object.keys(BOOSTS).filter(k => run.boosts[k]).map(k => `<span class="rw-chip ${BOOSTS[k].who}">${BOOSTS[k].mark} ${BOOSTS[k].name}${run.boosts[k] > 1 ? ' ×' + run.boosts[k] : ''}</span>`).join('') || '<span class="rw-none">まだなし</span>';
-function deckIconsHtml(deck) { return deck.map(id => `<span class="rw-card" data-id="${id}"><canvas width="96" height="64"></canvas><small>${CARD[id].name}</small></span>`).join(''); }
+function deckIconsHtml(deck, ups = {}) { return deck.map(id => `<span class="rw-card" data-id="${id}"><canvas width="96" height="64"></canvas><small>${CARD[id].name}${ups[id] ? `<b class="tlv">${stars(ups[id])}</b>` : ''}</small></span>`).join(''); }
 function drawDeckIcons(root) { root.querySelectorAll('.rw-card').forEach(el => iconCanvas(el.querySelector('canvas'), el.dataset.id, 48, 32)); }
 function showStory() {
   const sv = storySave[COOP_LV], run = sv.run;
@@ -135,7 +135,7 @@ function showStory() {
       <div class="si-text">${st.story.map(t => `<p>${t}</p>`).join('')}</div>
       <p class="si-meta">関門：${meta}　制限時間：${st.time}秒　大王の強さ：${CPU_LV[COOP_LV].name}</p>
       <p class="si-hint">ヒント：${st.hint}</p>
-      <div class="si-run"><div><b>サポーターのカード（${deck.length}枚）</b><div class="rw-deck">${deckIconsHtml(deck)}</div></div>
+      <div class="si-run"><div><b>サポーターのカード（${deck.length}枚）</b><div class="rw-deck">${deckIconsHtml(deck, run ? run.ups : {})}</div></div>
         <div><b>強化</b><div class="rw-boosts">${run ? boostSummary(run) : '<span class="rw-none">ステージをクリアすると、ごほうびで強くなれます</span>'}</div></div></div>
       <div class="si-btns">${run ? `<button class="btn blue big" id="btnRunGo">${run.pending ? 'ごほうびをえらんで、つづける' : `ステージ${i + 1}からつづける`}</button><button class="btn" id="btnRunNew">最初からやり直す</button>` : '<button class="btn blue big" id="btnRunNew">冒険をはじめる（ステージ1から）</button>'}</div>`;
     drawDeckIcons(intro);
@@ -163,20 +163,24 @@ function showReward() {
   }
   run.choices.forEach(r => {
     const b = document.createElement('button');
-    const isCard = r.type === 'card', bo = !isCard && BOOSTS[r.id];
-    b.className = 'rw-pick ' + (isCard ? 'card' : bo.who);
-    b.innerHTML = `<span class="rw-kind">${isCard ? 'サポーターのカード' : bo.who === 'runner' ? 'ランナーの強化' : 'サポーターの強化'}</span>
-      ${isCard ? '<canvas width="208" height="128"></canvas>' : `<span class="rw-mark">${bo.mark}</span>`}
-      <span class="rw-name hand">${rewardName(r)}</span>
-      <span class="rw-desc">${isCard ? CARD[r.id].desc : bo.desc}${!isCard && run.boosts[r.id] ? `（いま ${run.boosts[r.id]} → ${run.boosts[r.id] + 1}）` : ''}</span>`;
-    if (isCard) iconCanvas(b.querySelector('canvas'), r.id, 104, 64);
+    const isCard = r.type === 'card', isUp = r.type === 'up', bo = r.type === 'boost' && BOOSTS[r.id];
+    b.className = 'rw-pick ' + (isCard ? 'card' : isUp ? 'up' : bo.who);
+    let desc;
+    if (isCard) desc = CARD[r.id].desc;
+    else if (isUp) { const u = CARD_UP[r.id], a = r.lv - 1; desc = `コスト ${u.cost[a]} → <b>${u.cost[r.lv]}</b>／${u.f(u.v[a], a)} → <b>${u.f(u.v[r.lv], r.lv)}</b>`; }
+    else desc = bo.desc + (run.boosts[r.id] ? `（いま ${run.boosts[r.id]} → ${run.boosts[r.id] + 1}）` : '');
+    b.innerHTML = `<span class="rw-kind">${isCard ? 'サポーターのカード' : isUp ? 'カードのアップグレード' : bo.who === 'runner' ? 'ランナーの強化' : 'サポーターの強化'}</span>
+      ${isCard || isUp ? '<canvas width="208" height="128"></canvas>' : `<span class="rw-mark">${bo.mark}</span>`}
+      <span class="rw-name hand">${isUp ? `${CARD[r.id].name} <b class="tlv">${stars(r.lv)}</b>` : rewardName(r)}</span>
+      <span class="rw-desc">${desc}</span>`;
+    if (isCard || isUp) iconCanvas(b.querySelector('canvas'), r.id, 104, 64);
     b.addEventListener('click', () => {
       applyReward(run, r); run.pending = false; run.choices = null; saveStory();
       SFX.pick(); startStoryPage(run.stage);
     });
     row.appendChild(b);
   });
-  $('#rewardHave').innerHTML = `<div><b>サポーターのカード（${run.deck.length}枚）</b><div class="rw-deck">${deckIconsHtml(run.deck)}</div></div><div><b>強化</b><div class="rw-boosts">${boostSummary(run)}</div></div>`;
+  $('#rewardHave').innerHTML = `<div><b>サポーターのカード（${run.deck.length}枚）</b><div class="rw-deck">${deckIconsHtml(run.deck, run.ups)}</div></div><div><b>強化</b><div class="rw-boosts">${boostSummary(run)}</div></div>`;
   drawDeckIcons($('#rewardHave'));
   show('scr-reward');
 }
@@ -210,6 +214,7 @@ $('#btnNextPage').addEventListener('click', () => {
 $('#btnStoryMap').addEventListener('click', () => { $('#result').classList.add('hidden'); storySel = storyIdx === EX_IDX ? EX_IDX : 0; showStory(); });
 function startCoopGame() {
   DECK = inRun() ? curRun().deck.slice() : SUPPORT_DECK.slice(); // 冒険中は集めたカードだけ（EXステージは全部）
+  applyCardLevels(runUps()); // 冒険中はアップグレードしたカードの性能で
   SFX.init(); updateRoleLabels();
   show('scr-game'); buildToolbar(); resizeGame(); resetRound();
   $('#btnPause').textContent = 'ポーズ';

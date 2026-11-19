@@ -87,7 +87,7 @@ function netHostBegin() {
   NET.seq = 0; NET.fx.length = 0; NET.idc = 0; NET.mP = new Map(); NET.mE = new Map(); NET.mB = new Map(); NET.small = {}; NET.sE = ''; NET.sB = '';
   NET.shadow = netMakeShadow(); NET.live = true;
   netApplyRoleClasses(); resizeGame(); // カード欄の表示が変わるので、画面の大きさを合わせ直す
-  netSend({ t: 'start', seed: NET.seed, idx: storyIdx, lv: COOP_LV, ck: sumArr(tiles), vs: COOP ? 0 : 1, rs: NET.runnerSide, deck: DECK.slice(),
+  netSend({ t: 'start', seed: NET.seed, idx: storyIdx, lv: COOP_LV, ck: sumArr(tiles), vs: COOP ? 0 : 1, rs: NET.runnerSide, deck: DECK.slice(), up: COOP ? runUps() : 0,
     match: MATCH.on ? { target: MATCH.target, round: MATCH.round, runner: MATCH.runner, wins: MATCH.players.map(p => p.wins), history: MATCH.history } : 0,
     ch: serializeCH(CH) });
 }

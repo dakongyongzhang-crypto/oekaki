@@ -94,10 +94,33 @@ const BOOSTS = {
   energy: { who: 'support', name: 'スタートエネルギー', desc: 'ステージ開始時のエネルギーが +20', mark: '★', max: 2 },
   uses: { who: 'support', name: '使用回数アップ', desc: 'ボム・ストップ・ハートを使える回数が +1', mark: '＋', max: 3, needs: ['s_heart', 's_bomb', 's_freeze'] }
 };
+// カードのアップグレード（★1・★2）：コストが下がり、効果が強くなる。[ふつう, ★1, ★2]
+const CARD_UP = {
+  s_pen: { cost: [7, 5, 4], v: [20, 26, 32], f: v => `${v}秒`, d: v => `クリックで横3マスの足場を置く。${v}秒で消える` },
+  s_cloud: { cost: [5, 4, 3], v: [15, 20, 25], f: v => `${v}秒`, d: v => `下からすり抜けられる横3マスの足場。${v}秒で消える` },
+  s_bounce: { cost: [9, 7, 5], v: [20, 26, 32], f: v => `${v}秒`, d: v => `乗ると高く跳べる横2マスの台。${v}秒で消える` },
+  s_heart: { cost: [40, 35, 30], v: [30, 45, 60], f: v => `回復${v}`, d: v => `カードを押すだけでランナーのHPが${v}回復（カーソル不要）。1ステージ3回まで` },
+  s_shield: { cost: [90, 80, 70], v: [4, 5.5, 7], f: v => `${v}秒`, d: v => `${v}秒間ランナーがダメージを受けない` },
+  s_speed: { cost: [40, 35, 30], v: [5, 7, 9], f: v => `${v}秒`, d: v => `${v}秒間ランナーの足とジャンプが強くなる` },
+  s_bomb: { cost: [30, 25, 20], v: [90, 115, 140], f: (v, lv) => `範囲：${['ふつう', '広い', 'とても広い'][lv]}`, d: (v, lv) => `クリックした場所の敵とCPUの壁をまとめて吹き飛ばす${['', '（範囲が広い）', '（範囲がとても広い）'][lv]}。1ステージ3回まで` },
+  s_freeze: { cost: [55, 48, 40], v: [3, 4, 5], f: v => `${v}秒`, d: v => `${v}秒間すべての敵と弾を止めて無害にする。1ステージ3回まで` }
+};
+const UP_MAX = 2;
+// カードの性能をレベルに合わせて書きかえる（冒険以外ではすべて「ふつう」に戻す）
+function applyCardLevels(ups) {
+  for (const id in CARD_UP) {
+    const u = CARD_UP[id], lv = Math.min(UP_MAX, (ups && ups[id]) || 0), c = CARD[id];
+    c.lv = lv; c.cost = u.cost[lv]; c.costLabel = String(c.cost); c.pow = u.v[lv]; c.desc = u.d(u.v[lv], lv);
+    if (SUPPORT_BLOCKS[id]) SUPPORT_BLOCKS[id].life = u.v[lv];
+  }
+}
+applyCardLevels({});
+const stars = lv => lv ? '★'.repeat(lv) : '';
 const curRun = () => storySave[COOP_LV].run;
 const inRun = () => COOP && storyIdx !== EX_IDX && !!curRun();
 const runBoost = k => inRun() ? (curRun().boosts[k] || 0) : 0;
-function newRun() { storySave[COOP_LV].run = { stage: 0, deck: START_DECK.slice(), boosts: {}, pending: false, choices: null }; saveStory(); return curRun(); }
+const runUps = () => inRun() ? (curRun().ups || {}) : {};
+function newRun() { storySave[COOP_LV].run = { stage: 0, deck: START_DECK.slice(), boosts: {}, ups: {}, pending: false, choices: null }; saveStory(); return curRun(); }
 // ランナーの強化をキャラに反映したコピー（元の絵・名前はそのまま）
 function runCharacter(base) {
   if (!inRun()) return base;
@@ -112,17 +135,20 @@ function rollRewards(run) {
   const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
   const cards = shuffle(SUPPORT_DECK.filter(id => !run.deck.includes(id)).map(id => ({ type: 'card', id })));
   const boosts = shuffle(Object.keys(BOOSTS).filter(k => (run.boosts[k] || 0) < BOOSTS[k].max && (!BOOSTS[k].needs || BOOSTS[k].needs.some(c => run.deck.includes(c)))).map(k => ({ type: 'boost', id: k })));
+  const ups = shuffle(run.deck.filter(id => CARD_UP[id] && ((run.ups || {})[id] || 0) < UP_MAX).map(id => ({ type: 'up', id, lv: ((run.ups || {})[id] || 0) + 1 })));
   const out = [];
   if (cards.length) out.push(cards.shift());
-  const rest = shuffle(cards.concat(boosts));
+  if (ups.length && Math.random() < 0.7) out.push(ups.shift()); // アップグレードもよく出るように
+  const rest = shuffle(cards.concat(boosts, ups));
   while (out.length < 3 && rest.length) out.push(rest.shift());
   return shuffle(out);
 }
 function applyReward(run, r) {
   if (r.type === 'card') { if (!run.deck.includes(r.id)) run.deck.push(r.id); run.deck.sort((a, b) => SUPPORT_DECK.indexOf(a) - SUPPORT_DECK.indexOf(b)); }
+  else if (r.type === 'up') { run.ups = run.ups || {}; run.ups[r.id] = Math.min(UP_MAX, (run.ups[r.id] || 0) + 1); }
   else run.boosts[r.id] = (run.boosts[r.id] || 0) + 1;
 }
-const rewardName = r => r.type === 'card' ? CARD[r.id].name : BOOSTS[r.id].name;
+const rewardName = r => r.type === 'card' ? CARD[r.id].name : r.type === 'up' ? `${CARD[r.id].name} ${stars(r.lv)}` : BOOSTS[r.id].name;
 // メダル：銀＝クリア / 金＝Sランク / 虹＝ノーダメージ。表示するのはいちばん良い色の1枚だけ
 const MEDAL_ORDER = ['silver', 'gold', 'rainbow'];
 const MEDAL_JP = { silver: ['銀', 'クリア'], gold: ['金', 'Sランク'], rainbow: ['虹', 'ノーダメージ'] };

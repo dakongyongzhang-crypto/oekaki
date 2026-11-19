@@ -210,11 +210,11 @@ function useSupport(id, wx, wy, pl) {
   }
   SFX.special();
   if (id === 's_heart') { items.push({ type: 'heart', x: wx, y: wy, taken: false }); burst(wx, wy, '#f27eb1', 8, 2); }
-  if (id === 's_shield') { P.shield = 240; banner = { text: 'バリア！', life: 40, color: C.builder }; }
-  if (id === 's_speed') { effects.boost = 300; banner = { text: 'スピードアップ！', life: 40, color: C.builder }; }
-  if (id === 's_freeze') { effects.freeze = 180; banner = { text: 'ストップ！', life: 40, color: C.builder }; }
+  if (id === 's_shield') { P.shield = Math.round(CARD.s_shield.pow * 60); banner = { text: 'バリア！', life: 40, color: C.builder }; }
+  if (id === 's_speed') { effects.boost = Math.round(CARD.s_speed.pow * 60); banner = { text: 'スピードアップ！', life: 40, color: C.builder }; }
+  if (id === 's_freeze') { effects.freeze = Math.round(CARD.s_freeze.pow * 60); banner = { text: 'ストップ！', life: 40, color: C.builder }; }
   if (id === 's_bomb') {
-    SFX.boom(); const R = 90;
+    SFX.boom(); const R = CARD.s_bomb.pow || 90;
     for (const e of enemies) if (!e.dead && circleRect(wx, wy, R, e)) { if (e.type === 'boss') { e.stun = isEX() ? 55 : 90; popup(e.x + e.w / 2, e.y - 24, 'ピヨピヨ…', C.builder, 20); } else if (e.type === 'bomb') { e.dead = true; popup(e.x + e.w / 2, e.y - 6, '解除！', C.ink, 20); } else damageEnemy(e, 4, 0); }
     for (const b of bullets) if (dist(wx, wy, b.x, b.y) < R) b.dead = true;
     for (let c = Math.floor((wx - R) / T); c <= Math.floor((wx + R) / T); c++) for (let r = Math.floor((wy - R) / T); r <= Math.floor((wy + R) / T); r++) {

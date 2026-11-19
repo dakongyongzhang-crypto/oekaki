@@ -10,7 +10,7 @@ function buildToolbar() {
     const c = CARD[id];
     const b = document.createElement('button');
     b.className = 'tool'; b.dataset.id = id; b.tabIndex = -1;
-    b.innerHTML = `<span class="tk">${i + 1}</span><span class="tu"></span><canvas width="104" height="76"></canvas><span class="tx"><span class="tn">${c.name}</span><span class="tc">コスト ${c.costLabel}</span></span>`;
+    b.innerHTML = `<span class="tk">${i + 1}</span><span class="tu"></span><canvas width="104" height="76"></canvas><span class="tx"><span class="tn">${c.name}</span><span class="tc">コスト ${c.costLabel}${c.lv ? ` <b class="tlv">${stars(c.lv)}</b>` : ''}</span></span>`;
     b.title = c.desc;
     let lastPd = 0;
     b.addEventListener('pointerdown', e => { e.preventDefault(); if (NET.role && !netIAmBuilder()) return; lastPd = performance.now(); selectTool(id); });
@@ -36,7 +36,7 @@ function useHealNow() {
   if (energy < card.cost) { popup(px, py, 'エネルギー不足', C.bad, 16); return; }
   if (P.hp >= P.maxHp) { popup(px, py, 'HPは満タン', C.builder, 16); return; }
   energy -= card.cost; ST.placed++;
-  const heal = Math.min(30, P.maxHp - P.hp); P.hp += heal;
+  const heal = Math.min(card.pow || 30, P.maxHp - P.hp); P.hp += heal;
   supUses.s_heart = left - 1;
   SFX.pick(); burst(px, P.y + P.h / 2, '#f27eb1', 12, 2.5);
   popup(px, py, `+${Math.round(heal)} HP`, C.grass, 22);
