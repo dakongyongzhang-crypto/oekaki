@@ -155,7 +155,7 @@ function showStory() {
   } else if (!run) {
     intro.innerHTML = `<div class="si-head"><span class="si-page">新しい冒険</span><h3 class="hand">消しゴム大王をとめろ！</h3></div>
       <div class="si-text"><p>ノートの中の分かれ道を、2人で進む冒険。どの道を通るかは自分たちで決めよう。</p>
-        <p>ふつうのステージ・強敵・休けい・たからばこ・ふしぎなマス…。8階と15階には消しゴム大王が待っている。</p></div>
+        <p>ふつうのステージ・強敵・休けい・たからばこ・ふしぎなマス…。5階はどの道でもたからばこ。8階と15階には消しゴム大王が待っている。</p></div>
       <div class="si-run"><div><b>サポーターのカード（${START_DECK.length}枚）</b><div class="rw-deck">${deckIconsHtml(START_DECK)}</div></div>
         <div><b>強化</b><div class="rw-boosts"><span class="rw-none">ステージをクリアすると、ごほうびで強くなれます</span></div></div></div>
       <div class="si-btns"><button class="btn blue big" id="btnRunNew">冒険をはじめる（マップを作る）</button></div>`;

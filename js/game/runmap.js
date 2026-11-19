@@ -3,7 +3,7 @@
 /* =====================================================
    冒険のマップ：15階の分かれ道。次に進むマスを自分でえらぶ
    - 戦＝ふつうのステージ／強＝強敵ステージ（ごほうび2枚）／休＝休けい（アップグレード）
-   - 宝＝たからばこ（ステージなしでごほうび）／？＝ふしぎ（何かが起こる）／王＝ボス（8階と15階）
+   - 宝＝たからばこ（ステージなしでごほうび。5階はぜんぶたからばこ）／？＝ふしぎ（何かが起こる）／王＝ボス（8階と15階）
    ===================================================== */
 const NODE_T = {
   stage: { mark: '戦', name: 'ステージ', desc: '大王のじゃまを越えてゴールをめざす。クリアするとごほうびを1枚えらべる' },
@@ -14,12 +14,14 @@ const NODE_T = {
   boss: { mark: '王', name: 'ボス', desc: '消しゴム大王との対決！' }
 };
 const BOSS_FLOORS = [7, 14];
+const TREASURE_FLOOR = 4; // 5階はぜんぶたからばこ（どの道を通っても、かならず1回はたからばこに入れる）
 const MAP_ROWS = 4;
 // 階ごとのマスの種類を決める
 function mapNodeType(f, rnd) {
   if (f === 0) return 'stage';
   if (BOSS_FLOORS.includes(f)) return 'boss';
   if (f === STORY.length - 2) return 'rest'; // 最後のボスの前はかならず休けい
+  if (f === TREASURE_FLOOR) return 'treasure';
   const w = [['stage', 50], ['elite', f >= 3 ? 16 : 0], ['event', 14], ['treasure', f >= 2 ? 8 : 0], ['rest', f >= 4 ? 12 : 0]];
   let t = rnd() * w.reduce((s, [, n]) => s + n, 0);
   for (const [k, n] of w) { if ((t -= n) < 0) return k; }
