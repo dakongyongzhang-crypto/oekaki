@@ -31,7 +31,7 @@ function step() {
   }
   if (state === 'play' || state === 'countdown') {
     if (penCapOn()) penLive = countPenCells();
-    energy = Math.min(EMAX, energy + (COOP ? (pageDef(storyIdx).regen || 0.17) * (1 + 0.15 * runBoost('regen')) : EREGEN)); // 冒険の強化：エネルギー回復アップ
+    energy = Math.min(EMAX, energy + (COOP ? (pageDef(storyIdx).regen || 0.15) * (1 + 0.15 * runBoost('regen')) : EREGEN)); // 冒険の強化：エネルギー回復アップ
     if (dbg('energy')) energy = EMAX;
     if (lifts.length && COOP) {
       const overL = pointerIsDown && hover.on ? liftAt(bwx(hover.sx), bwy(hover.sy)) : null;

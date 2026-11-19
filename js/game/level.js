@@ -40,15 +40,15 @@ function genCoopLevel(rng, ri, seed) {
       if (tunnel) for (let r = 0; r <= h - 6; r++) tiles[idx(c, r)] = 1;
       col(c++, h);
     }
-    if (lead >= 5 && rng() < 0.3) items.push({ type: 'heart', x: (s0 + 2) * T + T / 2, y: (h - 3) * T, taken: false });
+    if (lead >= 5 && rng() < 0.2) items.push({ type: 'heart', x: (s0 + 2) * T + T / 2, y: (h - 3) * T, taken: false });
     if (kind === 'pit') {
-      flat(2); const pw = hole.noJump(st.ex ? ri(16, 18) : ri(13, 16)); guides.push({ kind: 'bridge', row: h, c0: c, c1: c + pw - 1 }); c += pw; flat(3); // ジャンプでは越えられない幅（キャラに合わせる）
+      flat(2); const pw = hole.noJump(st.ex ? ri(16, 18) : ri(15, 18)); guides.push({ kind: 'bridge', row: h, c0: c, c1: c + pw - 1 }); c += pw; flat(3); // ジャンプでは越えられない幅（キャラに合わせる）
     } else if (kind === 'wall') {
       flat(4); const wh = ri(9, 10); guides.push({ kind: 'pad', row: h - 1, c0: c - 3, c1: c - 2 });
       for (let i = 0; i < 3; i++) { col(c, h); for (let r = h - wh; r < h; r++) tiles[idx(c, r)] = 1; c++; }
       flat(3);
     } else if (kind === 'spikes') {
-      flat(3); const len = st.ex ? ri(15, 16) : ri(11, 14); guides.push({ kind: 'bridge', row: h - 1, c0: c, c1: c + len - 1 });
+      flat(3); const len = st.ex ? ri(15, 16) : ri(13, 16); guides.push({ kind: 'bridge', row: h - 1, c0: c, c1: c + len - 1 });
       for (let i = 0; i < len; i++) { col(c, h); tiles[idx(c, h)] = 8; c++; }
       flat(3);
     } else if (kind === 'key') {
@@ -70,7 +70,7 @@ function genCoopLevel(rng, ri, seed) {
     } else if (kind === 'darkpit') {
       // 暗闇の中の大穴：照らしながら橋をかける
       flat(3); const z0 = c; flat(3);
-      const pw = hole.noJump(ri(14, 16)); guides.push({ kind: 'bridge', row: h, c0: c, c1: c + pw - 1 }); c += pw;
+      const pw = hole.noJump(st.ex ? ri(14, 16) : ri(15, 17)); guides.push({ kind: 'bridge', row: h, c0: c, c1: c + pw - 1 }); c += pw;
       flat(4); darkZones.push({ x0: z0 * T, x1: c * T }); flat(2);
     } else if (kind === 'dark') {
       // 暗闇ゾーン：P2のカーソルのまわりだけが明るい。小さな穴とトゲが隠れている
