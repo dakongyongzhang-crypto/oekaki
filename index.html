@@ -410,6 +410,20 @@
       </div>
     </div>
   </section>
+  <!-- iPhone：画面を回して表示しているときの案内（縦向きロックを外してもらう） -->
+  <div class="orient-guide" id="orientGuide" hidden role="dialog" aria-labelledby="ogTitle">
+    <div class="og-card">
+      <h3 id="ogTitle">スマホを横向きにして遊ぼう</h3>
+      <p>スマホを横に倒すと、画面が横向きになります。<b>横にしても画面が回らないとき</b>は、画面の縦向きロックをオフにしてください。</p>
+      <ol>
+        <li>画面の右上から下にスワイプして、コントロールセンターを開く</li>
+        <li>鍵のまわりに矢印がついたアイコン（画面縦向きのロック）をタップしてオフにする</li>
+        <li>コントロールセンターを閉じて、スマホを横に倒す</li>
+      </ol>
+      <p class="og-note">ロックしたままでも、このまま横に持てば遊べます（キーボードは縦向きで出ます）。</p>
+      <div class="og-btns"><button class="btn primary" id="ogClose">閉じる</button><button class="btn sm" id="ogNever">今後表示しない</button></div>
+    </div>
+  </div>
 </div>
 
 <script src="js/core/util.js"></script>

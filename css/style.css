@@ -693,3 +693,13 @@ body.mobile.land .net-toast{max-width:calc(var(--appW) * .9)}
 .head-nav{margin-left:auto;display:flex;gap:8px;flex:none;align-self:center}
 .head-nav .btn[hidden]{display:none}
 body.mobile.land .head-nav{gap:5px}
+/* iPhone：横向きの案内（#app の中に出すので、画面を回していても横画面で読める） */
+.orient-guide{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;background:rgba(19,21,27,.55);padding:calc(8px + var(--saT,0px)) calc(12px + var(--saR,0px)) calc(8px + var(--saB,0px)) calc(12px + var(--saL,0px))}
+.orient-guide[hidden]{display:none}
+.og-card{background:var(--surface);color:var(--ink);border:2px solid var(--ink);border-radius:14px;box-shadow:4px 4px 0 var(--shade);padding:12px 16px;max-width:560px;max-height:100%;overflow:auto;font-size:13px;line-height:1.5}
+.og-card h3{margin:0 0 4px;font-size:18px}
+.og-card p{margin:4px 0}
+.og-card ol{margin:4px 0;padding-left:1.4em}
+.og-card li{margin:2px 0}
+.og-note{color:var(--ink-soft);font-size:12px}
+.og-btns{display:flex;gap:8px;align-items:center;margin-top:8px}

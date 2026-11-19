@@ -22,6 +22,7 @@ function updateOrient() {
   root.style.setProperty('--vw', W + 'px'); root.style.setProperty('--vh', H + 'px'); // 実際に見えている大きさ（iPhone の 100vh はずれるため）
   document.body.classList.toggle('rot', m && H > W);
   document.body.classList.toggle('land', m);
+  if (typeof updateOrientGuide === 'function') updateOrientGuide();
 }
 // iPhone は向きが変わったあと少し遅れて大きさが決まるので、何回か測り直す
 function onViewportChange() {
@@ -100,3 +101,17 @@ function lockLandscape() {
   };
   document.addEventListener('pointerup', once, true); document.addEventListener('click', once, true);
 })();
+
+/* ---------- iPhone：横向きの案内 ----------
+   iPhone は画面の向きを変える命令が使えないので、画面を回して表示しているとき（縦持ち・縦向きロック中）に、
+   スマホを横に倒す／縦向きロックを外すよう案内する。iPhone 自体が横画面になれば自動で消える */
+const OG_KEY = 'rr-orient-guide';
+let ogClosed = false;
+function updateOrientGuide() {
+  let never = false; try { never = localStorage.getItem(OG_KEY) === 'never'; } catch (_e) {}
+  const show = isIOS && isRot() && !never && !ogClosed && typeof curScreen !== 'undefined' && curScreen !== 'scr-game';
+  $('#orientGuide').hidden = !show;
+}
+$('#ogClose').addEventListener('click', () => { ogClosed = true; updateOrientGuide(); });
+$('#ogNever').addEventListener('click', () => { try { localStorage.setItem(OG_KEY, 'never'); } catch (_e) {} updateOrientGuide(); });
+updateOrientGuide();
