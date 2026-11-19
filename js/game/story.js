@@ -86,16 +86,16 @@ try {
 const START_DECK = ['s_pen', 's_cloud', 's_bounce']; // サポーターの最初のカード（これだけでどの関門も越えられる）
 // ごほうび：サポーターのカード（まだ持っていないもの）か、強化（何度でも重ねられる。max まで）
 const BOOSTS = {
-  hp: { who: 'runner', name: '体力アップ', desc: 'ランナーの最大HPが +20', mark: '♥', max: 6 },
-  spd: { who: 'runner', name: '速さアップ', desc: 'ランナーの走る速さが少し上がる', mark: '»', max: 4 },
-  jump: { who: 'runner', name: 'ジャンプ力アップ', desc: 'ランナーのジャンプが少し高くなる', mark: '↑', max: 4 },
-  guard: { who: 'runner', name: 'ダメージ軽減', desc: 'ランナーが受けるダメージが 15% へる', mark: '◆', max: 4 },
-  djump: { who: 'runner', name: '二段ジャンプ', desc: '空中でもう1回ジャンプできる', mark: '⇈', max: 1 },
+  hp: { who: 'runner', name: '体力アップ', desc: 'ランナーの最大HPが +20', mark: '♥', max: 3 },
+  spd: { who: 'runner', name: '速さアップ', desc: 'ランナーの走る速さが少し上がる', mark: '»', max: 3 },
+  jump: { who: 'runner', name: 'ジャンプ力アップ', desc: 'ランナーのジャンプが少し高くなる', mark: '↑', max: 3 },
+  guard: { who: 'runner', name: 'ダメージ軽減', desc: 'ランナーが受けるダメージが 15% へる', mark: '◆', max: 3 },
+  djump: { who: 'runner', name: '二段ジャンプ', desc: '空中でもう1回ジャンプできる', mark: '⇈', max: 3 },
   inv: { who: 'runner', name: 'むてき時間アップ', desc: 'ダメージを受けたあと、無敵でいられる時間が長くなる', mark: '✧', max: 3 },
-  fall: { who: 'runner', name: '落下ダメージ軽減', desc: '穴に落ちたときのダメージが 10 へる', mark: '☂', max: 2 },
+  fall: { who: 'runner', name: '落下ダメージ軽減', desc: '穴に落ちたときのダメージが 25 → 15 にへる', mark: '☂', max: 3 },
   autoheal: { who: 'runner', name: '自動回復', desc: '3秒ごとにHPが 2 ずつ回復する', mark: '✚', max: 3 },
   heart: { who: 'runner', name: 'ハート回復アップ', desc: 'ステージに落ちているハートの回復量が +15', mark: '♡', max: 3 },
-  guts: { who: 'runner', name: 'ふんばり', desc: '1ステージに1回、やられそうになってもHP1で耐える', mark: '!', max: 1 },
+  guts: { who: 'runner', name: 'ふんばり', desc: '1ステージに1回、やられそうになってもHP1で耐える', mark: '!', max: 3 },
   stomp: { who: 'runner', name: 'ふみつけ強化', desc: '敵を踏んだときのダメージが +1', mark: '▼', max: 3 },
   regen: { who: 'support', name: 'エネルギー回復アップ', desc: 'サポーターのエネルギーがたまる速さ +15%', mark: '⚡', max: 5 },
   energy: { who: 'support', name: 'スタートエネルギー', desc: 'ステージ開始時のエネルギーが +20', mark: '★', max: 2 },
@@ -146,6 +146,23 @@ function applyCardLevels(ups) {
 }
 applyCardLevels({});
 const stars = lv => lv ? '★'.repeat(lv) : '';
+// ランナーの強化は「取る（ふつう）→ ★1 → ★2」の3段階でアップグレードできる。v[レベル]（0 = まだ持っていない）
+const WORDS = ['なし', '少し', 'けっこう', 'かなり'];
+const RUN_UP = {
+  hp: { v: [0, 20, 35, 50], f: v => `最大HP +${v}` },
+  spd: { v: [0, 0.25, 0.45, 0.65], f: (v, lv) => `速さ：${WORDS[lv]}アップ` },
+  jump: { v: [0, 0.6, 1.0, 1.4], f: (v, lv) => `ジャンプ：${WORDS[lv]}アップ` },
+  guard: { v: [0, 15, 25, 35], f: v => `ダメージ −${v}%` },
+  djump: { v: [0, 1, 1, 2], f: (v, lv) => ['', '空中で1回', '空中で1回（高く跳べる）', '空中で2回'][lv] },
+  inv: { v: [0, 25, 45, 65], f: v => `無敵 +${(v / 60).toFixed(1)}秒` },
+  fall: { v: [25, 15, 8, 0], f: v => `落下ダメージ ${v}` },
+  autoheal: { v: [0, 2, 4, 6], f: v => `3秒ごとに +${v}` },
+  heart: { v: [0, 15, 25, 35], f: v => `ハート回復 +${v}` },
+  guts: { v: [0, 1, 2, 3], f: v => `1ステージ${v}回` },
+  stomp: { v: [0, 1, 2, 3], f: v => `踏みダメージ +${v}` }
+};
+const runLv = k => Math.min(3, runBoost(k));
+const runVal = k => RUN_UP[k].v[runLv(k)];
 const curRun = () => storySave[COOP_LV].run;
 const inRun = () => COOP && storyIdx !== EX_IDX && !!curRun();
 const runBoost = k => inRun() ? (curRun().boosts[k] || 0) : 0;
@@ -155,9 +172,10 @@ function newRun() { storySave[COOP_LV].run = { stage: 0, deck: START_DECK.slice(
 function runCharacter(base) {
   if (!inRun()) return base;
   const b = curRun().boosts, ch = Object.assign({}, base);
-  ch.maxHp = base.maxHp + 20 * (b.hp || 0);
-  ch.runSpeed = base.runSpeed + 0.25 * (b.spd || 0);
-  ch.jumpV = base.jumpV + 0.6 * (b.jump || 0);
+  const v = k => RUN_UP[k].v[Math.min(3, b[k] || 0)];
+  ch.maxHp = base.maxHp + v('hp');
+  ch.runSpeed = base.runSpeed + v('spd');
+  ch.jumpV = base.jumpV + v('jump');
   return ch;
 }
 // ごほうびの候補を3つ（サポーターのカードがまだ残っていれば、少なくとも1枚は入れる）
@@ -167,20 +185,24 @@ function rollRewards(run) {
   const boosts = shuffle(Object.keys(BOOSTS).filter(k => (run.boosts[k] || 0) < BOOSTS[k].max && (!BOOSTS[k].needs || BOOSTS[k].needs.some(c => run.deck.includes(c)))).map(k => ({ type: 'boost', id: k })));
   const ups = shuffle(run.deck.filter(id => CARD_UP[id] && ((run.ups || {})[id] || 0) < UP_MAX).map(id => ({ type: 'up', id, lv: ((run.ups || {})[id] || 0) + 1 })));
   // 1枚目：サポーター側（カード・アップグレード・強化）／2枚目：ランナーの強化／3枚目：なんでも。種類ごとに同じくらいの確率で
-  const pools = { card: cards, up: ups, sup: boosts.filter(r => BOOSTS[r.id].who !== 'runner'), run: boosts.filter(r => BOOSTS[r.id].who === 'runner') };
+  // ランナーの強化：まだ持っていないもの（run）と、持っているもののアップグレード（rup）
+  const runNew = boosts.filter(r => BOOSTS[r.id].who === 'runner' && !run.boosts[r.id]);
+  const rups = boosts.filter(r => BOOSTS[r.id].who === 'runner' && run.boosts[r.id]).map(r => ({ type: 'rup', id: r.id, lv: Math.min(3, run.boosts[r.id]) + 1 }));
+  const pools = { card: cards, up: ups, sup: boosts.filter(r => BOOSTS[r.id].who !== 'runner'), run: runNew, rup: rups };
   const pickFrom = keys => { const ks = keys.filter(k => pools[k].length); return ks.length ? pools[ks[Math.floor(Math.random() * ks.length)]].shift() : null; };
   const out = [];
-  for (const keys of [['card', 'up', 'sup'], ['run'], ['card', 'up', 'sup', 'run']]) { const r = pickFrom(keys); if (r) out.push(r); }
-  const rest = shuffle([].concat(pools.card, pools.up, pools.sup, pools.run));
+  for (const keys of [['card', 'up', 'sup'], ['run', 'rup'], ['card', 'up', 'sup', 'run', 'rup']]) { const r = pickFrom(keys); if (r) out.push(r); }
+  const rest = shuffle([].concat(pools.card, pools.up, pools.sup, pools.run, pools.rup));
   while (out.length < 3 && rest.length) out.push(rest.shift());
   return shuffle(out);
 }
 function applyReward(run, r) {
   if (r.type === 'card') { if (!run.deck.includes(r.id)) run.deck.push(r.id); run.deck.sort((a, b) => SUPPORT_DECK.indexOf(a) - SUPPORT_DECK.indexOf(b)); }
   else if (r.type === 'up') { run.ups = run.ups || {}; run.ups[r.id] = Math.min(UP_MAX, (run.ups[r.id] || 0) + 1); }
+  else if (r.type === 'rup') run.boosts[r.id] = Math.min(3, (run.boosts[r.id] || 0) + 1);
   else run.boosts[r.id] = (run.boosts[r.id] || 0) + 1;
 }
-const rewardName = r => r.type === 'card' ? CARD[r.id].name : r.type === 'up' ? `${CARD[r.id].name} ${stars(r.lv)}` : BOOSTS[r.id].name;
+const rewardName = r => r.type === 'card' ? CARD[r.id].name : r.type === 'up' ? `${CARD[r.id].name} ${stars(r.lv)}` : r.type === 'rup' ? `${BOOSTS[r.id].name} ${stars(r.lv - 1)}` : BOOSTS[r.id].name;
 // メダル：銀＝クリア / 金＝Sランク / 虹＝ノーダメージ。表示するのはいちばん良い色の1枚だけ
 const MEDAL_ORDER = ['silver', 'gold', 'rainbow'];
 const MEDAL_JP = { silver: ['銀', 'クリア'], gold: ['金', 'Sランク'], rainbow: ['虹', 'ノーダメージ'] };
