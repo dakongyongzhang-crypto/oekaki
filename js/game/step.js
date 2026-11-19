@@ -65,11 +65,6 @@ function step() {
     for (const e of enemies) if (!e.dead) updateEnemy(e);
     enemies = enemies.filter(e => !e.dead);
     if (spawnQueue.length) { enemies.push(...spawnQueue); spawnQueue = []; }
-    if (crumbling.length) crumbling = crumbling.filter(i => {
-      if (tiles[i] !== 3 || paintKind[i] !== 8) return false;
-      if (tick < paintExp[i]) return true;
-      tiles[i] = 0; burst((i % LW) * T + T / 2, ((i / LW) | 0) * T + T / 2, INKS[paintCol[i]], 4, 2); return false;
-    });
     if (!(effects.freeze > 0)) updateBullets();
     if (painting && lastPaint) { const w = { x: bwx(hover.sx), y: bwy(hover.sy) }; if (dist(w.x, w.y, lastPaint.x, lastPaint.y) > 3) { paintLine(lastPaint, w); lastPaint = w; } }
     if (tick % 10 === 0) {

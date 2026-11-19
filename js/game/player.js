@@ -59,7 +59,7 @@ function breakCells(cx, cy, R, px, py) {
       const k = tiles[i] === 5 ? 5 : paintKind[i];
       if (tiles[i] === 3 && paintHp[i] > CH.dmg) { paintHp[i] -= CH.dmg; dented++; continue; }
       tiles[i] = 0; broke++;
-      if (broke < 14) burst(c * T + T / 2, r * T + T / 2, (k === 0 || k === 8) ? INKS[paintCol[i]] : KCOL[k], 3, 2.4);
+      if (broke < 14) burst(c * T + T / 2, r * T + T / 2, k === 0 ? INKS[paintCol[i]] : KCOL[k], 3, 2.4);
     }
   }
   if (broke) { ST.broken += broke; SFX.crumble(); popup(px, py, 'ガリッ', C.builder, 18); }
@@ -176,7 +176,7 @@ function updatePlayer() {
   if (p.shield > 0) p.shield--;
 
   // surfaces: ice / bounce / glue / thorn
-  p.onIce = false; let bounce = false, thornX = null, hotX = null;
+  p.onIce = false; let bounce = false, thornX = null;
   if (p.onGround) {
     const r = Math.floor((p.y + p.h + 1) / T);
     for (let c = Math.floor((p.x + 1) / T); c <= Math.floor((p.x + p.w - 1) / T); c++) {
@@ -184,13 +184,11 @@ function updatePlayer() {
       const i = idx(c, r);
       if (tiles[i] === 3) {
         const k = paintKind[i];
-        if (k === 3) p.onIce = true; if (k === 4) bounce = true; if (k === 12) hotX = c * T + T / 2;
-        if (k === 8 && paintHp[i] !== 9) { paintHp[i] = 9; paintExp[i] = tick + 22; crumbling.push(i); SFX.crumble(); }
+        if (k === 3) p.onIce = true; if (k === 4) bounce = true;
       }
     }
   }
   if (effects.slip > 0 && p.onGround) p.onIce = true; // ツルツル：どの床も滑る
-  if (hotX !== null) hurt(10, hotX, 'アチッ!');
   if (bounce) {
     p.vy = -15.5; p.onGround = false; p.coyote = 0; p.squash = 0.7; p.noCut = 30;
     SFX.boing(); burst(p.x + p.w / 2, p.y + p.h, '#33b06a', 6, 2);

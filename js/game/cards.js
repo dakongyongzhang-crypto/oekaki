@@ -11,31 +11,25 @@ const CATS = {
 };
 // paint kinds: 0 ink, 1 hard, 2 thorn, 3 ice, 4 bounce, 5 glue
 const PENS = {
-  pen: { kind: 0, cost: 1.5, life: 30, hp: 1, solid: true },
-  thick: { kind: 0, cost: 1.2, life: 30, hp: 1, solid: true, thick: true },
+  pen: { kind: 0, cost: 1.5, life: 10, hp: 1, solid: true },
   hard: { kind: 1, cost: 3, life: 25, hp: 3, solid: true, block: true }, // block = トゲブロックと同じく、クリックで2×2を置くワナ（コストは CARDS 側）
   thorn: { kind: 2, cost: 5, life: 8, hp: 1, solid: true },
-  ice: { kind: 3, cost: 1.5, life: 25, hp: 1, solid: true },
-  bounce: { kind: 4, cost: 2, life: 25, hp: 1, solid: true },
-  glue: { kind: 5, cost: 1.2, life: 20, hp: 1, solid: false },
-  crumble: { kind: 8, cost: 1, life: 30, hp: 1, solid: true },
-  eraser: { kind: 6, cost: 3, life: 12, hp: 0, erase: true },
+  ice: { kind: 3, cost: 1.5, life: 10, hp: 1, solid: true },
+  bounce: { kind: 4, cost: 2, life: 10, hp: 1, solid: true },
+  glue: { kind: 5, cost: 1.2, life: 10, hp: 1, solid: false },
+  eraser: { kind: 6, cost: 3, life: 10, hp: 0, erase: true },
   quick: { kind: 0, cost: 0.6, life: 6, hp: 1, solid: true },
-  hot: { kind: 12, cost: 2, life: 20, hp: 1, solid: true },
   clear: { kind: 13, cost: 3, life: 25, hp: 1, solid: true, block: true, size: 1 } // size = ブロックの大きさ（マス。ないときは2×2）
 };
-// ペンの種類ごとの色（0:インク 1:かたい 2:トゲ 3:氷 4:バネ 5:ネバネバ 6:消しゴム 7:コンベア 8:くずれ 9:板 10:足場 11:（未使用） 12:アツアツ 13:すけすけ 14:（未使用））
+// ペンの種類ごとの色（0:インク 1:かたい 2:トゲ 3:氷 4:バネ 5:ネバネバ 6:消しゴム 7:（未使用） 8:（未使用） 9:板 10:足場 11:（未使用） 12:（未使用） 13:すけすけ 14:（未使用））
 const KCOL = ['#2a5bd7', '#5a6072', '#e0313f', '#9fe0f4', '#33b06a', '#a0703f', '#f7a8c4', '#7a8091', '#8fa6d9', '#c99a68', '#8fd8a8', '#3d4250', '#ff7a3d', '#c7d3e6', '#ff5ca8'];
 const CARDS = [
-  { id: 'pen', cat: 'pen', name: 'ペン', desc: 'なぞった線が壁になる。30秒で消える' },
-  { id: 'thick', cat: 'pen', name: '太ペン', desc: '太い線で一気に壁を作れる' },
-  { id: 'ice', cat: 'pen', name: '氷ペン', desc: '乗るとツルツル滑って止まれない足場' },
-  { id: 'bounce', cat: 'pen', name: 'バネペン', desc: '乗ると高く跳ね上げられる。トゲとの組み合わせに' },
-  { id: 'glue', cat: 'pen', name: 'ネバネバペン', desc: '通り抜けられるが、中では動きもジャンプも鈍る' },
-  { id: 'crumble', cat: 'pen', name: 'くずれペン', desc: '見た目はふつうの壁。乗ると一瞬で崩れる' },
-  { id: 'eraser', cat: 'pen', name: '消しゴム', desc: '地面を消して穴をあける。12秒で元に戻る' },
+  { id: 'pen', cat: 'pen', name: 'ペン', desc: 'なぞった線が壁になる。10秒で消える' },
+  { id: 'ice', cat: 'pen', name: '氷ペン', desc: '乗るとツルツル滑って止まれない足場。10秒で消える' },
+  { id: 'bounce', cat: 'pen', name: 'バネペン', desc: '乗ると高く跳ね上げられる。トゲとの組み合わせに。10秒で消える' },
+  { id: 'glue', cat: 'pen', name: 'ネバネバペン', desc: '通り抜けられるが、中では動きもジャンプも鈍る。10秒で消える' },
+  { id: 'eraser', cat: 'pen', name: '消しゴム', desc: '地面を消して穴をあける。10秒で元に戻る' },
   { id: 'quick', cat: 'pen', name: 'はやがきペン', desc: 'とても安く描けるが、6秒で消えてしまう' },
-  { id: 'hot', cat: 'pen', name: 'アツアツペン', desc: '上に乗るとやけどする床。20秒で消える' },
   { id: 'walker', cat: 'enemy', name: 'ノシノシ', cost: 20, desc: '左右に歩いて往復する基本の敵' },
   { id: 'hopper', cat: 'enemy', name: 'ピョンタ', cost: 25, desc: 'ランナーめがけて跳ねてくる' },
   { id: 'flyer', cat: 'enemy', name: 'パタパタ', cost: 30, desc: '空を飛んで追いかけてくる' },

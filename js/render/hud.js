@@ -37,14 +37,14 @@ function drawGhost() {
   }
   if (isDrawPen(tool)) {
     const pen = PENS[tool], c = Math.floor(wx / T), r = Math.floor(wy / T);
-    const cells = pen.thick ? [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]] : [[0, 0]];
+    const cells = [[0, 0]];
     let any = false;
     for (const [dx, dy] of cells) {
       const why = cellBlocked(c + dx, r + dy, tool); const ok = !why; any = any || ok;
       g.strokeStyle = ok ? C.builder : C.bad; g.lineWidth = 2; g.strokeRect((c + dx) * T + 1, (r + dy) * T + 1, T - 2, T - 2);
     }
     g.beginPath(); g.arc(wx, wy, 4, 0, TAU); g.fillStyle = any ? C.builder : C.bad; g.fill();
-    ghostLabel(`${card.name}  ${card.costLabel}`, wx, r * T - (pen.thick ? 26 : 6), any);
+    ghostLabel(`${card.name}  ${card.costLabel}`, wx, r * T - 6, any);
   } else if (card.cat === 'special' || card.cat === 'support' || tool === 'shadow') {
     const pl = placementFor(tool, wx, wy);
     if (SUPPORT_BLOCKS[tool]) {

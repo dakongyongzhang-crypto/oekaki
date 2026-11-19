@@ -44,15 +44,6 @@ function drawPaintCell(ctx, kind, cx, cy, rad, ink, hp) {
       ctx.stroke();
       break;
     }
-    case 8: {
-      const j = hp === 9 ? (Math.random() - 0.5) * 3 : 0;
-      ctx.save(); if (hp === 9) ctx.globalAlpha *= 0.6;
-      ctx.fillStyle = ink; ctx.beginPath(); ctx.arc(cx + j, cy, rad, 0, TAU); ctx.fill();
-      ctx.fillStyle = 'rgba(255,255,255,0.5)';
-      for (const [dx, dy] of [[-0.35, -0.2], [0.25, 0.3], [0.1, -0.45]]) { ctx.beginPath(); ctx.arc(cx + j + dx * rad, cy + dy * rad, 1.3, 0, TAU); ctx.fill(); }
-      ctx.restore();
-      break;
-    }
     case 10: {
       const s = rad * 0.86; rrect(ctx, cx - s, cy - s, s * 2, s * 2, 4);
       ctx.fillStyle = '#8fd8a8'; ctx.fill(); ctx.strokeStyle = '#2a7d4a'; ctx.lineWidth = 1.6; ctx.stroke();
@@ -95,7 +86,7 @@ function drawCardIcon(ctx, id, W, H) {
       rrect(ctx, -12 * k, -7 * k, 24 * k, 14 * k, 3); ctx.fillStyle = '#ffffff'; ctx.fill(); ctx.strokeStyle = C.ink; ctx.lineWidth = 1.6; ctx.stroke();
       rrect(ctx, 2 * k, -7 * k, 10 * k, 14 * k, 3); ctx.fillStyle = '#f7a8c4'; ctx.fill(); ctx.stroke();
     } else {
-      const r = 6.4 * k, pts = pen.thick ? [[0.18, 0.72], [0.3, 0.58], [0.42, 0.44], [0.18, 0.5], [0.32, 0.8], [0.44, 0.66]] : [[0.18, 0.72], [0.32, 0.56], [0.46, 0.4]];
+      const r = 6.4 * k, pts = [[0.18, 0.72], [0.32, 0.56], [0.46, 0.4]];
       for (const [px, py] of pts) drawPaintCell(ctx, pen.kind, W * px, H * py, r, INKS[0], 3);
       ctx.translate(W * 0.74, H * 0.18); ctx.rotate(0.7);
       ctx.fillStyle = '#ffe58a'; ctx.strokeStyle = C.ink; ctx.lineWidth = 1.5;

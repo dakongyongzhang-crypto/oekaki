@@ -270,7 +270,6 @@ function paintCell(c, r) {
 function paintAt(wx, wy) {
   const c = Math.floor(wx / T), r = Math.floor(wy / T);
   paintCell(c, r);
-  if (PENS[tool].thick) { paintCell(c + 1, r); paintCell(c - 1, r); paintCell(c, r + 1); paintCell(c, r - 1); }
 }
 function paintLine(a, b) {
   if (!a) { paintAt(b.x, b.y); return; }

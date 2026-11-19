@@ -29,7 +29,7 @@ const farBehind = e => stage.vertical ? e.y > camY + VWH + 500 : e.x < camX - 52
 const reachedGoal = () => bossInfo ? false : stage.vertical ? (P.onGround && P.y + P.h <= goalY + 1) : (P.x + P.w >= goalX + 4);
 function progress() { return stage.vertical ? clamp((ST.startY - P.y) / (ST.startY - (goalY - P.h)), 0, 1) : clamp((P.x - ST.startX) / (goalX - ST.startX), 0, 1); }
 const thornCells = (wx, wy) => { const c = Math.round(wx / T) - 1, r = Math.round(wy / T) - 1; return [[c, r], [c + 1, r], [c, r + 1], [c + 1, r + 1]]; };
-let trail = [], spawnQueue = [], crumbling = [], shadowSpr = null, shadowFor = null;
+let trail = [], spawnQueue = [], shadowSpr = null, shadowFor = null;
 let ST = {}; const SCORE = { runner: 0, builder: 0 }; let lastResult = null;
 
 const idx = (c, r) => r * LW + c;
