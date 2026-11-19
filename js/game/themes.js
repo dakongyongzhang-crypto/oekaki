@@ -13,7 +13,7 @@
    ===================================================== */
 const THEME = {
   meadow: { name: 'そよ風', desc: 'ときどき強い風がふいて、ランナーが横に流される' },
-  forest: { name: '木のかげ', desc: '手前の木の葉が視界をさえぎる。葉っぱのうしろに敵がかくれていることも' },
+  forest: { name: '木のかげ', desc: '手前の木の葉で先が見えにくい。ランナーやP2のカーソルが近づくと葉っぱが透ける' },
   canyon: { name: '落石', desc: 'ときどき上から岩が落ちてくる。赤い点線と影が見えたら、そこからはなれよう' },
   cave: { name: 'まっくらな洞くつ', desc: '暗闇と低い天井。P2のカーソルのまわりだけが明るい' },
   ice: { name: 'こおりの床', desc: '地面がこおっていて、つるつる滑る。止まりたいところの少し手前で手をはなそう' },
@@ -33,11 +33,11 @@ function themeGen(rng) {
     m.w = 3 * T; m.y = (m.row + 1) * T; m.x0 = m.c0 * T; m.x1 = (m.c0 + m.pw) * T - m.w; m.x = m.x0; m.spd = 1.15; m.ph = Math.floor(rng() * 400);
   }
   if (curTheme() === 'forest') { // 手前の木の葉のかたまり
-    for (let x = 520 + rng() * 200; x < WW - 300; x += 300 + rng() * 260) {
+    for (let x = 560 + rng() * 200; x < WW - 300; x += 440 + rng() * 280) { // まばらに
       const c = Math.floor(x / T); let r = 0; while (r < ROWS - 1 && !solid(c, r)) r++;
-      const gy = r * T, rad = 80 + rng() * 50;
-      const blobs = []; for (let k = 0; k < 7; k++) blobs.push([(rng() - 0.5) * rad * 1.6, (rng() - 0.5) * rad * 0.9, rad * (0.45 + rng() * 0.35)]);
-      foliage.push({ x, y: gy - 40 - rng() * 110, rad, blobs }); // ランナーが走る高さにかかるように
+      const gy = r * T, rad = 58 + rng() * 32;
+      const blobs = []; for (let k = 0; k < 5; k++) blobs.push([(rng() - 0.5) * rad * 1.4, (rng() - 0.5) * rad * 0.8, rad * (0.45 + rng() * 0.3)]);
+      foliage.push({ x, y: gy - 80 - rng() * 100, rad, blobs }); // ジャンプの高さあたりにかかる
     }
   }
 }
@@ -122,10 +122,13 @@ function drawThemeFront() {
   if (th === 'forest') {
     for (const f of foliage) {
       if (f.x + f.rad * 2 < viewX || f.x - f.rad * 2 > viewX + VWW) continue;
-      const inside = P && Math.abs(P.x + P.w / 2 - f.x) < f.rad && Math.abs(P.y + P.h / 2 - f.y) < f.rad * 0.7;
-      g.save(); g.globalAlpha = inside ? 0.55 : 0.93;
-      for (const [dx, dy, r] of f.blobs) { g.beginPath(); g.arc(f.x + dx, f.y + dy, r, 0, TAU); g.fillStyle = '#3f8a4c'; g.fill(); }
-      for (const [dx, dy, r] of f.blobs) { g.beginPath(); g.arc(f.x + dx - r * 0.25, f.y + dy - r * 0.25, r * 0.55, 0, TAU); g.fillStyle = '#5aa865'; g.fill(); }
+      // ランナーやP2のカーソルが近いほど透ける（遠くの葉っぱだけが視界をじゃまする）
+      const near = (x, y) => clamp((Math.hypot((x - f.x) / 1.3, y - f.y) - f.rad * 0.5) / (f.rad * 1.6), 0, 1);
+      let k = P ? near(P.x + P.w / 2, P.y + P.h / 2) : 1;
+      if (hover.on) k = Math.min(k, near(bwx(hover.sx), bwy(hover.sy)));
+      g.save(); g.globalAlpha = 0.2 + 0.45 * k;
+      g.beginPath(); for (const [dx, dy, r] of f.blobs) { g.moveTo(f.x + dx + r, f.y + dy); g.arc(f.x + dx, f.y + dy, r, 0, TAU); } g.fillStyle = '#3f8a4c'; g.fill(); // 重なっても濃くならないよう1回でぬる
+      g.beginPath(); for (const [dx, dy, r] of f.blobs) { g.moveTo(f.x + dx - r * 0.25 + r * 0.5, f.y + dy - r * 0.25); g.arc(f.x + dx - r * 0.25, f.y + dy - r * 0.25, r * 0.5, 0, TAU); } g.fillStyle = '#5aa865'; g.fill();
       g.strokeStyle = 'rgba(30,70,38,0.6)'; g.lineWidth = 2; for (const [dx, dy, r] of f.blobs) { g.beginPath(); g.arc(f.x + dx, f.y + dy, r, Math.PI * 0.1, Math.PI * 0.9); g.stroke(); }
       g.restore();
     }
