@@ -103,7 +103,14 @@ const PRESET = ['pen', 'walker', 'hopper', 'flyer', 'spike', 'cannon', 'slime', 
 let DECK = PRESET.slice();
 // 協力モードでP2（サポーター）が使うカード
 // サポーターのブロック（クリック1回で決まった形を置く）
-const SUPPORT_BLOCKS = { s_pen: { w: 3, kind: 10, life: 20 }, s_cloud: { w: 3, plank: true, life: 15 }, s_bounce: { w: 2, kind: 4, life: 20 } };
+// sh = 形（左下を[0,0]としたマスの並び。上は -1）。ないときは横 w マス
+const SUPPORT_BLOCKS = {
+  s_pen: { w: 3, kind: 10, life: 20 }, s_cloud: { w: 3, plank: true, life: 15 }, s_bounce: { w: 2, kind: 4, life: 20 },
+  s_long: { w: 5, kind: 10, life: 15 }, s_bridge: { w: 6, plank: true, life: 12 }, s_bigpad: { w: 4, kind: 4, life: 15 },
+  s_stairs: { w: 3, kind: 10, life: 18, sh: [[0, 0], [1, 0], [1, -1], [2, 0], [2, -1], [2, -2]] },
+  s_wall: { w: 1, kind: 10, life: 12, sh: [[0, 0], [0, -1], [0, -2]] }
+};
+const blockShape = b => b.sh || Array.from({ length: b.w }, (_, i) => [i, 0]);
 const SUPPORT_CARDS = [
   { id: 's_pen', cat: 'support', name: '足場ブロック', cost: 7, desc: 'クリックで横3マスの足場を置く。20秒で消える' },
   { id: 's_cloud', cat: 'support', name: 'くもブロック', cost: 5, desc: '下からすり抜けられる横3マスの足場。15秒で消える' },
@@ -112,8 +119,35 @@ const SUPPORT_CARDS = [
   { id: 's_shield', cat: 'support', name: 'バリア', cost: 90, desc: '4秒間ランナーがダメージを受けない' },
   { id: 's_speed', cat: 'support', name: 'スピードアップ', cost: 40, desc: '5秒間ランナーの足とジャンプが強くなる' },
   { id: 's_bomb', cat: 'support', name: 'おたすけボム', cost: 30, desc: 'クリックした場所の敵とCPUの壁をまとめて吹き飛ばす。1ページ3回まで' },
-  { id: 's_freeze', cat: 'support', name: 'ストップ', cost: 55, desc: '3秒間すべての敵と弾を止めて無害にする。1ページ3回まで' }
+  { id: 's_freeze', cat: 'support', name: 'ストップ', cost: 55, desc: '3秒間すべての敵と弾を止めて無害にする。1ページ3回まで' },
+  // ---- 冒険のごほうびで増えるカード ----
+  { id: 's_long', cat: 'support', name: '長い足場', cost: 11, desc: '横5マスの長い足場を置く。15秒で消える' },
+  { id: 's_bridge', cat: 'support', name: 'くもの橋', cost: 9, desc: '下からすり抜けられる横6マスの橋。12秒で消える' },
+  { id: 's_bigpad', cat: 'support', name: '大きなジャンプ台', cost: 14, desc: '横4マスのジャンプ台。15秒で消える' },
+  { id: 's_stairs', cat: 'support', name: 'かいだんブロック', cost: 10, desc: '3段の階段を置く。高い段差もラクラク。18秒で消える' },
+  { id: 's_wall', cat: 'support', name: 'かべブロック', cost: 8, desc: '縦3マスのかべ。敵や弾を止める。12秒で消える' },
+  { id: 's_miniheart', cat: 'support', name: 'ちびハート', cost: 15, desc: 'カードを押すだけでランナーのHPが12回復（カーソル不要）' },
+  { id: 's_regen', cat: 'support', name: 'いやしの光', cost: 35, desc: '8秒間、ランナーのHPが少しずつ回復する（合計24）' },
+  { id: 's_timer', cat: 'support', name: 'のびる時計', cost: 50, desc: '制限時間が15秒のびる。1ステージ2回まで' },
+  { id: 's_feather', cat: 'support', name: 'はねの羽', cost: 35, desc: '6秒間ランナーがふわふわになり、遠くまで跳べる' },
+  { id: 's_jump', cat: 'support', name: 'ジャンプアップ', cost: 30, desc: '6秒間ランナーのジャンプが高くなる' },
+  { id: 's_double', cat: 'support', name: 'ジャンプぐつ', cost: 35, desc: '8秒間ランナーが空中でもう1回ジャンプできる' },
+  { id: 's_wind', cat: 'support', name: 'おいかぜ', cost: 25, desc: '6秒間ランナーを前に押す追い風がふく' },
+  { id: 's_cushion', cat: 'support', name: 'クッション', cost: 30, desc: '10秒間、穴に落ちてもダメージを受けない' },
+  { id: 's_spikeboots', cat: 'support', name: 'トゲよけぐつ', cost: 30, desc: '8秒間トゲを踏んでもダメージを受けない' },
+  { id: 's_lamp', cat: 'support', name: 'ランタン', cost: 25, desc: '暗闇を消し、12秒間は暗くならない。暗いステージではランナーのまわりが広く明るくなる' },
+  { id: 's_slow', cat: 'support', name: 'スロー', cost: 40, desc: '6秒間、敵と弾の動きが半分の速さになる' },
+  { id: 's_nojam', cat: 'support', name: '大王おやすみ', cost: 60, desc: '8秒間、消しゴム大王が敵やワナを置けなくなる。1ステージ2回まで' },
+  { id: 's_clear', cat: 'support', name: '弾けし', cost: 15, desc: '画面の中の敵の弾をすべて消す' },
+  { id: 's_shot', cat: 'support', name: 'おたすけ弾', cost: 20, desc: 'ランナーの前に3発のインク弾を撃つ。敵にダメージ' },
+  { id: 's_push', cat: 'support', name: 'ふきとばし', cost: 25, desc: 'クリックした場所のまわりの敵を吹き飛ばして1ダメージ' },
+  { id: 's_thunder', cat: 'support', name: 'かみなり', cost: 45, desc: 'ランナーに近い敵3体に雷を落として3ダメージ。1ステージ3回まで' },
+  { id: 's_column', cat: 'support', name: 'たて消しゴム', cost: 20, desc: 'クリックした場所のたて3列にある大王の壁をまとめて消す' }
 ];
+const SUPPORT_BASIC = ['s_pen', 's_cloud', 's_bounce', 's_heart', 's_shield', 's_speed', 's_bomb', 's_freeze']; // EXステージなどで使う基本のカード
+const SUPPORT_EFFECT = { s_shield: null, s_speed: 'boost', s_freeze: 'freeze', s_regen: 'regen', s_feather: 'float', s_jump: 'jumpup', s_double: 'djump', s_wind: 'tail', s_cushion: 'cushion', s_spikeboots: 'spikeproof', s_lamp: 'lamp', s_slow: 'slow', s_nojam: 'nojam' };
+const SUPPORT_TIME = { s_regen: 8, s_feather: 6, s_jump: 6, s_double: 8, s_wind: 6, s_cushion: 10, s_spikeboots: 8, s_lamp: 12, s_slow: 6, s_nojam: 8 }; // 効果時間（秒）
+const INSTANT_SUPPORT = new Set(['s_heart', 's_miniheart']); // カードを押すだけで使える（カーソル不要）
 SUPPORT_CARDS.forEach(c => { if (c.cat === 'pen') { c.cost = PENS[c.id].cost; c.per = true; } c.costLabel = c.per ? `${c.cost}/マス` : String(c.cost); CARD[c.id] = c; });
 const SUPPORT_DECK = SUPPORT_CARDS.map(c => c.id);
 // CPUジャマーの強さ

@@ -86,7 +86,7 @@ gcv.addEventListener('wheel', e => {
     wheelAcc += e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
     if (Math.abs(wheelAcc) >= 60 && DECK.length) {
       const i = Math.max(0, DECK.indexOf(tool));
-      const order = COOP ? DECK.filter(d => d !== 's_heart') : DECK; // ホイールでは回復を飛ばす（うっかり使わないように）
+      const order = COOP ? DECK.filter(d => !INSTANT_SUPPORT.has(d)) : DECK; // ホイールでは回復を飛ばす（うっかり使わないように）
       const j = Math.max(0, order.indexOf(tool));
       selectTool(order[(j + (wheelAcc > 0 ? 1 : -1) + order.length) % order.length]); wheelAcc = 0;
     }

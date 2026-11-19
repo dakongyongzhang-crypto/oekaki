@@ -106,7 +106,7 @@ function doQuake(pow) { // ドスン：地面をゆらして両側を攻撃
 }
 function fallOut() {
   const p = P;
-  const fd = Math.max(5, 25 - 10 * runBoost('fall')); // 冒険の強化：落下ダメージ軽減
+  const fd = effects.cushion > 0 ? 0 : Math.max(5, 25 - 10 * runBoost('fall')); // 冒険の強化：落下ダメージ軽減。クッション中はダメージなし
   if (!dbg('inv')) { p.hp -= fd; ST.dmg += fd; } shake = 10; SFX.hurt();
   if (p.hp <= 0 && useGuts()) p.hp = 1;
   if (p.hp <= 0) { p.hp = 0; p.y = WH + 200; endRound('builder', '穴に落ちて力尽きた'); return; }
@@ -127,7 +127,7 @@ function fallOut() {
   }
   const zone = { x: p.x - 60, y: p.y - 60, w: p.w + 120, h: p.h + 120 };
   for (const e of enemies) if (!e.dead && e.type !== 'boss' && overlap(zone, e)) { e.dead = true; burst(e.x + e.w / 2, e.y + e.h / 2, ETYPES[e.type].color, 8, 2); }
-  popup(p.x + p.w / 2, p.y - 10, `おちた! -${fd}`, C.bad, 20);
+  popup(p.x + p.w / 2, p.y - 10, fd ? `おちた! -${fd}` : 'クッション！', fd ? C.bad : C.builder, 20);
 }
 function updatePlayer() {
   const p = P, ch = CH;
@@ -149,10 +149,10 @@ function updatePlayer() {
   if (p.jumpBuf > 0) p.jumpBuf--;
   if (p.noCut > 0) p.noCut--;
   if (p.jumpBuf > 0 && p.coyote > 0 && !(p.stuck > 0)) {
-    p.vy = -ch.jumpV * (p.glued ? 0.65 : 1) * (heavy ? 0.68 : 1) * (chill ? 0.85 : 1) * (effects.boost > 0 ? 1.1 : 1); p.coyote = 0; p.jumpBuf = 0; p.onGround = false; p.squash = 0.78;
+    p.vy = -ch.jumpV * (p.glued ? 0.65 : 1) * (heavy ? 0.68 : 1) * (chill ? 0.85 : 1) * (effects.boost > 0 ? 1.1 : 1) * (effects.jumpup > 0 ? 1.2 : 1); p.coyote = 0; p.jumpBuf = 0; p.onGround = false; p.squash = 0.78;
     SFX.jump(); dust(p.x + p.w / 2, p.y + p.h, 4);
-  } else if (p.jumpBuf >= 7 && !p.onGround && p.coyote <= 0 && (p.airJ || 0) < runBoost('djump') && !(p.stuck > 0)) { // 冒険の強化：二段ジャンプ（押した瞬間だけ）
-    p.vy = -ch.jumpV * 0.88 * (heavy ? 0.68 : 1) * (effects.boost > 0 ? 1.1 : 1); p.airJ = (p.airJ || 0) + 1; p.jumpBuf = 0; p.squash = 0.8;
+  } else if (p.jumpBuf >= 7 && !p.onGround && p.coyote <= 0 && (p.airJ || 0) < runBoost('djump') + (effects.djump > 0 ? 1 : 0) && !(p.stuck > 0)) { // 冒険の強化：二段ジャンプ（押した瞬間だけ）
+    p.vy = -ch.jumpV * 0.88 * (heavy ? 0.68 : 1) * (effects.boost > 0 ? 1.1 : 1) * (effects.jumpup > 0 ? 1.2 : 1); p.airJ = (p.airJ || 0) + 1; p.jumpBuf = 0; p.squash = 0.8;
     SFX.jump(); burst(p.x + p.w / 2, p.y + p.h, '#ffffff', 8, 2);
   }
   if (p.onGround) p.airJ = 0;
@@ -163,7 +163,7 @@ function updatePlayer() {
   if (p.slam) p.vy = Math.max(p.vy, 12); // ドスン（空中）：急降下
   const vyPrev = p.vy, prevBottom = p.y + p.h, wasGround = p.onGround;
   const baseVx = p.vx;
-  p.vx = baseVx + p.wind;
+  p.vx = baseVx + p.wind + (effects.tail > 0 && !(p.kb > 0) ? 1.3 : 0); // おいかぜ：前に押す
   const mr = moveEntity(p);
   if (COOP && SPLIT === 's' && p.x < camSlide.to + 2) { p.x = camSlide.to + 2; if (p.vx < 0) p.vx = 0; } // 画面に見えている範囲より左へは戻れない
   p.onLift = null;
@@ -219,7 +219,7 @@ function updatePlayer() {
       if ((tiles[i] === 3 && paintKind[i] === 2) || tiles[i] === 8) thornX = c * T + T / 2;
     }
   }
-  if (thornX !== null) hurt(12, thornX, 'チクッ!');
+  if (thornX !== null && !(effects.spikeproof > 0)) hurt(12, thornX, 'チクッ!'); // トゲよけぐつ中は平気
 
   if (p.atkCd > 0) p.atkCd--;
   if (atkPressed && (COOP || effects.seal > 0)) { if (tick - (p.noAtkT || 0) > 50) { popup(p.x + p.w / 2, p.y - 10, '攻撃できない！', C.bad, 16); p.noAtkT = tick; } }

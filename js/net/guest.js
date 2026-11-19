@@ -21,7 +21,7 @@ async function netStartMirror(m) {
       Object.assign(MATCH, { on: true, target: m.match.target, round: m.match.round, runner: m.match.runner, over: false, history: m.match.history || [] });
       m.match.wins.forEach((w, i) => { MATCH.players[i].wins = w; });
     } else MATCH.on = false;
-  } else { MATCH.on = false; DECK = (m.deck && m.deck.length ? m.deck : SUPPORT_DECK).slice(); }
+  } else { MATCH.on = false; DECK = (m.deck && m.deck.length ? m.deck : SUPPORT_BASIC).slice(); }
   applyCardLevels(COOP && m.up || {}); // ホストの冒険のカード（アップグレード込み）
   SFX.init(); updateRoleLabels(); netApplyRoleClasses();
   $('#guestHint').textContent = COOP ? 'P2 サポーター：画面をクリックしてブロックを置く／ホイールか1〜8キーでカード切り替え'

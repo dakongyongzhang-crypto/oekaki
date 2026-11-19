@@ -54,10 +54,11 @@ function drawGhost() {
         else drawPaintCell(g, SUPPORT_BLOCKS[tool].kind, c * T + T / 2, r * T + T / 2, T * 0.62, INKS[0], 1);
       }
       g.globalAlpha = 1;
-      g.setLineDash([4, 4]); g.strokeStyle = pl.ok ? '#2a9d5c' : C.bad; g.lineWidth = pl.snapped ? 3 : 2; g.strokeRect(pl.x - 2, pl.y - 2, pl.all.length * T + 4, T + 4); g.setLineDash([]);
-      ghostLabel(pl.ok ? `${card.name}  ${pl.cost}${pl.snapped ? '　ぴったり！' : ''}` : pl.why, pl.x + pl.all.length * T / 2, pl.y - 10, pl.ok);
+      g.setLineDash([4, 4]); g.strokeStyle = pl.ok ? '#2a9d5c' : C.bad; g.lineWidth = pl.snapped ? 3 : 2; g.strokeRect(pl.x - 2, pl.y - 2, pl.w * T + 4, pl.h * T + 4); g.setLineDash([]);
+      ghostLabel(pl.ok ? `${card.name}  ${pl.cost}${pl.snapped ? '　ぴったり！' : ''}` : pl.why, pl.x + pl.w * T / 2, pl.y - 10, pl.ok);
       g.restore(); return;
     }
+    if (tool === 's_push' || tool === 's_column') { g.setLineDash([6, 6]); g.strokeStyle = 'rgba(42,157,92,0.7)'; g.lineWidth = 2; if (tool === 's_push') { g.beginPath(); g.arc(wx, wy, 110, 0, TAU); g.stroke(); } else g.strokeRect((Math.floor(wx / T) - 1) * T, 0, 3 * T, WH); g.setLineDash([]); }
     if (tool === 's_bomb') { g.setLineDash([6, 6]); g.strokeStyle = 'rgba(42,157,92,0.7)'; g.lineWidth = 2; g.beginPath(); g.arc(wx, wy, 90, 0, TAU); g.stroke(); g.setLineDash([]); }
     if (tool === 's_heart') { g.globalAlpha = 0.6; drawHeart(g, wx, wy, 11); g.fillStyle = '#f27eb1'; g.fill(); g.globalAlpha = 1; }
     g.beginPath(); g.arc(wx, wy, 14, 0, TAU); g.strokeStyle = pl.ok ? C.builder : C.bad; g.lineWidth = 2; g.setLineDash([4, 4]); g.stroke(); g.setLineDash([]);
@@ -167,6 +168,7 @@ function drawHUD() {
   if (effects.slip > 0) tags.push(`ツルツル ${Math.ceil(effects.slip / 60)}`);
   if (effects.float > 0) tags.push(`ふわふわ ${Math.ceil(effects.float / 60)}`);
   if (effects.seal > 0) tags.push(`ふういん ${Math.ceil(effects.seal / 60)}`);
+  for (const [k, nm] of [['regen', 'いやし'], ['jumpup', 'ジャンプ↑'], ['djump', '2段ジャンプ'], ['tail', 'おいかぜ'], ['cushion', 'クッション'], ['spikeproof', 'トゲよけ'], ['lamp', 'ランタン'], ['slow', 'スロー'], ['nojam', '大王おやすみ']]) if (effects[k] > 0) tags.push(`${nm} ${Math.ceil(effects[k] / 60)}`);
   if (P.chill > 0) tags.push('ひえひえ');
   if (P.stuck > 0) tags.push('トリモチ');
   if (P.glued) tags.push('ネバネバ');

@@ -759,3 +759,5 @@ body.mobile.land #scr-story .si-hint{font-size:12px;margin:2px 0 4px}
 .rw-pick.up{background:#fff4c9}
 .rw-pick.up .rw-desc b{color:#c0392b}
 .tlv{color:#e0a100;margin-left:2px;font-size:.9em;letter-spacing:-1px;text-shadow:0 0 1px #8a6200}
+/* サポーターのカードが9枚以上：横に並べてスクロール（ホイールでもカード切り替え可） */
+.game-body:not(.side) .tools.many{grid-auto-flow:column;grid-template-columns:none;grid-auto-columns:calc((100% - 7 * 6px) / 8.4);overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;padding-bottom:2px}

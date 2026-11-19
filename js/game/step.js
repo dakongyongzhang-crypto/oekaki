@@ -50,7 +50,9 @@ function step() {
     if (effects.heavy > 0) effects.heavy--;
     if (effects.boost > 0) effects.boost--;
     if (effects.freeze > 0) effects.freeze--;
-    for (const k of ['slip', 'float', 'seal']) if (effects[k] > 0) effects[k]--;
+    for (const k of ['slip', 'float', 'seal', 'regen', 'jumpup', 'djump', 'tail', 'cushion', 'spikeproof', 'lamp', 'slow', 'nojam']) if (effects[k] > 0) effects[k]--;
+    if (effects.lamp > 0) effects.dark = 0; // ランタン：暗くならない
+    if (effects.regen > 0 && state === 'play' && effects.regen % 20 === 0 && P.hp > 0 && P.hp < P.maxHp) P.hp = Math.min(P.maxHp, P.hp + 1); // いやしの光
     for (const k in cardCd) if (cardCd[k] > 0) cardCd[k]--;
   }
   if (state === 'play' && lifts.length) updateLifts();
@@ -58,14 +60,15 @@ function step() {
   if (state === 'play' && bossInfo && !bossInfo.spawned && P.x > bossInfo.arenaStart) spawnBoss();
   if (state === 'play' && bossInfo && !bossCut && overlap(P, { x: bossInfo.sx - 18, y: bossInfo.sy - 62, w: 36, h: 62 })) triggerBossSwitch();
   if (state === 'cutscene') stepBossCut();
-  if (COOP && state === 'play' && !dbg('noCpu') && !(bossInfo && P.x > bossInfo.arenaStart - 200)) cpuUpdate();
+  if (COOP && state === 'play' && !dbg('noCpu') && !(effects.nojam > 0) && !(bossInfo && P.x > bossInfo.arenaStart - 200)) cpuUpdate(); // 大王おやすみ中は置かない
   if (state === 'play' && timeLeft === 15 * 60) { BGM.setTempo(1.2); banner = { text: 'あと15秒！', life: 50, color: C.runner }; }
   if (state === 'countdown') atkPressed = false;
   if (state === 'play' || state === 'countdown') {
-    for (const e of enemies) if (!e.dead) updateEnemy(e);
+    const slowSkip = effects.slow > 0 && tick % 2 === 1; // スロー：敵と弾は2回に1回だけ動く
+    if (!slowSkip) for (const e of enemies) if (!e.dead) updateEnemy(e);
     enemies = enemies.filter(e => !e.dead);
     if (spawnQueue.length) { enemies.push(...spawnQueue); spawnQueue = []; }
-    if (!(effects.freeze > 0)) updateBullets();
+    if (!(effects.freeze > 0) && !slowSkip) updateBullets();
     if (painting && lastPaint) { const w = { x: bwx(hover.sx), y: bwy(hover.sy) }; if (dist(w.x, w.y, lastPaint.x, lastPaint.y) > 3) { paintLine(lastPaint, w); lastPaint = w; } }
     if (tick % 10 === 0) {
       for (let i = 0; i < tiles.length; i++) {

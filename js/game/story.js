@@ -99,7 +99,7 @@ const BOOSTS = {
   stomp: { who: 'runner', name: 'ふみつけ強化', desc: '敵を踏んだときのダメージが +1', mark: '▼', max: 3 },
   regen: { who: 'support', name: 'エネルギー回復アップ', desc: 'サポーターのエネルギーがたまる速さ +15%', mark: '⚡', max: 5 },
   energy: { who: 'support', name: 'スタートエネルギー', desc: 'ステージ開始時のエネルギーが +20', mark: '★', max: 2 },
-  uses: { who: 'support', name: '使用回数アップ', desc: 'ボム・ストップ・ハートを使える回数が +1', mark: '＋', max: 3, needs: ['s_heart', 's_bomb', 's_freeze'] }
+  uses: { who: 'support', name: '使用回数アップ', desc: '回数に限りのあるカード（ボム・ストップ・ハートなど）を使える回数が +1', mark: '＋', max: 3, needs: ['s_heart', 's_bomb', 's_freeze', 's_timer', 's_nojam', 's_thunder'] }
 };
 // カードのアップグレード（★1・★2）：コストが下がり、効果が強くなる。[ふつう, ★1, ★2]
 const CARD_UP = {

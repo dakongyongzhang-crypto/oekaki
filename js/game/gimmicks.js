@@ -81,7 +81,7 @@ function drawDarkZones() {
   c.fillStyle = 'rgba(10,11,18,0.97)'; c.fillRect(0, 0, VWW, VWH);
   c.globalCompositeOperation = 'destination-out';
   const hole = (x, y, r) => { const gr = c.createRadialGradient(x, y, r * 0.4, x, y, r); gr.addColorStop(0, 'rgba(0,0,0,1)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = gr; c.beginPath(); c.arc(x, y, r, 0, TAU); c.fill(); };
-  hole(P.x + P.w / 2 - viewX, P.y + P.h / 2 - viewY, 64);
+  hole(P.x + P.w / 2 - viewX, P.y + P.h / 2 - viewY, effects.lamp > 0 ? 230 : 64); // ランタン中はランナーのまわりが広く明るい
   if (hover.on) hole(bwx(hover.sx) - viewX, bwy(hover.sy) - viewY, 150);
   c.globalCompositeOperation = 'source-over';
   g.save(); g.beginPath();

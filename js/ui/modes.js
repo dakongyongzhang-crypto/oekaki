@@ -122,7 +122,7 @@ function showStory() {
     const st = EX_PAGE, locked = !exUnlocked();
     intro.innerHTML = `<div class="si-head"><span class="si-page">EXステージ</span><h3 class="hand">${locked ? '？？？' : st.name}</h3></div>
       <div class="si-text">${locked ? '<p>15ステージの冒険を最後までクリアすると解放されます。とても難しいステージです。</p>' : st.story.map(t => `<p>${t}</p>`).join('')}</div>
-      ${locked ? '' : `<p class="si-meta">制限時間：${st.time}秒　大王の強さ：${CPU_LV[COOP_LV].name}　サポーターはすべてのカードを使えます（冒険のごほうびは使いません）</p><p class="si-hint">ヒント：${st.hint}</p>`}
+      ${locked ? '' : `<p class="si-meta">制限時間：${st.time}秒　大王の強さ：${CPU_LV[COOP_LV].name}　サポーターは基本の8枚のカードを使います（冒険のごほうびは使いません）</p><p class="si-hint">ヒント：${st.hint}</p>`}
       <div class="si-btns"><button class="btn blue big" id="btnStoryGo"${locked ? ' disabled' : ''}>${locked ? 'ロック中' : 'EXステージに挑戦'}</button><button class="btn" id="btnStoryBack">冒険にもどる</button></div>`;
     $('#btnStoryGo').addEventListener('click', () => { if (exUnlocked()) startStoryPage(EX_IDX); });
     $('#btnStoryBack').addEventListener('click', () => { storySel = 0; showStory(); });
@@ -213,7 +213,7 @@ $('#btnNextPage').addEventListener('click', () => {
 });
 $('#btnStoryMap').addEventListener('click', () => { $('#result').classList.add('hidden'); storySel = storyIdx === EX_IDX ? EX_IDX : 0; showStory(); });
 function startCoopGame() {
-  DECK = inRun() ? curRun().deck.slice() : SUPPORT_DECK.slice(); // 冒険中は集めたカードだけ（EXステージは全部）
+  DECK = inRun() ? curRun().deck.slice() : SUPPORT_BASIC.slice(); // 冒険中は集めたカードだけ（EXステージは基本の8枚）
   applyCardLevels(runUps()); // 冒険中はアップグレードしたカードの性能で
   SFX.init(); updateRoleLabels();
   show('scr-game'); buildToolbar(); resizeGame(); resetRound();

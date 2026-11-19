@@ -44,17 +44,18 @@ function placementBase(id, wx, wy) {
   const card = CARD[id];
   if (SUPPORT_BLOCKS[id]) {
     // おすすめ場所の近くなら自動でぴったり合わせる。ふさがっているマスは飛ばして、置けるマスだけに置く（コストもその分だけ）
-    const b = SUPPORT_BLOCKS[id], sn = snapBlock(id, wx, wy);
-    const c0 = sn ? sn.c0 : Math.round(wx / T - b.w / 2), r0 = sn ? sn.r0 : Math.floor(wy / T);
-    const all = []; for (let i = 0; i < b.w; i++) all.push([c0 + i, r0]);
+    const b = SUPPORT_BLOCKS[id], shape = blockShape(b), sn = b.sh ? null : snapBlock(id, wx, wy);
+    const sw = Math.max(...shape.map(s => s[0])) + 1, top = Math.min(...shape.map(s => s[1]));
+    const c0 = sn ? sn.c0 : Math.round(wx / T - sw / 2), r0 = sn ? sn.r0 : Math.floor(wy / T) - Math.round(top / 2);
+    const all = shape.map(([dx, dy]) => [c0 + dx, r0 + dy]);
     const cells = all.filter(([c, r]) => cellFree(c, r));
-    const cost = Math.ceil(card.cost * cells.length / b.w);
+    const cost = Math.ceil(card.cost * cells.length / all.length);
     const why = !cells.length ? 'ここには置けない' : energy < cost ? 'エネルギー不足' : '';
-    return { ok: !why, x: c0 * T, y: r0 * T, why, cells, all, cost, snapped: !!sn };
+    return { ok: !why, x: c0 * T, y: (r0 + top) * T, w: sw, h: 1 - top, why, cells, all, cost, snapped: !!sn };
   }
   if (card.cat === 'support') {
-    const busy = { s_shield: P.shield, s_speed: effects.boost, s_freeze: effects.freeze }[id] > 0;
-    const why = usesLeft(id) <= 0 ? 'このページではもう使えない' : energy < card.cost ? 'エネルギー不足' : busy ? '発動中' : (id === 's_heart' && boxSolid(wx - 10, wy - 10, 20, 20)) ? 'ここには置けない' : '';
+    const busy = id === 's_shield' ? P.shield > 0 : SUPPORT_EFFECT[id] ? effects[SUPPORT_EFFECT[id]] > 0 : false;
+    const why = usesLeft(id) <= 0 ? 'このステージではもう使えない' : energy < card.cost ? 'エネルギー不足' : busy ? '発動中' : (id === 's_heart' && boxSolid(wx - 10, wy - 10, 20, 20)) ? 'ここには置けない' : '';
     return { ok: !why, x: wx, y: wy, why };
   }
   if (card.cat === 'special') {
@@ -162,7 +163,7 @@ function snapBlock(id, wx, wy) {
   const b = SUPPORT_BLOCKS[id], cx = wx / T, cy = wy / T;
   let best = null, bd = 1e9;
   for (const gd of guides) {
-    if ((gd.kind === 'pad') !== (id === 's_bounce') || (gd.until && tick > gd.until)) continue;
+    if ((gd.kind === 'pad') !== (b.kind === 4) || (gd.until && tick > gd.until)) continue;
     let empty = 0; for (let c = gd.c0; c <= gd.c1; c++) if (cellFree(c, gd.row)) empty++;
     if (!empty) continue;
     const dc = cx < gd.c0 ? gd.c0 - cx : cx > gd.c1 + 1 ? cx - gd.c1 - 1 : 0, dr = Math.abs(cy - (gd.row + 0.5));
@@ -186,7 +187,7 @@ function drawGuides() {
     if ((gd.until && tick > gd.until) || gd.c1 * T < P.x - 40 || gd.c1 * T < viewX - 40 || gd.c0 * T > viewX + VWW + 40) continue;
     const cells = []; for (let c = gd.c0; c <= gd.c1; c++) { const t = tiles[idx(c, gd.row)]; if (t === 0 || t === 6) cells.push(c); }
     if (!cells.length) continue;
-    const active = sel && ((gd.kind === 'pad') === (sel === 's_bounce'));
+    const active = sel && ((gd.kind === 'pad') === (SUPPORT_BLOCKS[sel].kind === 4));
     g.setLineDash([4, 4]); g.strokeStyle = active ? 'rgba(42,157,92,0.85)' : 'rgba(42,157,92,0.3)';
     for (const c of cells) g.strokeRect(c * T + 2, gd.row * T + 2, T - 4, T - 4);
     g.setLineDash([]);
@@ -205,10 +206,52 @@ function useSupport(id, wx, wy, pl) {
       tiles[i] = b.plank ? 4 : 3; paintKind[i] = b.plank ? 9 : b.kind; paintHp[i] = 1; paintCol[i] = 7;
       paintT[i] = tick; paintExp[i] = tick + b.life * 60; ST.painted++;
     }
-    SFX.place(); burst(pl.x + b.w * T / 2, pl.y + T / 2, '#2a9d5c', 6, 2);
+    SFX.place(); burst(pl.x + pl.w * T / 2, pl.y + pl.h * T / 2, '#2a9d5c', 6, 2);
     return;
   }
   SFX.special();
+  if (SUPPORT_TIME[id]) { // 時間で切れる効果
+    effects[SUPPORT_EFFECT[id]] = SUPPORT_TIME[id] * 60;
+    if (id === 's_lamp') effects.dark = 0;
+    banner = { text: CARD[id].name + '！', life: 40, color: C.builder };
+  }
+  if (id === 's_timer') { timeLeft += 15 * 60; banner = { text: '時間が15秒のびた！', life: 50, color: C.builder }; }
+  if (id === 's_clear') {
+    let n = 0; for (const b of bullets) if (!b.dead && !b.friendly && b.x > viewX - 40 && b.x < viewX + VWW + 40) { b.dead = true; n++; burst(b.x, b.y, '#7ddc94', 4, 2); }
+    popup(P.x + P.w / 2, P.y - 20, n ? `弾を${n}個消した！` : '消す弾がない', C.builder, 18);
+  }
+  if (id === 's_shot') {
+    const d = P.facing || 1;
+    for (const vy of [-1.6, 0, 1.6]) bullets.push({ kind: 'ink', friendly: true, x: P.x + P.w / 2 + d * (P.w / 2 + 2), y: P.y + P.h * 0.42, vx: d * 8, vy, r: 9, hr: 17, life: 60, dmg: Math.max(2, CH.dmg), col: '#2a9d5c', dead: false });
+  }
+  if (id === 's_push') {
+    const R = 110;
+    for (const e of enemies) if (!e.dead && e.type !== 'boss' && circleRect(wx, wy, R, e)) {
+      const dir = e.x + e.w / 2 < wx ? -1 : 1;
+      damageEnemy(e, 1, dir);
+      for (let k = 0; k < 6 && !boxSolid(e.x + dir * 10, e.y, e.w, e.h); k++) e.x += dir * 10;
+    }
+    particles.push({ x: wx, y: wy, vx: 0, vy: 0, life: 18, max: 18, r: R, color: '#9fd3f4', g: 0, ring: true });
+  }
+  if (id === 's_thunder') {
+    const cx = P.x + P.w / 2, near = enemies.filter(e => !e.dead && e.spawnT <= 0 && Math.abs(e.x - cx) < 520).sort((a, b) => Math.abs(a.x - cx) - Math.abs(b.x - cx)).slice(0, 3);
+    for (const e of near) {
+      if (e.type === 'boss') { e.stun = Math.max(e.stun || 0, 60); popup(e.x + e.w / 2, e.y - 24, 'ビリビリ…', C.builder, 20); }
+      else damageEnemy(e, 3, 0);
+      for (let k = 0; k < 8; k++) particles.push({ x: e.x + e.w / 2 + rand(-6, 6), y: e.y - k * 30, vx: 0, vy: 0, life: 14, max: 14, r: 4, color: '#ffd23f', g: 0 });
+    }
+    shake = Math.max(shake, 5);
+    if (!near.length) popup(cx, P.y - 20, '近くに敵がいない', C.builder, 16);
+  }
+  if (id === 's_column') {
+    const c0 = Math.floor(wx / T) - 1; let n = 0;
+    for (let c = c0; c <= c0 + 2; c++) for (let r = 0; r < ROWS; r++) {
+      if (c < 0 || c >= LW) continue;
+      const i = idx(c, r);
+      if ((tiles[i] === 3 || tiles[i] === 5) && paintCol[i] !== 7) { tiles[i] = 0; n++; burst(c * T + T / 2, r * T + T / 2, INKS[paintCol[i] % INKS.length], 2, 2); }
+    }
+    popup(wx, wy - 20, n ? 'ゴシゴシ！' : '消す壁がない', C.builder, 18);
+  }
   if (id === 's_heart') { items.push({ type: 'heart', x: wx, y: wy, taken: false }); burst(wx, wy, '#f27eb1', 8, 2); }
   if (id === 's_shield') { P.shield = Math.round(CARD.s_shield.pow * 60); banner = { text: 'バリア！', life: 40, color: C.builder }; }
   if (id === 's_speed') { effects.boost = Math.round(CARD.s_speed.pow * 60); banner = { text: 'スピードアップ！', life: 40, color: C.builder }; }

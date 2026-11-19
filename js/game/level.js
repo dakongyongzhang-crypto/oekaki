@@ -258,7 +258,7 @@ function resetRound() {
   };
   enemies = []; bullets = []; particles = []; popups = [];
   energy = COOP ? Math.min(EMAX, 60 + 20 * runBoost('energy')) : EMAX; timeLeft = roundLen(); tick = 0; state = 'countdown'; countT = COOP ? 300 : 180; camX = 0; shake = 0; hitStop = 0; banner = null; // 対戦：ビルダーはエネルギー満タンで始まる
-  effects = { dark: 0, rev: 0, heavy: 0, boost: 0, freeze: 0, slip: 0, float: 0, seal: 0 };
+  effects = { dark: 0, rev: 0, heavy: 0, boost: 0, freeze: 0, slip: 0, float: 0, seal: 0, regen: 0, jumpup: 0, djump: 0, tail: 0, cushion: 0, spikeproof: 0, lamp: 0, slow: 0, nojam: 0 };
   cpu = { energy: 40, timer: 90 };
   trail = []; spawnQueue = [];
   atkPressed = false; painting = false; lastPaint = null; penLive = 0;
