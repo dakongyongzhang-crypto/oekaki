@@ -689,3 +689,7 @@ body.rot.ingame #app{overflow:hidden}
 body.mobile.land .result-card h2{font-size:clamp(24px,calc(var(--appW) * .05),40px)}
 body.mobile.land .ending-wrap h2{font-size:clamp(28px,calc(var(--appW) * .06),52px)}
 body.mobile.land .net-toast{max-width:calc(var(--appW) * .9)}
+/* キャラを描く画面・カードを選ぶ画面の「戻る」「タイトルへ」 */
+.head-nav{margin-left:auto;display:flex;gap:8px;flex:none;align-self:center}
+.head-nav .btn[hidden]{display:none}
+body.mobile.land .head-nav{gap:5px}

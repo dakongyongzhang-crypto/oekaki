@@ -197,6 +197,43 @@ function startRound() {
   gcv.focus({ preventScroll: true });
 }
 function quitToTitle() { if (NET.role) netClose(true); $('#btnPause').textContent = 'ポーズ'; $('#btnTitle').textContent = 'タイトルへ'; $('#result').classList.add('hidden'); $('#pauseMenu').classList.add('hidden'); MATCH.on = false; COOP = false; updateScoreUI(); updateRoleLabels(); show('scr-title'); }
+/* ---------- キャラを描く画面・カードを選ぶ画面の「戻る」「タイトルへ」 ----------
+   オンラインは相手と準備がつながっているので「タイトルへ」だけ（確認してから接続を切る） */
+function drawBackTarget() {
+  if (NET.role) return null;
+  if (COOP) return storyCH ? 'story' : null; // ストーリーの「キャラを描き直す」から来たとき
+  if (MATCH.on) { if (MATCH.phase === 'redraw') return 'swap'; if (MATCH.setup === 1) return 'deckA'; }
+  return null; // 最初の画面（戻る先はタイトルだけ）
+}
+function deckBackTarget() {
+  if (NET.role) return null;
+  if (MATCH.on && MATCH.phase === 'redeck') return 'swap';
+  return 'draw';
+}
+function updateSetupNav() {
+  const d = drawBackTarget(), k = deckBackTarget();
+  $('#btnDrawBack').hidden = !d; $('#btnDeckBack').hidden = !k;
+  $('#btnDrawBack').textContent = { story: '◀ ページ選択へ', swap: '◀ 戻る', deckA: '◀ プレイヤーAのカード選び' }[d] || '◀ 戻る';
+  $('#btnDeckBack').textContent = k === 'swap' ? '◀ 戻る' : '◀ キャラを描く';
+}
+function setupToTitle() {
+  if (NET.role && !confirm('オンラインの接続が切れます。タイトルに戻りますか？')) return;
+  quitToTitle();
+}
+$('#btnDrawBack').addEventListener('click', () => {
+  const d = drawBackTarget();
+  if (d === 'story') showStory();
+  else if (d === 'swap') { MATCH.phase = 'play'; showSwap(); }
+  else if (d === 'deckA') { MATCH.setup = 0; DECK = MATCH.players[0].deck.slice(); setSetupTexts(); show('scr-deck'); refreshDeckUI(); }
+});
+$('#btnDeckBack').addEventListener('click', () => {
+  const k = deckBackTarget();
+  if (k === 'swap') { MATCH.phase = 'play'; showSwap(); return; }
+  if (MATCH.on) { MATCH.players[MATCH.setup].deck = DECK.slice(); beginDrawFor(MATCH.setup, true); return; } // 選んだカードは覚えておく
+  setSetupTexts(); show('scr-draw'); redrawDrawing(); analyzeAndShow(); // フリー：描いた絵はそのまま
+});
+$('#btnDrawTitle').addEventListener('click', setupToTitle);
+$('#btnDeckTitle').addEventListener('click', setupToTitle);
 $('#btnMatch').addEventListener('click', startMatch);
 $$('.target-pick .btn').forEach(b => b.addEventListener('click', () => {
   MATCH.target = +b.dataset.t;

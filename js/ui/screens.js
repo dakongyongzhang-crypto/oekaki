@@ -12,5 +12,6 @@ function show(id) {
   musicForScreen(id);
   if (NET.role === 'host' && NET.open) netOnHostScreen(id);
   if (NET.vsMode && (id === 'scr-draw' || id === 'scr-deck')) netFixTexts();
+  if ((id === 'scr-draw' || id === 'scr-deck') && typeof updateSetupNav === 'function') updateSetupNav();
 }
 $('#btnStart').addEventListener('click', () => { SFX.init(); startFree(); });
